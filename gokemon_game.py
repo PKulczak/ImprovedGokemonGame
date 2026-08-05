@@ -88,7 +88,40 @@ class Keyboard:
         self.up = False
         self.down = False
 
-#Makes player class        
+#shared by Player/NPC draw(): blits the current animation frame, using column 0 when idle
+def draw_frame(canvas, image, frame_center, frame_index, frame_dim, pos, scale_factor, moving):
+    col = frame_index[0] if moving else 0
+    canvas.draw_image(image,
+            [frame_center[0] + col * frame_dim[0],
+             frame_center[1] + frame_index[1] * frame_dim[1]],
+            frame_dim, [pos.x, pos.y], [frame_dim[0]*scale_factor, frame_dim[1]*scale_factor])
+
+#shared by Player/NPC next_frame(): advances to the next animation column, wrapping at columns
+def advance_frame(frame_index, columns):
+    frame_index[0] += 1
+    if frame_index[0] >= columns:
+        frame_index[0] = 0
+
+#shared by Wall/NPC collision(): axis-aligned bounding box overlap check
+def aabb_overlap(a_left, a_right, a_top, a_bot, b_left, b_right, b_top, b_bot):
+    col_left = (a_left - b_right) >= 0
+    col_right = (b_left - a_right) >= 0
+    col_top = (a_top - b_bot) >= 0
+    col_bot = (b_top - a_bot) >= 0
+
+    collision = True
+    if (col_right):
+        collision = False
+    if (col_left):
+        collision = False
+    if (col_bot):
+        collision = False
+    if (col_top):
+        collision = False
+
+    return collision
+
+#Makes player class
 class Player:
     def __init__(self, clock): 
         self.clock = clock
@@ -136,17 +169,8 @@ class Player:
 
     #draws the player on screen
     def draw(self, canvas):
-        if self.moving == True:
-            canvas.draw_image(self.image, 
-                    [self.frame_center[0] + self.frame_index[0] * self.frame_dim[0], 
-                     self.frame_center[1] + self.frame_index[1] * self.frame_dim[1]], 
-                     self.frame_dim, [self.pos.x,self.pos.y], [self.frame_dim[0]*self.scale_factor,self.frame_dim[1]*self.scale_factor])
-        else:
-            canvas.draw_image(self.image, 
-                    [self.frame_center[0] + 0 * self.frame_dim[0], 
-                     self.frame_center[1] + self.frame_index[1] * self.frame_dim[1]], 
-                     self.frame_dim, [self.pos.x,self.pos.y], [self.frame_dim[0]*self.scale_factor,self.frame_dim[1]*self.scale_factor])
-            
+        draw_frame(canvas, self.image, self.frame_center, self.frame_index, self.frame_dim, self.pos, self.scale_factor, self.moving)
+
         canvas.draw_image(self.heart_img, [8,8], [16,16], [16,16], [16,16])
         lives = "x"+str(self.lives)
         canvas.draw_text(lives, [30,20], 24, "Black")
@@ -161,9 +185,7 @@ class Player:
 
     #switches frames
     def next_frame(self):
-        self.frame_index[0] += 1
-        if self.frame_index[0] >= self.columns:
-            self.frame_index[0] = 0
+        advance_frame(self.frame_index, self.columns)
 
     def update(self):
         self.pos.add(self.vel)
@@ -209,19 +231,10 @@ class NPC:
                 pokemon = Pokemon(pokemonL[0], int(pokemonL[1]), int(pokemonL[2]), int(pokemonL[3]), [570, 140], [200, 250])
                 self.pokemon_list.append(pokemon)
 
-    #draws the NPC on screen       
+    #draws the NPC on screen
     def draw(self, canvas):
-        if self.moving == True:
-            canvas.draw_image(self.image, 
-                    [self.frame_center[0] + self.frame_index[0] * self.frame_dim[0], 
-                     self.frame_center[1] + self.frame_index[1] * self.frame_dim[1]], 
-                     self.frame_dim, [self.pos.x,self.pos.y], [self.frame_dim[0]*self.scale_factor,self.frame_dim[1]*self.scale_factor])
-        else:
-            canvas.draw_image(self.image, 
-                    [self.frame_center[0] + 0 * self.frame_dim[0], 
-                     self.frame_center[1] + self.frame_index[1] * self.frame_dim[1]], 
-                     self.frame_dim, [self.pos.x,self.pos.y], [self.frame_dim[0]*self.scale_factor,self.frame_dim[1]*self.scale_factor])
-        
+        draw_frame(canvas, self.image, self.frame_center, self.frame_index, self.frame_dim, self.pos, self.scale_factor, self.moving)
+
         if self.moving:
             self.update()
         self.clock.tick()
@@ -230,9 +243,7 @@ class NPC:
             self.next_frame()
 
     def next_frame(self):
-        self.frame_index[0] += 1
-        if self.frame_index[0] >= self.columns:
-            self.frame_index[0] = 0
+        advance_frame(self.frame_index, self.columns)
 
     def update(self):
         self.pos.add(self.vel)
@@ -248,23 +259,9 @@ class NPC:
         self.wall_right = self.pos.x + (self.frame_dim[0]//2*self.scale_factor)
         self.wall_top = self.pos.y - (self.frame_dim[1]//2*self.scale_factor)
         self.wall_bot = self.pos.y + (self.frame_dim[1]//2*self.scale_factor)
-        
-        col_left = ((self.wall_left - player.player_right) >= 0)
-        col_right = ((player.player_left - self.wall_right) >= 0)
-        col_top = ((self.wall_top - player.player_bot) >= 0)
-        col_bot = ((player.player_top - self.wall_bot) >= 0)
 
-        collision = True
-        if (col_right) :
-            collision = False
-        if (col_left):
-            collision = False
-        if (col_bot):
-            collision = False
-        if (col_top):
-            collision = False
-
-        return collision
+        return aabb_overlap(self.wall_left, self.wall_right, self.wall_top, self.wall_bot,
+                             player.player_left, player.player_right, player.player_top, player.player_bot)
 
     def interact(self, player):
         self.vel = Vector(0,0)
@@ -366,29 +363,15 @@ class Wall:
                     [self.width//2, self.height//2], 
                      [self.width, self.height], [self.pos.x,self.pos.y], [self.frame_dim[0],self.frame_dim[1]])
 
-    #checks for collision    
+    #checks for collision
     def collision(self, player):
         player.player_left = player.pos.x - ((player.frame_dim[0]//2)*player.scale_factor)
         player.player_right = player.pos.x + ((player.frame_dim[0]//2)*player.scale_factor)
         player.player_top = player.pos.y
         player.player_bot = player.pos.y + ((player.frame_dim[1]//2)*player.scale_factor)
 
-        col_left = ((self.wall_left - player.player_right) >= 0)
-        col_right = ((player.player_left - self.wall_right) >= 0)
-        col_top = ((self.wall_top - player.player_bot) >= 0)
-        col_bot = ((player.player_top - self.wall_bot) >= 0)
-
-        collision = True
-        if (col_right) :
-            collision = False
-        if (col_left):
-            collision = False
-        if (col_bot):
-            collision = False
-        if (col_top):
-            collision = False
-
-        return collision
+        return aabb_overlap(self.wall_left, self.wall_right, self.wall_top, self.wall_bot,
+                             player.player_left, player.player_right, player.player_top, player.player_bot)
 
     #blocks the player from moving through
     def interact(self, player):
