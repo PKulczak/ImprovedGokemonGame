@@ -630,7 +630,25 @@ class Pokedex:
             else:
                 canvas.draw_text(self.poke_list[i], (540, 150+(i-3)*120), 25, 'Black')
 
-#used to show text from a text file on screen
+#loads all dialogue text once from Text/dialogue.json
+def _load_dialogue():
+    with open('{}/Text/dialogue.json'.format(BASE_DIR), "r") as file:
+        return json.load(file)
+
+DIALOGUE = _load_dialogue()
+
+#looks up the lines for a dialogue id (e.g. "boss1", "boss1W" for its win text, "boss1L" for its lose text)
+def dialogue_lines(dialogue_id):
+    entry = DIALOGUE.get(dialogue_id)
+    if entry is not None and "lines" in entry:
+        return entry["lines"]
+    if dialogue_id.endswith("W") and dialogue_id[:-1] in DIALOGUE:
+        return DIALOGUE[dialogue_id[:-1]]["win"]
+    if dialogue_id.endswith("L") and dialogue_id[:-1] in DIALOGUE:
+        return DIALOGUE[dialogue_id[:-1]]["lose"]
+    return DIALOGUE[dialogue_id]["pre_fight"]
+
+#used to show text from the dialogue data on screen
 class Text:
     def __init__(self, txtfile, player, pos, box, count, clock):
         self.txtfile = txtfile
@@ -641,20 +659,8 @@ class Text:
         self.display = True
         self.clock = clock
         self.txtbox = simplegui._load_local_image('{}/Text/box.png'.format(BASE_DIR))
-        self.num_lines = sum(1 for line in open(('{}/Text/'.format(BASE_DIR))+self.txtfile+'.txt'))
-        with open(('{}/Text/'.format(BASE_DIR))+self.txtfile+'.txt',"r") as file:
-            allline = file.readlines()
-            self.alltxt = []
-            for line in allline:
-                line = line.split()
-                newline = ""
-                for word in line:
-                    if word == "{}":
-                        newline += player.name
-                    else:
-                        newline += word
-                    newline += " "
-                self.alltxt.append(newline)
+        self.alltxt = [line.format(player_name=player.name) for line in dialogue_lines(txtfile)]
+        self.num_lines = len(self.alltxt)
 
     def draw(self, canvas):
         if self.display:

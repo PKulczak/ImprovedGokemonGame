@@ -1,0 +1,87 @@
+{
+  "intro": {
+    "lines": [
+      "Hello there {player_name} and welcome to Gokemon!",
+      "Oh no.... You have missed your boat back home!",
+      "You are stuck on the Gokemon training island until you defeat Myron the temple leader.",
+      "There are plenty of ways to practice and build a relationship with your Gokemon."
+    ]
+  },
+  "heal": {
+    "lines": [
+      "Your Gokemon have been healed!"
+    ]
+  },
+  "empty": {
+    "lines": []
+  },
+  "boss1": {
+    "pre_fight": [
+      "Welcome to the SeaSide Town gym!",
+      "I am here to test your skills... you do not stand a chance!",
+      "Lets battle!"
+    ],
+    "win": [
+      "Urgh, this must have been luck!",
+      "This will be the last time this happens...",
+      "Make sure to heal your Gokemon at the Gokecentre at the entrance to town."
+    ],
+    "lose": [
+      "Ha! I did say you had no chance of victory!",
+      "You fought well but I fought better. I would love to battle again sometime!"
+    ]
+  },
+  "boss2": {
+    "pre_fight": [
+      "You have made it further than I expected...",
+      "Welcome {player_name} , I am Myron the Temple Master of this island.",
+      "If you defeat me you will become a certified trainer and return home.",
+      "I am so confident of defeating you that I healed all your Gokemon for you!",
+      "Lets begin..."
+    ],
+    "win": [
+      "Wow... I did not expect you to be that strong.",
+      "I guess you earned this trainer badge.",
+      "Congratulations on this achievement!",
+      "Step on the portal to exit"
+    ],
+    "lose": [
+      "Just as I expected HA!",
+      "You were no match for me...",
+      "Come back when you are ready next time...",
+      "Step on the portal to exit"
+    ]
+  },
+  "boss3": {
+    "pre_fight": [
+      "Welcome to the temple!",
+      "The masters in here will push your skills to the limit.",
+      "{player_name} lets begin."
+    ],
+    "win": [
+      "Congratulations, you fought well.",
+      "Climb the ladder to meet your next master.",
+      "Good luck!"
+    ],
+    "lose": [
+      "Close fight {player_name}.",
+      "Continue practicing and come back stronger!"
+    ]
+  },
+  "boss4": {
+    "pre_fight": [
+      "Myron awaits you behind those doors...",
+      "But first you must go through me!"
+    ],
+    "win": [
+      "That was tense, great battle.",
+      "You have what it takes to defeat Myron.",
+      "Good luck!"
+    ],
+    "lose": [
+      "You almost had me!",
+      "This was a great battle.",
+      "Practice practice practice and come back stronger."
+    ]
+  }
+}
