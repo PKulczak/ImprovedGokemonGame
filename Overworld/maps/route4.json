@@ -257,13 +257,21 @@
       "type": "interact",
       "x": 19,
       "y": 5,
-      "location": 1
+      "target_map": "bossfight1",
+      "target_pos": [
+        406,
+        424
+      ]
     },
     {
       "type": "interact",
       "x": 20,
       "y": 5,
-      "location": 1
+      "target_map": "bossfight1",
+      "target_pos": [
+        406,
+        424
+      ]
     },
     {
       "type": "wall_left_b",
@@ -644,7 +652,11 @@
       "type": "interact",
       "x": 0,
       "y": 11,
-      "location": 0
+      "target_map": "route3",
+      "target_pos": [
+        774,
+        351
+      ]
     },
     {
       "type": "tree",

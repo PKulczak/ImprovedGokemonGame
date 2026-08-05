@@ -62,22 +62,34 @@
       "type": "boss_gate",
       "x": 11,
       "y": 1,
-      "location": 1,
-      "requires_defeated": "boss4"
+      "requires_defeated": "boss4",
+      "target_map": "bossfight3",
+      "target_pos": [
+        406,
+        424
+      ]
     },
     {
       "type": "boss_gate",
       "x": 12,
       "y": 1,
-      "location": 1,
-      "requires_defeated": "boss4"
+      "requires_defeated": "boss4",
+      "target_map": "bossfight3",
+      "target_pos": [
+        406,
+        424
+      ]
     },
     {
       "type": "boss_gate",
       "x": 13,
       "y": 1,
-      "location": 1,
-      "requires_defeated": "boss4"
+      "requires_defeated": "boss4",
+      "target_map": "bossfight3",
+      "target_pos": [
+        406,
+        424
+      ]
     },
     {
       "type": "tree",
@@ -683,19 +695,31 @@
       "type": "interact",
       "x": 11,
       "y": 15,
-      "location": 0
+      "target_map": "bossfight1",
+      "target_pos": [
+        406,
+        70
+      ]
     },
     {
       "type": "interact",
       "x": 12,
       "y": 15,
-      "location": 0
+      "target_map": "bossfight1",
+      "target_pos": [
+        406,
+        70
+      ]
     },
     {
       "type": "interact",
       "x": 13,
       "y": 15,
-      "location": 0
+      "target_map": "bossfight1",
+      "target_pos": [
+        406,
+        70
+      ]
     },
     {
       "type": "tree",

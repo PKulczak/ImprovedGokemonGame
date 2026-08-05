@@ -362,7 +362,11 @@
       "type": "interact",
       "x": 12,
       "y": 5,
-      "location": 1
+      "target_map": "route4",
+      "target_pos": [
+        626,
+        200
+      ]
     },
     {
       "type": "wall_left_a",
@@ -768,19 +772,31 @@
       "type": "interact",
       "x": 11,
       "y": 15,
-      "location": 0
+      "target_map": "bossfight2",
+      "target_pos": [
+        406,
+        70
+      ]
     },
     {
       "type": "interact",
       "x": 12,
       "y": 15,
-      "location": 0
+      "target_map": "bossfight2",
+      "target_pos": [
+        406,
+        70
+      ]
     },
     {
       "type": "interact",
       "x": 13,
       "y": 15,
-      "location": 0
+      "target_map": "bossfight2",
+      "target_pos": [
+        406,
+        70
+      ]
     },
     {
       "type": "tree",

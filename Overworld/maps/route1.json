@@ -12,13 +12,21 @@
       "type": "interact",
       "x": 3,
       "y": 0,
-      "location": 0
+      "target_map": "map2",
+      "target_pos": [
+        756,
+        169
+      ]
     },
     {
       "type": "interact",
       "x": 4,
       "y": 0,
-      "location": 0
+      "target_map": "map2",
+      "target_pos": [
+        756,
+        169
+      ]
     },
     {
       "type": "tree",
@@ -454,7 +462,11 @@
       "type": "interact",
       "x": 25,
       "y": 10,
-      "location": 1
+      "target_map": "map",
+      "target_pos": [
+        58,
+        169
+      ]
     },
     {
       "type": "tree",
@@ -485,7 +497,11 @@
       "type": "interact",
       "x": 25,
       "y": 11,
-      "location": 1
+      "target_map": "map",
+      "target_pos": [
+        58,
+        169
+      ]
     },
     {
       "type": "tree",

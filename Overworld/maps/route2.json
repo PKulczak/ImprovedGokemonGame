@@ -177,7 +177,11 @@
       "type": "interact",
       "x": 22,
       "y": 4,
-      "location": 1
+      "target_map": "route3",
+      "target_pos": [
+        56,
+        120
+      ]
     },
     {
       "type": "tree",
@@ -363,7 +367,11 @@
       "type": "interact",
       "x": 0,
       "y": 7,
-      "location": 0
+      "target_map": "map",
+      "target_pos": [
+        768,
+        225
+      ]
     },
     {
       "type": "fight",
@@ -434,7 +442,11 @@
       "type": "interact",
       "x": 0,
       "y": 8,
-      "location": 0
+      "target_map": "map",
+      "target_pos": [
+        768,
+        225
+      ]
     },
     {
       "type": "fight",
@@ -980,7 +992,11 @@
       "type": "interact",
       "x": 17,
       "y": 14,
-      "location": 2
+      "target_map": "route3",
+      "target_pos": [
+        47,
+        447
+      ]
     },
     {
       "type": "tree",

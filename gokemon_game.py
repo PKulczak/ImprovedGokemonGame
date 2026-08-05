@@ -427,9 +427,10 @@ class Wall:
 
 #creates an Interactive wall (subclass of wall)
 class Interact(Wall):
-    def __init__(self, name, pos, int_type, location = None):
+    def __init__(self, name, pos, int_type, target_map = None, target_pos = None):
         super().__init__(name, pos)
-        self.location = location
+        self.target_map = target_map
+        self.target_pos = target_pos
         self.int_type = int_type
 
     #checks for what kind of interaction is happening
@@ -475,13 +476,15 @@ class Background:
                 wall = Wall(TILE_WALL_IMAGES[ttype], pos)
                 self.walls_list.append(wall)
             elif ttype == "interact":
-                wall = Interact("tree.png", pos, "interact", tile["location"])
+                target_pos = Vector(tile["target_pos"][0], tile["target_pos"][1])
+                wall = Interact("tree.png", pos, "interact", tile["target_map"], target_pos)
                 self.walls_list.append(wall)
             elif ttype == "boss_gate":
                 if tile["requires_defeated"] not in self.npc_lost:
                     wall = Wall("tree.png", pos)
                 else:
-                    wall = Interact("tree.png", pos, "interact", tile["location"])
+                    target_pos = Vector(tile["target_pos"][0], tile["target_pos"][1])
+                    wall = Interact("tree.png", pos, "interact", tile["target_map"], target_pos)
                 self.walls_list.append(wall)
             elif ttype == "fight":
                 wall = Interact("tree.png", pos, "fight")
@@ -502,31 +505,11 @@ class Background:
                     npc = NPC(npc_name, pos, clock)
                 self.npc_list.append(npc)
 
-    #loads a new level    
-    def new_level(self, location, player):
-        map_str = {"map2y": [["route1", Vector(111,43)]],
-                   "map": [["route1", Vector(770,338)], ["route2", Vector(58,236)], ["pokecenter", Vector(406,424)]],
-                   "map2": [["route1", Vector(111,43)]],
-                   "route1": [["map2", Vector(756, 169)], ["map", Vector(58,169)]],
-                   "route2": [["map", Vector(768,225)], ["route3a", Vector(56,120)], ["route3b", Vector(47,447)]],
-                   "route3": [["route2a", Vector(680,143)], ["route2b", Vector(514,443)], ["map3", Vector(220, 424)], ["route4", Vector(52,319)]],
-                   "route4": [["route3", Vector(774,351)], ["bossfight1",Vector(406,424)]],
-                   "map3": [["route3",Vector(746,67)], ["gym2",Vector(406,424)], ["pokecenter2",Vector(406,424)]],
-                   "gym2": [["map3",Vector(650,143)]],
-                   "pokecenter": [["map",Vector(290,261)]],
-                   "pokecenter2": [["map3",Vector(172,382)]],
-                   "bossfight1": [["route4",Vector(626,200)], ["bossfight2",Vector(406,424)]],
-                   "bossfight2": [["bossfight1",Vector(406,70)], ["bossfight3",Vector(406,424)]],
-                   "bossfight3": [["bossfight2",Vector(406,70)], ["route4",Vector(626,200)]]}
-        
-        player.pos = map_str[self.map_name][location][1]
+    #loads a new level, transitioning to the target map/position named on the interact tile that triggered it
+    def new_level(self, target_map, target_pos, player):
+        player.pos = target_pos
         player.vel = Vector(0,0)
-        self.map_name = map_str[self.map_name][location][0]
-
-        if (self.map_name == "route3a") or (self.map_name == "route3b"):
-            self.map_name = "route3"
-        if (self.map_name == "route2a") or (self.map_name == "route2b"):
-            self.map_name = "route2"
+        self.map_name = target_map
 
         player.interacting = False
         self.Map = simplegui._load_local_image(('{}/Overworld/map_img/'.format(BASE_DIR))+self.map_name+".png")
@@ -715,7 +698,7 @@ class Interaction:
             if col == True:
                 x.interact(self.player)
                 if player.interacting == True:
-                    self.game.background.new_level(x.location, self.player)
+                    self.game.background.new_level(x.target_map, x.target_pos, self.player)
 
                 if player.in_fight == True:
                     rand_int = random.random()
@@ -872,7 +855,9 @@ class Game:
 
             if self.fight.npc:
                 if (self.fight.catch == False) and (self.fight.run == False) and (self.fight.lost == False):
-                    self.npc_lost.append(self.background.npc_list[0].image_name)
+                    npc_name = self.background.npc_list[0].image_name
+                    if npc_name not in self.npc_lost:
+                        self.npc_lost.append(npc_name)
                     fight_state = "W"
                 else:
                     fight_state = "L"

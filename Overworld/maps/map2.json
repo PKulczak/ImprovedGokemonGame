@@ -262,7 +262,11 @@
       "type": "interact",
       "x": 25,
       "y": 5,
-      "location": 0
+      "target_map": "route1",
+      "target_pos": [
+        111,
+        43
+      ]
     },
     {
       "type": "tree",
@@ -333,7 +337,11 @@
       "type": "interact",
       "x": 25,
       "y": 6,
-      "location": 0
+      "target_map": "route1",
+      "target_pos": [
+        111,
+        43
+      ]
     },
     {
       "type": "tree",

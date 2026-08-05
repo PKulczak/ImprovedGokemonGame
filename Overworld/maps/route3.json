@@ -12,7 +12,11 @@
       "type": "interact",
       "x": 23,
       "y": 0,
-      "location": 2
+      "target_map": "map3",
+      "target_pos": [
+        220,
+        424
+      ]
     },
     {
       "type": "tree",
@@ -253,7 +257,11 @@
       "type": "interact",
       "x": 0,
       "y": 4,
-      "location": 0
+      "target_map": "route2",
+      "target_pos": [
+        680,
+        143
+      ]
     },
     {
       "type": "tree",
@@ -1004,7 +1012,11 @@
       "type": "interact",
       "x": 25,
       "y": 11,
-      "location": 3
+      "target_map": "route4",
+      "target_pos": [
+        52,
+        319
+      ]
     },
     {
       "type": "tree",
@@ -1240,7 +1252,11 @@
       "type": "interact",
       "x": 0,
       "y": 14,
-      "location": 1
+      "target_map": "route2",
+      "target_pos": [
+        514,
+        443
+      ]
     },
     {
       "type": "fight",

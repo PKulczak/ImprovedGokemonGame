@@ -892,13 +892,21 @@
       "type": "interact",
       "x": 12,
       "y": 15,
-      "location": 0
+      "target_map": "map3",
+      "target_pos": [
+        172,
+        382
+      ]
     },
     {
       "type": "interact",
       "x": 13,
       "y": 15,
-      "location": 0
+      "target_map": "map3",
+      "target_pos": [
+        172,
+        382
+      ]
     },
     {
       "type": "tree",
