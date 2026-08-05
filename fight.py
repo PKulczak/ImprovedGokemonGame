@@ -8,6 +8,23 @@ import os
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
+#loads each pokemon's base stats from Pokedex.txt once, keyed by name
+def _load_pokedex():
+    pokedex = {}
+    with open('{}/Fight/Files/Pokedex.txt'.format(BASE_DIR), "r") as file:
+        for line in file:
+            fields = line.split()
+            pokedex[fields[0]] = {
+                "ATK": int(fields[1]),
+                "DEF": int(fields[2]),
+                "fullhp": int(fields[3]),
+                "effect_img": fields[4],
+                "row": int(fields[5]),
+            }
+    return pokedex
+
+POKEDEX = _load_pokedex()
+
 class Fight:
     def __init__(self, monster_list, pokemon_list, keyboard, npc):
         self.mons_list = monster_list
@@ -216,14 +233,10 @@ class Fight:
                 if pokemon.exp >= pokemon.max_exp:
                     if pokemon.lvl <= 25:
                         pokemon.lvl += 1
-                        with open('{}/Fight/Files/Pokedex.txt'.format(BASE_DIR),"r") as file:
-                            pokedex = file.readlines()
-                            for pokemon_line in pokedex:
-                                pokemonT = pokemon_line.split()
-                                if pokemonT[0] == pokemon.name:
-                                    pokemon.ATK = int(pokemonT[1])
-                                    pokemon.DEF = int(pokemonT[2])
-                                    pokemon.fullhp = int(pokemonT[3])
+                        base_stats = POKEDEX[pokemon.name]
+                        pokemon.ATK = base_stats["ATK"]
+                        pokemon.DEF = base_stats["DEF"]
+                        pokemon.fullhp = base_stats["fullhp"]
                         pokemon.max_exp = 100
                         pokemon.ATK = int(pokemon.ATK+(((pokemon.ATK*0.1)*pokemon.lvl)//1))
                         pokemon.DEF = int(pokemon.DEF+(((pokemon.DEF*0.01)*pokemon.lvl)//1))
@@ -275,16 +288,12 @@ class Fight:
 class Pokemon:
     def __init__(self, name, HP, lvl, exp, pos, pos1):
         self.name = name
-        with open('{}/Fight/Files/Pokedex.txt'.format(BASE_DIR),"r") as file:
-            pokedex = file.readlines()
-            for pokemon_line in pokedex:
-                pokemon = pokemon_line.split()
-                if pokemon[0] == self.name:
-                    self.ATK = int(pokemon[1])
-                    self.DEF = int(pokemon[2])
-                    self.fullhp = int(pokemon[3])
-                    effect_img = pokemon[4]
-                    row = int(pokemon[5])
+        base_stats = POKEDEX[self.name]
+        self.ATK = base_stats["ATK"]
+        self.DEF = base_stats["DEF"]
+        self.fullhp = base_stats["fullhp"]
+        effect_img = base_stats["effect_img"]
+        row = base_stats["row"]
         self.count = 0
 
         #pokemon scaling
