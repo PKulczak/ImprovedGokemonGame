@@ -15,10 +15,6 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 WIDTH = 800
 HEIGHT = 480
 
-walls_list = []
-npc_list = []
-npc_lost = []
-
 #Used for animation/transitioning
 class Clock:
     def __init__(self):
@@ -196,7 +192,6 @@ class Player:
 #similar to Player but controlled by computer
 class NPC:
     def __init__(self, img_name, pos, clock):
-        npc_list.append(self)
         self.clock = clock
         self.image_name = img_name
         self.image = simplegui._load_local_image(('{}/Overworld/NPC/'.format(BASE_DIR))+self.image_name+".png")
@@ -345,7 +340,6 @@ class Yacht(NPC):
 #makes a wall which doesn't allow for player to walk through        
 class Wall:
     def __init__(self, name, pos):
-        walls_list.append(self)
         self.image = simplegui._load_local_image(('{}/Overworld/Other/'.format(BASE_DIR))+name)
         self.width = self.image.get_width()
         self.height = self.image.get_height()
@@ -403,23 +397,27 @@ class Interact(Wall):
             
 #creates the background of the map
 class Background:
-    def __init__(self, Map, width, height):
+    def __init__(self, Map, width, height, npc_lost=None):
         self.map_name = Map
         self.Map = simplegui._load_local_image(('{}/Overworld/map_img/'.format(BASE_DIR))+self.map_name+".png")
         self.width = width
         self.height = height
-        
+
         self.orig_width = self.Map.get_width()
         self.orig_height = self.Map.get_height()
+
+        #npc_lost is owned by Game (it's persistent save data); Background just holds a reference to it
+        self.npc_lost = npc_lost if npc_lost is not None else []
+        self.walls_list = []
+        self.npc_list = []
 
     def draw(self, canvas):
         canvas.draw_image(self.Map, (self.orig_width/2,self.orig_height/2), (self.orig_width,self.orig_height), (self.width/2, self.height/2), (self.width,self.height))
 
     #loads all the hitboxes for the map
     def load_wall(self):
-        global walls_list, npc_list, npc_lost
-        walls_list = []
-        npc_list = []
+        self.walls_list = []
+        self.npc_list = []
         with open(('{}/Overworld/map_txt/'.format(BASE_DIR))+self.map_name+".txt","r") as file:
             level = file.readlines()
             x = y = 0
@@ -427,41 +425,54 @@ class Background:
                 for col in row:
                     if col == "t":
                         wall = Wall("tree.png", Vector(8+(32*x), 0+(32*y)))
+                        self.walls_list.append(wall)
                     if col == "w":
                         wall = Wall("up.png", Vector(8+(32*x), 8+(32*y)))
+                        self.walls_list.append(wall)
                     if col == "s":
                         wall = Wall("up.png", Vector(8+(32*x), -8+(32*y)))
+                        self.walls_list.append(wall)
                     if col == "a":
                         wall = Wall("left.png", Vector(16+(32*x), 0+(32*y)))
+                        self.walls_list.append(wall)
                     if col == "d":
                         wall = Wall("left.png", Vector(0+(32*x), 0+(32*y)))
+                        self.walls_list.append(wall)
                     if col == "1":
                         wall = Interact("tree.png", Vector(8+(32*x), 0+(32*y)), "interact", 0)
+                        self.walls_list.append(wall)
                     if col == "2":
-                        if (self.map_name == "bossfight1") and ("boss3" not in npc_lost):
+                        if (self.map_name == "bossfight1") and ("boss3" not in self.npc_lost):
                             wall = Wall("tree.png", Vector(8+(32*x), 0+(32*y)))
-                        elif (self.map_name == "bossfight2") and ("boss4" not in npc_lost):
+                        elif (self.map_name == "bossfight2") and ("boss4" not in self.npc_lost):
                             wall = Wall("tree.png", Vector(8+(32*x), 0+(32*y)))
                         else:
                             wall = Interact("tree.png", Vector(8+(32*x), 0+(32*y)), "interact", 1)
+                        self.walls_list.append(wall)
                     if col == "3":
                         wall = Interact("tree.png", Vector(8+(32*x), 0+(32*y)), "interact", 2)
+                        self.walls_list.append(wall)
                     if col == "4":
                         wall = Interact("tree.png", Vector(8+(32*x), 0+(32*y)), "interact", 3)
+                        self.walls_list.append(wall)
                     if col == "f":
                         wall = Interact("tree.png", Vector(8+(32*x), 0+(32*y)), "fight")
+                        self.walls_list.append(wall)
                     if col == "h":
                         wall = Interact("tree.png", Vector(8+(32*x), 0+(32*y)), "heal")
+                        self.walls_list.append(wall)
                     if col == "y":
                         clock = Clock()
                         yacht = Yacht("yacht", Vector(8+(32*x), 0+(32*y)), clock)
+                        self.npc_list.append(yacht)
                     if col == "b":
                         clock = Clock()
                         npc_name = self.load_npc()
-                        if npc_name in npc_lost:
+                        if npc_name in self.npc_lost:
                             npc = NPCWall(npc_name, Vector(8+(32*x), 0+(32*y)), clock)
                         else:
                             npc = NPC(npc_name, Vector(8+(32*x), 0+(32*y)), clock)
+                        self.npc_list.append(npc)
                     x += 1
                 y += 1
                 x = 0
@@ -667,8 +678,7 @@ class Interaction:
 
     #goes through the wall and npc lists
     def draw(self, canvas):
-        global walls_list, npc_list, npc_lost
-        for x in walls_list:
+        for x in self.game.background.walls_list:
             x.draw(canvas)
             col = x.collision(self.player)
             if col == True:
@@ -698,7 +708,7 @@ class Interaction:
                     
         self.game.background.draw(canvas)
         self.player.draw(canvas)
-        for y in npc_list:
+        for y in self.game.background.npc_list:
             y.draw(canvas)
             y.move_to_player(self.player)
             col = y.collision(self.player)
@@ -713,7 +723,7 @@ class Interaction:
                         self.player.lock = False
                         self.game.txtcount = 0
                         self.game.fightB = True
-                        self.game.fight = Fight(npc_list[0].pokemon_list, self.player.pokemon_list, self.game.Kbd, True)
+                        self.game.fight = Fight(self.game.background.npc_list[0].pokemon_list, self.player.pokemon_list, self.game.Kbd, True)
 
 #sets up main class        
 class Game:
@@ -726,6 +736,7 @@ class Game:
         self.caughtAll = Welcome("CaughtAll.png")
         self.tutorial = tutorial
         self.background = background
+        self.npc_lost = []
         self.intro = False
         self.complete = False
         self.pokecomplete = False
@@ -758,7 +769,7 @@ class Game:
         temp1 += "\n"
         allinfo.append(temp1)
         temp2 = ""
-        for npc in npc_lost:
+        for npc in self.npc_lost:
             temp2 += npc
             temp2 += " "
         temp2 += "\n"
@@ -787,7 +798,6 @@ class Game:
                 
     #loads the game from the save files
     def load_game(self):
-        global npc_lost
         with open('{}/Fight/Files/Save.txt'.format(BASE_DIR),"r") as file:
             info = file.readlines()
             allinfo = []
@@ -806,10 +816,10 @@ class Game:
         self.complete = allinfo[0][1]
         self.pokecomplete = allinfo[0][2]
         if not allinfo[1]:
-            npc_lost = []
+            self.npc_lost = []
         else:
             for npc in allinfo[1]:
-                npc_lost.append(npc)
+                self.npc_lost.append(npc)
         self.player.pos.x = int(float(allinfo[2][0]))
         self.player.pos.y = int(float(allinfo[2][1]))
         self.player.lives = int(allinfo[2][2])
@@ -817,7 +827,7 @@ class Game:
             self.player.name = ""
         else:
             self.player.name = allinfo[2][3]
-        self.background = Background(allinfo[3][0], WIDTH, HEIGHT)
+        self.background = Background(allinfo[3][0], WIDTH, HEIGHT, self.npc_lost)
         self.background.load_wall()
 
     #creates a new game by replacing files
@@ -855,8 +865,6 @@ class Game:
 
     #runs main game loop
     def draw(self, canvas):
-        global walls_list, npc_list, npc_lost
-        
         if self.keyboard.start:
             if self.keyboard.startscreen:
                 if self.fightB:
@@ -872,17 +880,17 @@ class Game:
                         
                         if self.fight.npc:
                             if (self.fight.catch == False) and (self.fight.run == False) and (self.fight.lost == False):
-                                npc_lost.append(npc_list[0].image_name)
+                                self.npc_lost.append(self.background.npc_list[0].image_name)
                                 fight_state = "W"
                             else:
                                 fight_state = "L"
 
-                            self.text = Text(npc_list[0].image_name+fight_state, self.player, (50,405), True, self.txtcount, self.txtclock)
+                            self.text = Text(self.background.npc_list[0].image_name+fight_state, self.player, (50,405), True, self.txtcount, self.txtclock)
                             self.text.draw(canvas)
                             self.txtcount = self.text.count
-                
+
                             if self.text.display == False:
-                                self.background = Background(self.background.map_name, WIDTH, HEIGHT)
+                                self.background = Background(self.background.map_name, WIDTH, HEIGHT, self.npc_lost)
                                 self.background.load_wall()
                                 self.player.lock = False
                                 self.txtcount = 0
@@ -927,7 +935,7 @@ class Game:
                         self.save_game()
                         self.keyboard.save = False
 
-                    if (self.complete == False) and ("boss2" in npc_lost):
+                    if (self.complete == False) and ("boss2" in self.npc_lost):
                         self.credits.draw(canvas)
                         self.txtclock.tick()
                         move_on = self.txtclock.transition(200)
@@ -935,7 +943,7 @@ class Game:
                             self.complete = True
 
                     if (self.pokecomplete == False) and (self.player.encounters == 79):
-                        if (self.complete == False) and ("boss2" in npc_lost):
+                        if (self.complete == False) and ("boss2" in self.npc_lost):
                             pass
                         else:
                             self.caughtAll.draw(canvas)
