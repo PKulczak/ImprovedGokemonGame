@@ -868,136 +868,153 @@ class Game:
         if self.keyboard.start:
             if self.keyboard.startscreen:
                 if self.fightB:
-                    frame.set_keydown_handler(self.Kbd.keyDown)
-                    frame.set_keyup_handler(self.Kbd.keyUp)
-                    self.fight.draw(canvas)
-                    
-                    if (self.fight.end == True):
-                        self.Kbd.KeyReset()
-                        frame.set_keydown_handler(self.keyboard.keyDown)
-                        frame.set_keyup_handler(self.keyboard.keyUp)
-                        self.keyboard.KeyReset()
-                        
-                        if self.fight.npc:
-                            if (self.fight.catch == False) and (self.fight.run == False) and (self.fight.lost == False):
-                                self.npc_lost.append(self.background.npc_list[0].image_name)
-                                fight_state = "W"
-                            else:
-                                fight_state = "L"
-
-                            self.text = Text(self.background.npc_list[0].image_name+fight_state, self.player, (50,405), True, self.txtcount, self.txtclock)
-                            self.text.draw(canvas)
-                            self.txtcount = self.text.count
-
-                            if self.text.display == False:
-                                self.background = Background(self.background.map_name, WIDTH, HEIGHT, self.npc_lost)
-                                self.background.load_wall()
-                                self.player.lock = False
-                                self.txtcount = 0
-                                self.fightB = False
-                                
-                                if self.fight.lost:
-                                    self.player.pos.x +=50
-                                    self.player.pos.y +=50
-                                    self.player.lives -= 1
-                                    for pokemon in player.pokemon_list:
-                                        pokemon.HP = pokemon.fullhp
-                                        
-                                if self.fight.run:
-                                    self.player.pos.x +=50
-                                    self.player.pos.y +=50
-                        else:
-                            if self.fight.lost:
-                                self.player.lives -= 1
-                                for pokemon in player.pokemon_list:
-                                    pokemon.HP = pokemon.fullhp
-                            self.fightB = False
-                        
+                    self._draw_fight(canvas)
                 elif self.keyboard.pokedex:
-                    frame.set_keydown_handler(self.Kbd.keyDown)
-                    frame.set_keyup_handler(self.Kbd.keyUp)
-                    self.pokedex.draw(canvas)
-                    if self.Kbd.quit:
-                        self.Kbd.KeyReset()
-                        frame.set_keydown_handler(self.keyboard.keyDown)
-                        frame.set_keyup_handler(self.keyboard.keyUp)
-                        self.keyboard.KeyReset()
-                        self.keyboard.pokedex = False
-                        self.Kbd.quit = False
-                        
+                    self._draw_pokedex(canvas)
                 else:
-                    self.inter.update()
-                    self.player.update()
-                    self.background.draw(canvas)
-                    self.inter.draw(canvas)
-
-                    if self.keyboard.save:
-                        self.save_game()
-                        self.keyboard.save = False
-
-                    if (self.complete == False) and ("boss2" in self.npc_lost):
-                        self.credits.draw(canvas)
-                        self.txtclock.tick()
-                        move_on = self.txtclock.transition(200)
-                        if move_on:
-                            self.complete = True
-
-                    if (self.pokecomplete == False) and (self.player.encounters == 79):
-                        if (self.complete == False) and ("boss2" in self.npc_lost):
-                            pass
-                        else:
-                            self.caughtAll.draw(canvas)
-                            self.txtclock.tick()
-                            move_on = self.txtclock.transition(200)
-                            if move_on:
-                                self.pokecomplete = True
-                        
-                    if self.player.player_heal:
-                        self.player.lock = True
-                        self.player.vel = Vector(0,0)
-                        self.text = Text("heal", self.player, (50,405), True, self.txtcount, self.txtclock)
-                        for y in self.player.pokemon_list:
-                            y.HP = y.fullhp
-                        self.text.draw(canvas)
-                        self.txtcount = self.text.count
-                        if self.text.display == False:
-                            self.player.pos.y += 50
-                            self.player.player_heal = False
-                            self.player.lock = False
-                            self.txtcount = 0
-                            
-                    if not self.intro:
-                        self.player.lock = True
-                        self.text = Text("intro", self.player, (50,405), True, self.txtcount, self.txtclock)
-                        self.text.draw(canvas)
-                        self.txtcount = self.text.count
-                        if self.text.display == False:
-                            self.intro = True
-                            self.player.lock = False
-                            self.txtcount = 0
-                    
-                    if self.player.lives == 0:
-                        self.player.lives = 6
-                        self.new_game("yes")
-                
+                    self._draw_overworld(canvas)
             else:
-                if not self.keyboard.tutorial:
-                    self.startscreen.draw(canvas)
-                else:
-                    self.tutorial.draw(canvas)
-                    if self.keyboard.back:
-                        self.keyboard.tutorial = False
-                        self.keyboard.back = False
+                self._draw_start_menu(canvas)
         else:
-            if not self.keyboard.tutorial:
-                self.welcome.draw(canvas)    
-            else:
-                self.tutorial.draw(canvas)
-                if self.keyboard.back:
-                    self.keyboard.tutorial = False
-                    self.keyboard.back = False
+            self._draw_welcome(canvas)
 
-#sets up all the objects              
+    #handles the active battle screen, including the win/lose outcome once a fight ends
+    def _draw_fight(self, canvas):
+        frame.set_keydown_handler(self.Kbd.keyDown)
+        frame.set_keyup_handler(self.Kbd.keyUp)
+        self.fight.draw(canvas)
+
+        if (self.fight.end == True):
+            self.Kbd.KeyReset()
+            frame.set_keydown_handler(self.keyboard.keyDown)
+            frame.set_keyup_handler(self.keyboard.keyUp)
+            self.keyboard.KeyReset()
+
+            if self.fight.npc:
+                if (self.fight.catch == False) and (self.fight.run == False) and (self.fight.lost == False):
+                    self.npc_lost.append(self.background.npc_list[0].image_name)
+                    fight_state = "W"
+                else:
+                    fight_state = "L"
+
+                self.text = Text(self.background.npc_list[0].image_name+fight_state, self.player, (50,405), True, self.txtcount, self.txtclock)
+                self.text.draw(canvas)
+                self.txtcount = self.text.count
+
+                if self.text.display == False:
+                    self.background = Background(self.background.map_name, WIDTH, HEIGHT, self.npc_lost)
+                    self.background.load_wall()
+                    self.player.lock = False
+                    self.txtcount = 0
+                    self.fightB = False
+
+                    if self.fight.lost:
+                        self.player.pos.x +=50
+                        self.player.pos.y +=50
+                        self.player.lives -= 1
+                        for pokemon in player.pokemon_list:
+                            pokemon.HP = pokemon.fullhp
+
+                    if self.fight.run:
+                        self.player.pos.x +=50
+                        self.player.pos.y +=50
+            else:
+                if self.fight.lost:
+                    self.player.lives -= 1
+                    for pokemon in player.pokemon_list:
+                        pokemon.HP = pokemon.fullhp
+                self.fightB = False
+
+    #handles the Gokedex overlay
+    def _draw_pokedex(self, canvas):
+        frame.set_keydown_handler(self.Kbd.keyDown)
+        frame.set_keyup_handler(self.Kbd.keyUp)
+        self.pokedex.draw(canvas)
+        if self.Kbd.quit:
+            self.Kbd.KeyReset()
+            frame.set_keydown_handler(self.keyboard.keyDown)
+            frame.set_keyup_handler(self.keyboard.keyUp)
+            self.keyboard.KeyReset()
+            self.keyboard.pokedex = False
+            self.Kbd.quit = False
+
+    #handles normal overworld movement/interaction and its one-off text overlays
+    def _draw_overworld(self, canvas):
+        self.inter.update()
+        self.player.update()
+        self.background.draw(canvas)
+        self.inter.draw(canvas)
+
+        if self.keyboard.save:
+            self.save_game()
+            self.keyboard.save = False
+
+        if (self.complete == False) and ("boss2" in self.npc_lost):
+            self.credits.draw(canvas)
+            self.txtclock.tick()
+            move_on = self.txtclock.transition(200)
+            if move_on:
+                self.complete = True
+
+        if (self.pokecomplete == False) and (self.player.encounters == 79):
+            if (self.complete == False) and ("boss2" in self.npc_lost):
+                pass
+            else:
+                self.caughtAll.draw(canvas)
+                self.txtclock.tick()
+                move_on = self.txtclock.transition(200)
+                if move_on:
+                    self.pokecomplete = True
+
+        if self.player.player_heal:
+            self.player.lock = True
+            self.player.vel = Vector(0,0)
+            self.text = Text("heal", self.player, (50,405), True, self.txtcount, self.txtclock)
+            for y in self.player.pokemon_list:
+                y.HP = y.fullhp
+            self.text.draw(canvas)
+            self.txtcount = self.text.count
+            if self.text.display == False:
+                self.player.pos.y += 50
+                self.player.player_heal = False
+                self.player.lock = False
+                self.txtcount = 0
+
+        if not self.intro:
+            self.player.lock = True
+            self.text = Text("intro", self.player, (50,405), True, self.txtcount, self.txtclock)
+            self.text.draw(canvas)
+            self.txtcount = self.text.count
+            if self.text.display == False:
+                self.intro = True
+                self.player.lock = False
+                self.txtcount = 0
+
+        if self.player.lives == 0:
+            self.player.lives = 6
+            self.new_game("yes")
+
+    #handles the start-screen / tutorial toggle shown before pressing space to enter the overworld
+    def _draw_start_menu(self, canvas):
+        if not self.keyboard.tutorial:
+            self.startscreen.draw(canvas)
+        else:
+            self.tutorial.draw(canvas)
+            if self.keyboard.back:
+                self.keyboard.tutorial = False
+                self.keyboard.back = False
+
+    #handles the welcome screen / tutorial shown before pressing space the first time
+    def _draw_welcome(self, canvas):
+        if not self.keyboard.tutorial:
+            self.welcome.draw(canvas)
+        else:
+            self.tutorial.draw(canvas)
+            if self.keyboard.back:
+                self.keyboard.tutorial = False
+                self.keyboard.back = False
+
+#sets up all the objects
 kbd = Keyboard()
 clock = Clock()
 player = Player(clock)
