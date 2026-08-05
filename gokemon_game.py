@@ -16,6 +16,28 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 WIDTH = 800
 HEIGHT = 480
 
+#live save data isn't committed to the repo (see .gitignore) - only these bundled defaults are
+SAVE_FILE_TEMPLATES = [
+    ("NewSave.txt", "Save.txt"),
+    ("NewPlayerPokedex.txt", "PlayerPokedex.txt"),
+    ("NewPlayerPokemon.txt", "PlayerPokemon.txt"),
+]
+
+#overwrites a live save file with its bundled default
+def copy_template(template_name, live_name):
+    with open('{}/Fight/Files/{}'.format(BASE_DIR, template_name), "r") as src:
+        text = src.read()
+    with open('{}/Fight/Files/{}'.format(BASE_DIR, live_name), "w") as dst:
+        dst.write(text)
+
+#creates the live save files from the bundled defaults if they don't exist yet -
+#e.g. right after cloning the repo, since the live files themselves aren't committed
+def ensure_save_files_exist():
+    for template_name, live_name in SAVE_FILE_TEMPLATES:
+        live_path = '{}/Fight/Files/{}'.format(BASE_DIR, live_name)
+        if not os.path.exists(live_path):
+            copy_template(template_name, live_name)
+
 #Used for animation/transitioning
 class Clock:
     def __init__(self):
@@ -842,27 +864,8 @@ class Game:
     #creates a new game by replacing files
     def new_game(self, confirmation):
         if confirmation == "yes":
-            with open('{}/Fight/Files/NewSave.txt'.format(BASE_DIR),"r") as file1:
-                newtext = file1.readlines()
-                text = ""
-                for line in newtext:
-                    text += line
-            with open('{}/Fight/Files/Save.txt'.format(BASE_DIR),"w") as file2:
-                file2.write(text)
-            with open('{}/Fight/Files/NewPlayerPokedex.txt'.format(BASE_DIR),"r") as file1:
-                newtext = file1.readlines()
-                text = ""
-                for line in newtext:
-                    text += line
-            with open('{}/Fight/Files/PlayerPokedex.txt'.format(BASE_DIR),"w") as file2:
-                file2.write(text)
-            with open('{}/Fight/Files/NewPlayerPokemon.txt'.format(BASE_DIR),"r") as file1:
-                newtext = file1.readlines()
-                text = ""
-                for line in newtext:
-                    text += line
-            with open('{}/Fight/Files/PlayerPokemon.txt'.format(BASE_DIR),"w") as file2:
-                file2.write(text)
+            for template_name, live_name in SAVE_FILE_TEMPLATES:
+                copy_template(template_name, live_name)
             self.player.pokemon_list = []
             with open('{}/Fight/Files/PlayerPokemon.txt'.format(BASE_DIR),"r") as file:
                 party = file.readlines()
@@ -1024,6 +1027,7 @@ class Game:
                 self.keyboard.back = False
 
 #sets up all the objects
+ensure_save_files_exist()
 kbd = Keyboard()
 clock = Clock()
 player = Player(clock)

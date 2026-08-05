@@ -44,12 +44,12 @@ Asset and save-data paths are resolved relative to the script's own location, so
 
 ## Save data
 
-`Fight/Files/Save.txt`, `PlayerPokemon.txt`, and `PlayerPokedex.txt` hold your current progress and are overwritten as you play — expect them to show as changed in `git status` after a session. `NewSave.txt`, `NewPlayerPokemon.txt`, and `NewPlayerPokedex.txt` are the fresh-start templates used when starting a new game.
+`Fight/Files/Save.txt`, `PlayerPokemon.txt`, and `PlayerPokedex.txt` hold your current progress. They're gitignored — not committed to the repo — and get created automatically from the bundled `NewSave.txt`/`NewPlayerPokemon.txt`/`NewPlayerPokedex.txt` templates the first time you run the game (or any time one of them is missing), so a fresh clone works with no setup step. Starting a new game (or typing `yes` in the new-game prompt) resets them from those same templates.
 
 ## Project structure
 
 - `Fight/` — battle sprite sheets, type-effect sprites, save files, and the fight-screen background
-- `Overworld/` — maps, their matching collision/NPC text files, and player/NPC sprites
+- `Overworld/` — maps, their matching tilemap JSON files (`maps/`), and player/NPC sprites
 - `Text/` — dialogue and story text
 - `gokemon_game.py` — main entry point / game loop
 - `fight.py` — battle logic

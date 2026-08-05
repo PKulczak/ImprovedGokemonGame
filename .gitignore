@@ -12,3 +12,8 @@ env/
 *.log
 
 plans/
+
+# live save data - generated from Fight/Files/New*.txt at startup, not shipped in the repo
+Fight/Files/Save.txt
+Fight/Files/PlayerPokedex.txt
+Fight/Files/PlayerPokemon.txt
