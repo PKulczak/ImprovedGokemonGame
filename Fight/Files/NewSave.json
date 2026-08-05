@@ -1,0 +1,13 @@
+{
+  "intro": false,
+  "complete": false,
+  "pokecomplete": false,
+  "npc_lost": [],
+  "player": {
+    "x": 552,
+    "y": 224,
+    "lives": 6,
+    "name": null
+  },
+  "map": "map2y"
+}

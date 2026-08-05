@@ -13,7 +13,7 @@ env/
 
 plans/
 
-# live save data - generated from Fight/Files/New*.txt at startup, not shipped in the repo
-Fight/Files/Save.txt
+# live save data - generated from Fight/Files/New* templates at startup, not shipped in the repo
+Fight/Files/Save.json
 Fight/Files/PlayerPokedex.txt
 Fight/Files/PlayerPokemon.txt

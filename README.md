@@ -44,7 +44,7 @@ Asset and save-data paths are resolved relative to the script's own location, so
 
 ## Save data
 
-`Fight/Files/Save.txt`, `PlayerPokemon.txt`, and `PlayerPokedex.txt` hold your current progress. They're gitignored — not committed to the repo — and get created automatically from the bundled `NewSave.txt`/`NewPlayerPokemon.txt`/`NewPlayerPokedex.txt` templates the first time you run the game (or any time one of them is missing), so a fresh clone works with no setup step. Starting a new game (or typing `yes` in the new-game prompt) resets them from those same templates.
+`Fight/Files/Save.json`, `PlayerPokemon.txt`, and `PlayerPokedex.txt` hold your current progress. They're gitignored — not committed to the repo — and get created automatically from the bundled `NewSave.json`/`NewPlayerPokemon.txt`/`NewPlayerPokedex.txt` templates the first time you run the game (or any time one of them is missing), so a fresh clone works with no setup step. Starting a new game (or typing `yes` in the new-game prompt) resets them from those same templates.
 
 ## Project structure
 

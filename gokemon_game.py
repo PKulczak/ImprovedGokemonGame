@@ -18,7 +18,7 @@ HEIGHT = 480
 
 #live save data isn't committed to the repo (see .gitignore) - only these bundled defaults are
 SAVE_FILE_TEMPLATES = [
-    ("NewSave.txt", "Save.txt"),
+    ("NewSave.json", "Save.json"),
     ("NewPlayerPokedex.txt", "PlayerPokedex.txt"),
     ("NewPlayerPokemon.txt", "PlayerPokemon.txt"),
 ]
@@ -783,42 +783,21 @@ class Game:
 
     #saves the current progress of player
     def save_game(self):
-        allinfo = []
-        temp1 = ""
-        if self.intro == False:
-            temp1 += "F "
-        else:
-            temp1 += "T "
-        if self.complete == False:
-            temp1 += "F "
-        else:
-            temp1 += "T "
-        if self.pokecomplete == False:
-            temp1 += "F "
-        else:
-            temp1 += "T "
-        temp1 += "\n"
-        allinfo.append(temp1)
-        temp2 = ""
-        for npc in self.npc_lost:
-            temp2 += npc
-            temp2 += " "
-        temp2 += "\n"
-        allinfo.append(temp2)
-        temp3 = str(self.player.pos.x)+" "+str(self.player.pos.y)+" "+str(self.player.lives)+" "
-        if self.player.name == "":
-            temp3 += ","
-        else:
-            temp3 += self.player.name
-        temp3 += "\n"
-        allinfo.append(temp3)
-        temp4 = self.background.map_name
-        allinfo.append(temp4)
-        text = ""
-        for line in allinfo:
-            text += line
-        with open('{}/Fight/Files/Save.txt'.format(BASE_DIR),"w") as file1:
-            file1.write(text)
+        save_data = {
+            "intro": self.intro,
+            "complete": self.complete,
+            "pokecomplete": self.pokecomplete,
+            "npc_lost": list(self.npc_lost),
+            "player": {
+                "x": self.player.pos.x,
+                "y": self.player.pos.y,
+                "lives": self.player.lives,
+                "name": self.player.name if self.player.name != "" else None,
+            },
+            "map": self.background.map_name,
+        }
+        with open('{}/Fight/Files/Save.json'.format(BASE_DIR),"w") as file1:
+            json.dump(save_data, file1, indent=2)
         poketxt = ""
         for pokemon in self.player.pokemon_list:
             poketxt += pokemon.name+" "+str(pokemon.HP)+" "+str(pokemon.lvl)+" "+str(pokemon.exp)
@@ -827,39 +806,22 @@ class Game:
         with open('{}/Fight/Files/PlayerPokemon.txt'.format(BASE_DIR),"w") as file2:
             file2.write(poketxt)
                 
-    #loads the game from the save files; falls back to a fresh game if Save.txt is missing/corrupted
+    #loads the game from the save files; falls back to a fresh game if Save.json is missing/corrupted
     def load_game(self, allow_fallback=True):
         try:
-            with open('{}/Fight/Files/Save.txt'.format(BASE_DIR),"r") as file:
-                info = file.readlines()
-                allinfo = []
-                for line in info:
-                    line = line.split()
-                    count = 0
-                    for element in line:
-                        if element == "F":
-                            line[count] = False
-                        elif element == "T":
-                            line[count] = True
-                        count += 1
-                    allinfo.append(line)
-            self.keyboard.startscreen = allinfo[0][0]
-            self.intro = allinfo[0][0]
-            self.complete = allinfo[0][1]
-            self.pokecomplete = allinfo[0][2]
-            if not allinfo[1]:
-                self.npc_lost = []
-            else:
-                for npc in allinfo[1]:
-                    self.npc_lost.append(npc)
-            self.player.pos.x = int(float(allinfo[2][0]))
-            self.player.pos.y = int(float(allinfo[2][1]))
-            self.player.lives = int(allinfo[2][2])
-            if allinfo[2][3] == ",":
-                self.player.name = ""
-            else:
-                self.player.name = allinfo[2][3]
-            self.background = Background(allinfo[3][0], WIDTH, HEIGHT, self.npc_lost)
+            with open('{}/Fight/Files/Save.json'.format(BASE_DIR),"r") as file:
+                save_data = json.load(file)
+            self.intro = save_data["intro"]
+            self.keyboard.startscreen = self.intro
+            self.complete = save_data["complete"]
+            self.pokecomplete = save_data["pokecomplete"]
+            self.npc_lost = list(save_data["npc_lost"])
+            player_data = save_data["player"]
+            self.player.pos.x = int(player_data["x"])
+            self.player.pos.y = int(player_data["y"])
+            self.player.lives = int(player_data["lives"])
+            self.player.name = player_data["name"] if player_data["name"] is not None else ""
+            self.background = Background(save_data["map"], WIDTH, HEIGHT, self.npc_lost)
             self.background.load_wall()
         except (OSError, IndexError, ValueError, KeyError) as error:
             if not allow_fallback:
