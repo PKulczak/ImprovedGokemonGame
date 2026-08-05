@@ -4,6 +4,7 @@ except ImportError:
     import SimpleGUICS2Pygame.simpleguics2pygame as simplegui
 import random
 import os
+import json
 from vector import Vector
 from Welcome import Welcome
 from fight import Pokemon
@@ -116,6 +117,30 @@ def aabb_overlap(a_left, a_right, a_top, a_bot, b_left, b_right, b_top, b_bot):
         collision = False
 
     return collision
+
+#pixel offset applied to a tile's grid (x,y) from Overworld/maps/*.json, keyed by tile type
+TILE_OFFSETS = {
+    "tree": (8, 0),
+    "wall_up_a": (8, 8),
+    "wall_up_b": (8, -8),
+    "wall_left_a": (16, 0),
+    "wall_left_b": (0, 0),
+    "interact": (8, 0),
+    "boss_gate": (8, 0),
+    "fight": (8, 0),
+    "heal": (8, 0),
+    "yacht": (8, 0),
+    "npc": (8, 0),
+}
+
+#sprite image used for each plain-wall tile type
+TILE_WALL_IMAGES = {
+    "tree": "tree.png",
+    "wall_up_a": "up.png",
+    "wall_up_b": "up.png",
+    "wall_left_a": "left.png",
+    "wall_left_b": "left.png",
+}
 
 #Makes player class
 class Player:
@@ -414,68 +439,46 @@ class Background:
     def draw(self, canvas):
         canvas.draw_image(self.Map, (self.orig_width/2,self.orig_height/2), (self.orig_width,self.orig_height), (self.width/2, self.height/2), (self.width,self.height))
 
-    #loads all the hitboxes for the map
+    #loads all the hitboxes for the map from its structured tilemap
     def load_wall(self):
         self.walls_list = []
         self.npc_list = []
-        with open(('{}/Overworld/map_txt/'.format(BASE_DIR))+self.map_name+".txt","r") as file:
-            level = file.readlines()
-            x = y = 0
-            for row in level:
-                for col in row:
-                    if col == "t":
-                        wall = Wall("tree.png", Vector(8+(32*x), 0+(32*y)))
-                        self.walls_list.append(wall)
-                    if col == "w":
-                        wall = Wall("up.png", Vector(8+(32*x), 8+(32*y)))
-                        self.walls_list.append(wall)
-                    if col == "s":
-                        wall = Wall("up.png", Vector(8+(32*x), -8+(32*y)))
-                        self.walls_list.append(wall)
-                    if col == "a":
-                        wall = Wall("left.png", Vector(16+(32*x), 0+(32*y)))
-                        self.walls_list.append(wall)
-                    if col == "d":
-                        wall = Wall("left.png", Vector(0+(32*x), 0+(32*y)))
-                        self.walls_list.append(wall)
-                    if col == "1":
-                        wall = Interact("tree.png", Vector(8+(32*x), 0+(32*y)), "interact", 0)
-                        self.walls_list.append(wall)
-                    if col == "2":
-                        if (self.map_name == "bossfight1") and ("boss3" not in self.npc_lost):
-                            wall = Wall("tree.png", Vector(8+(32*x), 0+(32*y)))
-                        elif (self.map_name == "bossfight2") and ("boss4" not in self.npc_lost):
-                            wall = Wall("tree.png", Vector(8+(32*x), 0+(32*y)))
-                        else:
-                            wall = Interact("tree.png", Vector(8+(32*x), 0+(32*y)), "interact", 1)
-                        self.walls_list.append(wall)
-                    if col == "3":
-                        wall = Interact("tree.png", Vector(8+(32*x), 0+(32*y)), "interact", 2)
-                        self.walls_list.append(wall)
-                    if col == "4":
-                        wall = Interact("tree.png", Vector(8+(32*x), 0+(32*y)), "interact", 3)
-                        self.walls_list.append(wall)
-                    if col == "f":
-                        wall = Interact("tree.png", Vector(8+(32*x), 0+(32*y)), "fight")
-                        self.walls_list.append(wall)
-                    if col == "h":
-                        wall = Interact("tree.png", Vector(8+(32*x), 0+(32*y)), "heal")
-                        self.walls_list.append(wall)
-                    if col == "y":
-                        clock = Clock()
-                        yacht = Yacht("yacht", Vector(8+(32*x), 0+(32*y)), clock)
-                        self.npc_list.append(yacht)
-                    if col == "b":
-                        clock = Clock()
-                        npc_name = self.load_npc()
-                        if npc_name in self.npc_lost:
-                            npc = NPCWall(npc_name, Vector(8+(32*x), 0+(32*y)), clock)
-                        else:
-                            npc = NPC(npc_name, Vector(8+(32*x), 0+(32*y)), clock)
-                        self.npc_list.append(npc)
-                    x += 1
-                y += 1
-                x = 0
+        with open(('{}/Overworld/maps/'.format(BASE_DIR))+self.map_name+".json","r") as file:
+            map_data = json.load(file)
+        for tile in map_data["tiles"]:
+            ttype = tile["type"]
+            off_x, off_y = TILE_OFFSETS[ttype]
+            pos = Vector(off_x+(32*tile["x"]), off_y+(32*tile["y"]))
+            if ttype in TILE_WALL_IMAGES:
+                wall = Wall(TILE_WALL_IMAGES[ttype], pos)
+                self.walls_list.append(wall)
+            elif ttype == "interact":
+                wall = Interact("tree.png", pos, "interact", tile["location"])
+                self.walls_list.append(wall)
+            elif ttype == "boss_gate":
+                if tile["requires_defeated"] not in self.npc_lost:
+                    wall = Wall("tree.png", pos)
+                else:
+                    wall = Interact("tree.png", pos, "interact", tile["location"])
+                self.walls_list.append(wall)
+            elif ttype == "fight":
+                wall = Interact("tree.png", pos, "fight")
+                self.walls_list.append(wall)
+            elif ttype == "heal":
+                wall = Interact("tree.png", pos, "heal")
+                self.walls_list.append(wall)
+            elif ttype == "yacht":
+                clock = Clock()
+                yacht = Yacht("yacht", pos, clock)
+                self.npc_list.append(yacht)
+            elif ttype == "npc":
+                clock = Clock()
+                npc_name = self.load_npc()
+                if npc_name in self.npc_lost:
+                    npc = NPCWall(npc_name, pos, clock)
+                else:
+                    npc = NPC(npc_name, pos, clock)
+                self.npc_list.append(npc)
 
     #loads a new level    
     def new_level(self, location, player):
