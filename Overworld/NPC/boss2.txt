@@ -1,0 +1,6 @@
+Regigigas -1 20 0
+Lugia -1 20 0
+Ho-oh -1 20 0
+Rayquaza -1 20 0
+Groudon -1 20 0
+Giratina -1 20 0

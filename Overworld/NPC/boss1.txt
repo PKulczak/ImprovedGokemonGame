@@ -1,0 +1,6 @@
+Espeon -1 16 0
+Shinx -1 16 0
+Mareep -1 16 0
+Breloom -1 16 0
+Absol -1 16 0
+Zorua -1 17 0
