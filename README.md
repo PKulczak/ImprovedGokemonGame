@@ -17,11 +17,11 @@ pip install -r requirements.txt
 
 ## Running the game
 
-Run from the **repo root** — the game builds its file paths (save data, sprites, maps) relative to the current working directory, so it won't find its assets if launched from elsewhere:
-
 ```bash
 python gokemon_game.py
 ```
+
+Asset and save-data paths are resolved relative to the script's own location, so this works regardless of your current working directory.
 
 ## Controls
 

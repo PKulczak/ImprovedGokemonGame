@@ -10,6 +10,8 @@ from fight import Pokemon
 from fight import Fight
 from fight import Kbd
 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
 WIDTH = 800
 HEIGHT = 480
 
@@ -91,7 +93,7 @@ class Player:
     def __init__(self, clock): 
         self.clock = clock
         self.name = ""
-        self.image = simplegui._load_local_image('{}/Overworld/Other/player.png'.format(os.getcwd()))
+        self.image = simplegui._load_local_image('{}/Overworld/Other/player.png'.format(BASE_DIR))
         self.rows = 4
         self.columns = 4
         
@@ -112,11 +114,11 @@ class Player:
         self.interacting = False
         self.lock = False
         self.scale_factor = 0.26
-        self.encounters = self.num_lines = sum(1 for line in open('{}/Fight/Files/PlayerPokedex.txt'.format(os.getcwd())))
+        self.encounters = self.num_lines = sum(1 for line in open('{}/Fight/Files/PlayerPokedex.txt'.format(BASE_DIR)))
         
         self.lives = 6
         self.player_heal = False
-        self.heart_img = simplegui._load_local_image('{}/Overworld/Other/heart.png'.format(os.getcwd()))
+        self.heart_img = simplegui._load_local_image('{}/Overworld/Other/heart.png'.format(BASE_DIR))
 
         self.player_left = self.pos.x - self.frame_center[0]
         self.player_right = self.pos.x + self.frame_center[0]
@@ -125,13 +127,12 @@ class Player:
 
         #loads the players pokemon
         self.pokemon_list = []
-        with open('{}/Fight/Files/PlayerPokemon.txt'.format(os.getcwd()),"r") as file:
+        with open('{}/Fight/Files/PlayerPokemon.txt'.format(BASE_DIR),"r") as file:
             party = file.readlines()
             for pokemonL in party:
                 pokemonL = pokemonL.split()
                 pokemon = Pokemon(pokemonL[0], int(pokemonL[1]), int(pokemonL[2]), int(pokemonL[3]), [210, 250], [570, 140])
                 self.pokemon_list.append(pokemon)
-            file.close()
 
     #draws the player on screen
     def draw(self, canvas):
@@ -150,7 +151,7 @@ class Player:
         lives = "x"+str(self.lives)
         canvas.draw_text(lives, [30,20], 24, "Black")
 
-        self.encounters = self.num_lines = sum(1 for line in open('{}/Fight/Files/PlayerPokedex.txt'.format(os.getcwd())))
+        self.encounters = self.num_lines = sum(1 for line in open('{}/Fight/Files/PlayerPokedex.txt'.format(BASE_DIR)))
         canvas.draw_text("Gokedex entries: "+str(self.encounters), [300,20], 24, "Black")
             
         self.clock.tick()
@@ -176,7 +177,7 @@ class NPC:
         npc_list.append(self)
         self.clock = clock
         self.image_name = img_name
-        self.image = simplegui._load_local_image(('{}/Overworld/NPC/'.format(os.getcwd()))+self.image_name+".png")
+        self.image = simplegui._load_local_image(('{}/Overworld/NPC/'.format(BASE_DIR))+self.image_name+".png")
         
         self.rows = 1
         self.columns = 4
@@ -201,13 +202,12 @@ class NPC:
         self.wall_bot = self.pos.y + (self.frame_dim[1]//2*self.scale_factor)
 
         self.pokemon_list = []
-        with open(('{}/Overworld/NPC/'.format(os.getcwd()))+self.image_name+".txt","r") as file:
+        with open(('{}/Overworld/NPC/'.format(BASE_DIR))+self.image_name+".txt","r") as file:
             party = file.readlines()
             for pokemonL in party:
                 pokemonL = pokemonL.split()
                 pokemon = Pokemon(pokemonL[0], int(pokemonL[1]), int(pokemonL[2]), int(pokemonL[3]), [570, 140], [200, 250])
                 self.pokemon_list.append(pokemon)
-            file.close()
 
     #draws the NPC on screen       
     def draw(self, canvas):
@@ -349,7 +349,7 @@ class Yacht(NPC):
 class Wall:
     def __init__(self, name, pos):
         walls_list.append(self)
-        self.image = simplegui._load_local_image(('{}/Overworld/Other/'.format(os.getcwd()))+name)
+        self.image = simplegui._load_local_image(('{}/Overworld/Other/'.format(BASE_DIR))+name)
         self.width = self.image.get_width()
         self.height = self.image.get_height()
         self.pos = pos
@@ -422,7 +422,7 @@ class Interact(Wall):
 class Background:
     def __init__(self, Map, width, height):
         self.map_name = Map
-        self.Map = simplegui._load_local_image(('{}/Overworld/map_img/'.format(os.getcwd()))+self.map_name+".png")
+        self.Map = simplegui._load_local_image(('{}/Overworld/map_img/'.format(BASE_DIR))+self.map_name+".png")
         self.width = width
         self.height = height
         
@@ -437,7 +437,7 @@ class Background:
         global walls_list, npc_list, npc_lost
         walls_list = []
         npc_list = []
-        with open(('{}/Overworld/map_txt/'.format(os.getcwd()))+self.map_name+".txt","r") as file:
+        with open(('{}/Overworld/map_txt/'.format(BASE_DIR))+self.map_name+".txt","r") as file:
             level = file.readlines()
             x = y = 0
             for row in level:
@@ -482,14 +482,12 @@ class Background:
                     x += 1
                 y += 1
                 x = 0
-            file.close()
 
     #loads a new level    
     def new_level(self, location, player):
         map_str = {"map2y": [["route1", Vector(111,43)]],
                    "map": [["route1", Vector(770,338)], ["route2", Vector(58,236)], ["pokecenter", Vector(406,424)]],
                    "map2": [["route1", Vector(111,43)]],
-                   "map3": [["route3", Vector(745,47)]],
                    "route1": [["map2", Vector(756, 169)], ["map", Vector(58,169)]],
                    "route2": [["map", Vector(768,225)], ["route3a", Vector(56,120)], ["route3b", Vector(47,447)]],
                    "route3": [["route2a", Vector(680,143)], ["route2b", Vector(514,443)], ["map3", Vector(220, 424)], ["route4", Vector(52,319)]],
@@ -512,7 +510,7 @@ class Background:
             self.map_name = "route2"
 
         player.interacting = False
-        self.Map = simplegui._load_local_image(('{}/Overworld/map_img/'.format(os.getcwd()))+self.map_name+".png")
+        self.Map = simplegui._load_local_image(('{}/Overworld/map_img/'.format(BASE_DIR))+self.map_name+".png")
         self.load_wall()
 
     #loads the correct npcs
@@ -547,24 +545,23 @@ class Pokedex:
         self.first = True
         self.poke_list =[]
         self.index = 0
-        self.bag = simplegui._load_local_image('{}/Fight/Other/bag.png'.format(os.getcwd()))
-        self.light = simplegui._load_local_image('{}/Fight/Other/highlight.png'.format(os.getcwd()))
+        self.bag = simplegui._load_local_image('{}/Fight/Other/bag.png'.format(BASE_DIR))
+        self.light = simplegui._load_local_image('{}/Fight/Other/highlight.png'.format(BASE_DIR))
         self.pos = [[(348,145),(348,265),(348,380)],[(598,145),(598,265),(598,380)]]
 
     def draw(self, canvas):
         self.player_pokedex = []
         self.pokedex = []
         #loads the gokemon the player has in their gokedex
-        with open('{}/Fight/Files/PlayerPokedex.txt'.format(os.getcwd()),"r") as file:
+        with open('{}/Fight/Files/PlayerPokedex.txt'.format(BASE_DIR),"r") as file:
             all_lines = file.readlines()
             for pokemon_line in all_lines:
                 pokemon = pokemon_line.split()
                 self.player_pokedex.append(pokemon[0])
-            file.close()
 
         #fills out the gokedex file
         count = 0
-        with open('{}/Fight/Files/Pokedex.txt'.format(os.getcwd()),"r") as file:
+        with open('{}/Fight/Files/Pokedex.txt'.format(BASE_DIR),"r") as file:
             all_lines = file.readlines()
             temp_list = []
             for pokemon_line in all_lines:
@@ -624,9 +621,9 @@ class Text:
         self.box = box
         self.display = True
         self.clock = clock
-        self.txtbox = simplegui._load_local_image('{}/Text/box.png'.format(os.getcwd()))
-        self.num_lines = sum(1 for line in open(('{}/Text/'.format(os.getcwd()))+self.txtfile+'.txt'))
-        with open(('{}/Text/'.format(os.getcwd()))+self.txtfile+'.txt',"r") as file:
+        self.txtbox = simplegui._load_local_image('{}/Text/box.png'.format(BASE_DIR))
+        self.num_lines = sum(1 for line in open(('{}/Text/'.format(BASE_DIR))+self.txtfile+'.txt'))
+        with open(('{}/Text/'.format(BASE_DIR))+self.txtfile+'.txt',"r") as file:
             allline = file.readlines()
             self.alltxt = []
             for line in allline:
@@ -639,7 +636,6 @@ class Text:
                         newline += word
                     newline += " "
                 self.alltxt.append(newline)
-            file.close()
 
     def draw(self, canvas):
         if self.display:
@@ -702,9 +698,9 @@ class Interaction:
                     if rand_int < 0.007:
                         pokerange = self.game.background.load_pokelvl()
                         pokelvl = random.randint(pokerange[0], pokerange[1])
-                        num_lines = sum(1 for line in open(('{}/Overworld/map_poke/'.format(os.getcwd()))+self.game.background.map_name+".txt"))
+                        num_lines = sum(1 for line in open(('{}/Overworld/map_poke/'.format(BASE_DIR))+self.game.background.map_name+".txt"))
                         poke_num = random.randint(1,num_lines)
-                        with open(('{}/Overworld/map_poke/'.format(os.getcwd()))+self.game.background.map_name+".txt","r") as file:
+                        with open(('{}/Overworld/map_poke/'.format(BASE_DIR))+self.game.background.map_name+".txt","r") as file:
                             area = file.readlines()
                             count = 1
                             for pokemon in area:
@@ -712,7 +708,6 @@ class Interaction:
                                 if count == poke_num:
                                     pokeName = pokemon[0]
                                 count += 1
-                            file.close()
                         Wpokemon = Pokemon(pokeName, -1, pokelvl, 0, [570, 140], [200, 250])
                         self.game.fight = Fight([Wpokemon], self.player.pokemon_list, self.game.Kbd, False)
                         self.game.fightB = True
@@ -797,21 +792,20 @@ class Game:
         text = ""
         for line in allinfo:
             text += line
-        with open('{}/Fight/Files/Save.txt'.format(os.getcwd()),"w") as file1:
+        with open('{}/Fight/Files/Save.txt'.format(BASE_DIR),"w") as file1:
             file1.write(text)
-        file1.close()
         poketxt = ""
         for pokemon in self.player.pokemon_list:
             poketxt += pokemon.name+" "+str(pokemon.HP)+" "+str(pokemon.lvl)+" "+str(pokemon.exp)
             if not(pokemon == self.player.pokemon_list[len(self.player.pokemon_list)-1]):
                 poketxt += "\n"
-        with open('{}/Fight/Files/PlayerPokemon.txt'.format(os.getcwd()),"w") as file2:
+        with open('{}/Fight/Files/PlayerPokemon.txt'.format(BASE_DIR),"w") as file2:
             file2.write(poketxt)
                 
     #loads the game from the save files
     def load_game(self):
         global npc_lost
-        with open('{}/Fight/Files/Save.txt'.format(os.getcwd()),"r") as file:
+        with open('{}/Fight/Files/Save.txt'.format(BASE_DIR),"r") as file:
             info = file.readlines()
             allinfo = []
             for line in info:
@@ -824,7 +818,6 @@ class Game:
                         line[count] = True
                     count += 1
                 allinfo.append(line)
-            file.close()
         self.keyboard.startscreen = allinfo[0][0]
         self.intro = allinfo[0][0]
         self.complete = allinfo[0][1]
@@ -847,41 +840,34 @@ class Game:
     #creates a new game by replacing files
     def new_game(self, confirmation):
         if confirmation == "yes":
-            with open('{}/Fight/Files/NewSave.txt'.format(os.getcwd()),"r") as file1:
+            with open('{}/Fight/Files/NewSave.txt'.format(BASE_DIR),"r") as file1:
                 newtext = file1.readlines()
                 text = ""
                 for line in newtext:
                     text += line
-            with open('{}/Fight/Files/Save.txt'.format(os.getcwd()),"w") as file2:
+            with open('{}/Fight/Files/Save.txt'.format(BASE_DIR),"w") as file2:
                 file2.write(text)
-            file1.close()
-            file2.close()
-            with open('{}/Fight/Files/NewPlayerPokedex.txt'.format(os.getcwd()),"r") as file1:
+            with open('{}/Fight/Files/NewPlayerPokedex.txt'.format(BASE_DIR),"r") as file1:
                 newtext = file1.readlines()
                 text = ""
                 for line in newtext:
                     text += line
-            with open('{}/Fight/Files/PlayerPokedex.txt'.format(os.getcwd()),"w") as file2:
+            with open('{}/Fight/Files/PlayerPokedex.txt'.format(BASE_DIR),"w") as file2:
                 file2.write(text)
-            file1.close()
-            file2.close()
-            with open('{}/Fight/Files/NewPlayerPokemon.txt'.format(os.getcwd()),"r") as file1:
+            with open('{}/Fight/Files/NewPlayerPokemon.txt'.format(BASE_DIR),"r") as file1:
                 newtext = file1.readlines()
                 text = ""
                 for line in newtext:
                     text += line
-            with open('{}/Fight/Files/PlayerPokemon.txt'.format(os.getcwd()),"w") as file2:
+            with open('{}/Fight/Files/PlayerPokemon.txt'.format(BASE_DIR),"w") as file2:
                 file2.write(text)
-            file1.close()
-            file2.close()
             self.player.pokemon_list = []
-            with open('{}/Fight/Files/PlayerPokemon.txt'.format(os.getcwd()),"r") as file:
+            with open('{}/Fight/Files/PlayerPokemon.txt'.format(BASE_DIR),"r") as file:
                 party = file.readlines()
                 for pokemonL in party:
                     pokemonL = pokemonL.split()
                     pokemon = Pokemon(pokemonL[0], int(pokemonL[1]), int(pokemonL[2]), int(pokemonL[3]), [210, 250], [570, 140])
                     self.player.pokemon_list.append(pokemon)
-                file.close()
             self.load_game()
 
     #runs main game loop

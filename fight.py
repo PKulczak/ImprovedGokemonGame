@@ -6,6 +6,8 @@ import time
 import random
 import os
 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
 class Fight:
     def __init__(self, monster_list, pokemon_list, keyboard, npc):
         self.mons_list = monster_list
@@ -17,15 +19,15 @@ class Fight:
         self.kbd = keyboard
         self.npc = npc
         self.info = self.monster.name+" VS "+ self.pokemon.name
-        self.image = simplegui._load_local_image('{}/Fight/Other/fight_background.png'.format(os.getcwd()))
+        self.image = simplegui._load_local_image('{}/Fight/Other/fight_background.png'.format(BASE_DIR))
         self.col1 = "White"
         self.col2 = "Grey"
         self.col3 = "Grey"
         self.col4 = "Grey"
         self.inte = 1
         self.run = False
-        self.bag = simplegui._load_local_image('{}/Fight/Other/bag.png'.format(os.getcwd()))
-        self.light = simplegui._load_local_image('{}/Fight/Other/highlight.png'.format(os.getcwd()))
+        self.bag = simplegui._load_local_image('{}/Fight/Other/bag.png'.format(BASE_DIR))
+        self.light = simplegui._load_local_image('{}/Fight/Other/highlight.png'.format(BASE_DIR))
         self.first = True
         self.change = False
         self.catch = False
@@ -171,17 +173,15 @@ class Fight:
                             self.monster.pos1 = self.pokemon.pos1
                             self.poke_list.append(monster)
                             self.mons_list.remove(self.monster)
-                            with open('{}/Fight/Files/PlayerPokedex.txt'.format(os.getcwd()),"r") as file:
+                            with open('{}/Fight/Files/PlayerPokedex.txt'.format(BASE_DIR),"r") as file:
                                 pokedex = file.readlines()
                                 beaten = False
                                 for pokemon in pokedex:
                                     if str(pokemon) == (monster.name+"\n"):
                                         beaten = True
                                 if beaten == False:
-                                    with open('{}/Fight/Files/PlayerPokedex.txt'.format(os.getcwd()),"a") as file1:
+                                    with open('{}/Fight/Files/PlayerPokedex.txt'.format(BASE_DIR),"a") as file1:
                                         file1.write(monster.name+"\n")
-                                        file1.close()
-                                file.close()
                             if len(self.mons_list) == 0:
                                 self.count = 0
                                 self.end = True
@@ -216,7 +216,7 @@ class Fight:
                 if pokemon.exp >= pokemon.max_exp:
                     if pokemon.lvl <= 25:
                         pokemon.lvl += 1
-                        with open('{}/Fight/Files/Pokedex.txt'.format(os.getcwd()),"r") as file:
+                        with open('{}/Fight/Files/Pokedex.txt'.format(BASE_DIR),"r") as file:
                             pokedex = file.readlines()
                             for pokemon_line in pokedex:
                                 pokemonT = pokemon_line.split()
@@ -233,17 +233,15 @@ class Fight:
                     pokemon.exp -= pokemon.max_exp
                     pokemon.HP = pokemon.fullhp
                     
-                with open('{}/Fight/Files/PlayerPokedex.txt'.format(os.getcwd()),"r") as file:
+                with open('{}/Fight/Files/PlayerPokedex.txt'.format(BASE_DIR),"r") as file:
                     pokedex = file.readlines()
                     beaten = False
                     for pokemon in pokedex:
                         if str(pokemon) == (monster.name+"\n"):
                             beaten = True
                     if beaten == False:
-                        with open('{}/Fight/Files/PlayerPokedex.txt'.format(os.getcwd()),"a") as file1:
+                        with open('{}/Fight/Files/PlayerPokedex.txt'.format(BASE_DIR),"a") as file1:
                             file1.write(monster.name+"\n")
-                            file1.close()
-                    file.close()
              
                 self.mons_list.remove(monster)
                 if not(len(self.mons_list) == 0):
@@ -277,7 +275,7 @@ class Fight:
 class Pokemon:
     def __init__(self, name, HP, lvl, exp, pos, pos1):
         self.name = name
-        with open('{}/Fight/Files/Pokedex.txt'.format(os.getcwd()),"r") as file:
+        with open('{}/Fight/Files/Pokedex.txt'.format(BASE_DIR),"r") as file:
             pokedex = file.readlines()
             for pokemon_line in pokedex:
                 pokemon = pokemon_line.split()
@@ -304,7 +302,7 @@ class Pokemon:
             self.HP = HP
         
         # pokemon image
-        self.image = simplegui._load_local_image(('{}/Fight/pokemon/'.format(os.getcwd()))+name+".png")
+        self.image = simplegui._load_local_image(('{}/Fight/pokemon/'.format(BASE_DIR))+name+".png")
         width = self.image.get_width()
         frame_width = width//5
         height = self.image.get_height()
@@ -328,7 +326,7 @@ class Pokemon:
                       "poison": 3,
                       "psychic": 2,
                       "rock": 2}
-        self.effectimg = simplegui._load_local_image(('{}/Fight/effects/'.format(os.getcwd()))+effect_img+".png")
+        self.effectimg = simplegui._load_local_image(('{}/Fight/effects/'.format(BASE_DIR))+effect_img+".png")
         width = self.effectimg.get_width()
         frame_width = width//5
         height = self.effectimg.get_height()
@@ -364,8 +362,8 @@ class Pokemon:
         if self.frame_index1[0] >= 5:
             self.frame_index1[0] = 0
             self.frame_index1[1] +=1
-            if self.frame_index1[1] > self.row1:
-                pass
+            if self.frame_index1[1] >= self.row1:
+                self.frame_index1[1] = 0
                 
     def draw_effect(self, canvas):
         canvas.draw_image(self.effectimg,

@@ -5,12 +5,14 @@ except ImportError:
 from vector import Vector
 import os
 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
 #sets a class used to display full screen image
 class Welcome:
     global WIDTH
     global HEIGHT
     def __init__(self, img_name):
-        self.image = simplegui._load_local_image(('{}/Text/'.format(os.getcwd()))+img_name)
+        self.image = simplegui._load_local_image(('{}/Text/'.format(BASE_DIR))+img_name)
         width = self.image.get_width()
         height = self.image.get_height()
         self.pos = Vector(WIDTH/2, HEIGHT/2)
