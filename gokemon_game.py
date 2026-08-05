@@ -796,39 +796,45 @@ class Game:
         with open('{}/Fight/Files/PlayerPokemon.txt'.format(BASE_DIR),"w") as file2:
             file2.write(poketxt)
                 
-    #loads the game from the save files
-    def load_game(self):
-        with open('{}/Fight/Files/Save.txt'.format(BASE_DIR),"r") as file:
-            info = file.readlines()
-            allinfo = []
-            for line in info:
-                line = line.split()
-                count = 0
-                for element in line:
-                    if element == "F":
-                        line[count] = False
-                    elif element == "T":
-                        line[count] = True
-                    count += 1
-                allinfo.append(line)
-        self.keyboard.startscreen = allinfo[0][0]
-        self.intro = allinfo[0][0]
-        self.complete = allinfo[0][1]
-        self.pokecomplete = allinfo[0][2]
-        if not allinfo[1]:
-            self.npc_lost = []
-        else:
-            for npc in allinfo[1]:
-                self.npc_lost.append(npc)
-        self.player.pos.x = int(float(allinfo[2][0]))
-        self.player.pos.y = int(float(allinfo[2][1]))
-        self.player.lives = int(allinfo[2][2])
-        if allinfo[2][3] == ",":
-            self.player.name = ""
-        else:
-            self.player.name = allinfo[2][3]
-        self.background = Background(allinfo[3][0], WIDTH, HEIGHT, self.npc_lost)
-        self.background.load_wall()
+    #loads the game from the save files; falls back to a fresh game if Save.txt is missing/corrupted
+    def load_game(self, allow_fallback=True):
+        try:
+            with open('{}/Fight/Files/Save.txt'.format(BASE_DIR),"r") as file:
+                info = file.readlines()
+                allinfo = []
+                for line in info:
+                    line = line.split()
+                    count = 0
+                    for element in line:
+                        if element == "F":
+                            line[count] = False
+                        elif element == "T":
+                            line[count] = True
+                        count += 1
+                    allinfo.append(line)
+            self.keyboard.startscreen = allinfo[0][0]
+            self.intro = allinfo[0][0]
+            self.complete = allinfo[0][1]
+            self.pokecomplete = allinfo[0][2]
+            if not allinfo[1]:
+                self.npc_lost = []
+            else:
+                for npc in allinfo[1]:
+                    self.npc_lost.append(npc)
+            self.player.pos.x = int(float(allinfo[2][0]))
+            self.player.pos.y = int(float(allinfo[2][1]))
+            self.player.lives = int(allinfo[2][2])
+            if allinfo[2][3] == ",":
+                self.player.name = ""
+            else:
+                self.player.name = allinfo[2][3]
+            self.background = Background(allinfo[3][0], WIDTH, HEIGHT, self.npc_lost)
+            self.background.load_wall()
+        except (OSError, IndexError, ValueError, KeyError) as error:
+            if not allow_fallback:
+                raise
+            print("Save data missing or corrupted ({}) - starting a new game.".format(error))
+            self.new_game("yes")
 
     #creates a new game by replacing files
     def new_game(self, confirmation):
@@ -861,7 +867,7 @@ class Game:
                     pokemonL = pokemonL.split()
                     pokemon = Pokemon(pokemonL[0], int(pokemonL[1]), int(pokemonL[2]), int(pokemonL[3]), [210, 250], [570, 140])
                     self.player.pokemon_list.append(pokemon)
-            self.load_game()
+            self.load_game(allow_fallback=False)
 
     #runs main game loop
     def draw(self, canvas):
