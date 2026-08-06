@@ -1,7 +1,4 @@
-try:
-    import simplegui
-except ImportError:
-    import SimpleGUICS2Pygame.simpleguics2pygame as simplegui
+import pygame
 import random
 import os
 import json
@@ -12,6 +9,10 @@ from fight import Fight
 from fight import Kbd
 from fight import POKEDEX
 from image_cache import load_image
+from canvas import Canvas
+from frame import Frame
+
+pygame.init()
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -79,37 +80,37 @@ class Keyboard:
         self.save = False
 
     def keyDown(self, key):
-        if key == simplegui.KEY_MAP['right']:
+        if key == pygame.K_RIGHT:
             self.right = True
-        if key == simplegui.KEY_MAP['left']:
+        if key == pygame.K_LEFT:
             self.left = True
-        if key == simplegui.KEY_MAP['up']:
+        if key == pygame.K_UP:
             self.up = True
-        if key == simplegui.KEY_MAP['down']:
+        if key == pygame.K_DOWN:
             self.down = True
-        if key == simplegui.KEY_MAP['space']:
+        if key == pygame.K_SPACE:
             if self.start == False:
                 self.start = True
             else:
                 self.startscreen = True
-        if key == simplegui.KEY_MAP['p']:
+        if key == pygame.K_p:
             self.pokedex = True
-        if key == simplegui.KEY_MAP['s']:
+        if key == pygame.K_s:
             self.save = True
-        if key == simplegui.KEY_MAP['q']:
+        if key == pygame.K_q:
             self.back = True
-        if key == simplegui.KEY_MAP['t']:
+        if key == pygame.K_t:
             self.tutorial = True
 
 
     def keyUp(self, key):
-        if key == simplegui.KEY_MAP['right']:
+        if key == pygame.K_RIGHT:
             self.right = False
-        if key == simplegui.KEY_MAP['left']:
+        if key == pygame.K_LEFT:
             self.left = False
-        if key == simplegui.KEY_MAP['up']:
+        if key == pygame.K_UP:
             self.up = False
-        if key == simplegui.KEY_MAP['down']:
+        if key == pygame.K_DOWN:
             self.down = False
 
     def KeyReset(self):
@@ -1124,11 +1125,15 @@ game = Game(welcome, tutorial, player, kbd, background)
 game.load_game()
 
 #sets up frame and all the event handlers
-frame = simplegui.create_frame('Gokemon', WIDTH, HEIGHT)
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption('Gokemon')
+canvas = Canvas(screen)
+frame = Frame(screen, canvas)
 frame.set_canvas_background('Black')
-frame.add_input("Player Name:", player.add_name, 100)
-frame.add_input("Type 'yes' to start a new game:", game.new_game, 50)
+frame.add_input("Player Name:", player.add_name, pygame.K_r)
+frame.add_input("Type 'yes' to start a new game:", game.new_game, pygame.K_n)
 frame.set_draw_handler(game.draw)
 frame.set_keydown_handler(kbd.keyDown)
 frame.set_keyup_handler(kbd.keyUp)
 frame.start()
+pygame.quit()

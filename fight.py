@@ -1,7 +1,4 @@
-try:
-    import simplegui
-except ImportError:
-    import SimpleGUICS2Pygame.simpleguics2pygame as simplegui
+import pygame
 import time
 import random
 import os
@@ -380,29 +377,29 @@ class Kbd:
         self.quit = False
 
     def keyDown(self, key):
-        if key == simplegui.KEY_MAP['right']:
+        if key == pygame.K_RIGHT:
             self.right = True
-        if key == simplegui.KEY_MAP['left']:
+        if key == pygame.K_LEFT:
             self.left = True
-        if key == simplegui.KEY_MAP['up']:
+        if key == pygame.K_UP:
             self.up = True
-        if key == simplegui.KEY_MAP['down']:
+        if key == pygame.K_DOWN:
             self.down = True
-        if key == simplegui.KEY_MAP['q']:
+        if key == pygame.K_q:
             self.quit = True
-        if key == simplegui.KEY_MAP['space']:
+        if key == pygame.K_SPACE:
             self.select = True
 
     def keyUp(self, key):
-        if key == simplegui.KEY_MAP['right']:
+        if key == pygame.K_RIGHT:
             self.right = False
-        if key == simplegui.KEY_MAP['left']:
+        if key == pygame.K_LEFT:
             self.left = False
-        if key == simplegui.KEY_MAP['up']:
+        if key == pygame.K_UP:
             self.up = False
-        if key == simplegui.KEY_MAP['down']:
+        if key == pygame.K_DOWN:
             self.down = False
-        if key == simplegui.KEY_MAP['q']:
+        if key == pygame.K_q:
             self.quit = False
 
     def KeyReset(self):
