@@ -17,3 +17,9 @@ plans/
 Fight/Files/Save.json
 Fight/Files/PlayerPokedex.txt
 Fight/Files/PlayerPokemon.txt
+
+# map builder: in-progress projects and staged export output are local working files
+MapBuilder/projects/*
+!MapBuilder/projects/.gitkeep
+MapBuilder/output/*
+!MapBuilder/output/.gitkeep

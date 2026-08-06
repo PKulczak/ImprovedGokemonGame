@@ -50,3 +50,34 @@ https://www.deviantart.com/phyromatical/art/Partumia-City-657201996
 Other:
 https://wallpapersafari.com/w/NVqxeH
 
+Map builder tileset assets:
+
+https://github.com/icyethics/PokemonAssets/tree/main/Tilesets
+Credit: IcyEthics. Used under the repo's stated terms (free to use/adapt for non-commercial projects, derivative works must remain free to use/adapt by others).
+
+https://github.com/nikouu/Pokemon-gen-2-style-tilemap
+"nikouu_custom.png" is Custom.png from this repo, and "nikouu_original.png" is Original.png
+(both upscaled 3x, nearest-neighbor, for easier selection in the map builder). Custom.png is the
+redrawn/"legally different" tileset; Original.png is the repo's own side-by-side comparison sheet
+and is close to the real Pokemon Gold/Silver sprites - kept in for local/private use only, not
+meant to be included if this project is ever distributed or published.
+MIT License, Copyright (c) 2022 Niko:
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+

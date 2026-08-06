@@ -16,6 +16,9 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 WIDTH = 800
 HEIGHT = 480
 
+#TEMP: set True to re-enable random wild encounters (disabled for map/collision QA)
+WILD_ENCOUNTERS_ENABLED = False
+
 #live save data isn't committed to the repo (see .gitignore) - only these bundled defaults are
 SAVE_FILE_TEMPLATES = [
     ("NewSave.json", "Save.json"),
@@ -384,12 +387,18 @@ class Yacht(NPC):
     def interact(self, player):
         return False
 
-#makes a wall which doesn't allow for player to walk through        
+#makes a wall which doesn't allow for player to walk through
 class Wall:
-    def __init__(self, name, pos):
-        self.image = simplegui._load_local_image(('{}/Overworld/Other/'.format(BASE_DIR))+name)
-        self.width = self.image.get_width()
-        self.height = self.image.get_height()
+    #dims=(width,height) skips loading a named asset - used for map-builder objects, which
+    #already carry their own explicit box size and are drawn separately (see MapObject)
+    def __init__(self, name, pos, dims=None):
+        if dims is not None:
+            self.image = None
+            self.width, self.height = dims
+        else:
+            self.image = simplegui._load_local_image(('{}/Overworld/Other/'.format(BASE_DIR))+name)
+            self.width = self.image.get_width()
+            self.height = self.image.get_height()
         self.pos = pos
         self.frame_dim = [self.width, self.height]
 
@@ -400,8 +409,10 @@ class Wall:
 
 
     def draw(self, canvas):
-        canvas.draw_image(self.image, 
-                    [self.width//2, self.height//2], 
+        if self.image is None:
+            return
+        canvas.draw_image(self.image,
+                    [self.width//2, self.height//2],
                      [self.width, self.height], [self.pos.x,self.pos.y], [self.frame_dim[0],self.frame_dim[1]])
 
     #checks for collision
@@ -427,8 +438,8 @@ class Wall:
 
 #creates an Interactive wall (subclass of wall)
 class Interact(Wall):
-    def __init__(self, name, pos, int_type, target_map = None, target_pos = None):
-        super().__init__(name, pos)
+    def __init__(self, name, pos, int_type, target_map = None, target_pos = None, dims = None):
+        super().__init__(name, pos, dims=dims)
         self.target_map = target_map
         self.target_pos = target_pos
         self.int_type = int_type
@@ -443,11 +454,43 @@ class Interact(Wall):
         if self.int_type == "heal":
             player.player_heal = True
             
+#reads a map's JSON; distinguishes the legacy "tiles" schema from the map-builder "objects" schema
+def _load_map_data(map_name):
+    with open('{}/Overworld/maps/{}.json'.format(BASE_DIR, map_name), "r") as file:
+        return json.load(file)
+
+#background image path: the map-builder format's ground layer, or the legacy full flat map
+def _background_image_path(map_name, map_data):
+    if "objects" in map_data:
+        return '{}/Overworld/{}'.format(BASE_DIR, map_data["ground"])
+    return '{}/Overworld/map_img/{}.png'.format(BASE_DIR, map_name)
+
+#a single visually-drawn map-builder object (decoration or a visible collision object, e.g. a tree);
+#kept separate from Wall/Interact so it can be Y-sorted against the player/NPCs instead of being
+#hidden behind the legacy format's redundant full-background redraw
+class MapObject:
+    def __init__(self, image, x, y, width, height):
+        self.image = image
+        self.x = x
+        self.y = y
+        self.width = width
+        self.height = height
+
+    def draw(self, canvas):
+        canvas.draw_image(self.image, (self.width/2, self.height/2), (self.width, self.height),
+                           (self.x, self.y), (self.width, self.height))
+
+    #bottom edge of the object's box - the "feet" position objects are Y-sorted by
+    def base_y(self):
+        return self.y + self.height/2
+
 #creates the background of the map
 class Background:
     def __init__(self, Map, width, height, npc_lost=None):
         self.map_name = Map
-        self.Map = simplegui._load_local_image(('{}/Overworld/map_img/'.format(BASE_DIR))+self.map_name+".png")
+        map_data = _load_map_data(Map)
+        self.is_object_format = "objects" in map_data
+        self.Map = simplegui._load_local_image(_background_image_path(Map, map_data))
         self.width = width
         self.height = height
 
@@ -458,16 +501,24 @@ class Background:
         self.npc_lost = npc_lost if npc_lost is not None else []
         self.walls_list = []
         self.npc_list = []
+        self.visual_objects = []
 
     def draw(self, canvas):
         canvas.draw_image(self.Map, (self.orig_width/2,self.orig_height/2), (self.orig_width,self.orig_height), (self.width/2, self.height/2), (self.width,self.height))
 
-    #loads all the hitboxes for the map from its structured tilemap
+    #loads all the hitboxes (and, for map-builder maps, visual objects) for the map
     def load_wall(self):
         self.walls_list = []
         self.npc_list = []
-        with open(('{}/Overworld/maps/'.format(BASE_DIR))+self.map_name+".json","r") as file:
-            map_data = json.load(file)
+        self.visual_objects = []
+        map_data = _load_map_data(self.map_name)
+        if "tiles" in map_data:
+            self._load_legacy_tiles(map_data)
+        else:
+            self._load_objects(map_data)
+
+    #legacy hand-authored format: one flat background image, tile type + grid index + TILE_OFFSETS
+    def _load_legacy_tiles(self, map_data):
         for tile in map_data["tiles"]:
             ttype = tile["type"]
             off_x, off_y = TILE_OFFSETS[ttype]
@@ -505,6 +556,48 @@ class Background:
                     npc = NPC(npc_name, pos, clock)
                 self.npc_list.append(npc)
 
+    #map-builder format: ground image + explicit per-object position/size, Y-sorted at draw time.
+    #"npc"/"yacht" still resolve their actual sprite through the existing per-map lookups below,
+    #same as the legacy format - the builder only marks where they go, not which species/asset
+    def _load_objects(self, map_data):
+        for obj in map_data["objects"]:
+            if obj["sprite"] is not None:
+                image = simplegui._load_local_image('{}/Overworld/{}'.format(BASE_DIR, obj["sprite"]))
+                self.visual_objects.append(MapObject(image, obj["x"], obj["y"], obj["width"], obj["height"]))
+
+            collision = obj.get("collision")
+            if collision is None:
+                continue
+            ttype = collision["type"]
+            pos = Vector(obj["x"], obj["y"])
+            dims = (obj["width"], obj["height"])
+            if ttype in ("tree", "wall_up_a", "wall_up_b", "wall_left_a", "wall_left_b"):
+                self.walls_list.append(Wall(None, pos, dims=dims))
+            elif ttype == "interact":
+                target_pos = Vector(collision["target_pos"][0], collision["target_pos"][1])
+                self.walls_list.append(Interact(None, pos, "interact", collision["target_map"], target_pos, dims=dims))
+            elif ttype == "boss_gate":
+                if collision["requires_defeated"] not in self.npc_lost:
+                    self.walls_list.append(Wall(None, pos, dims=dims))
+                else:
+                    target_pos = Vector(collision["target_pos"][0], collision["target_pos"][1])
+                    self.walls_list.append(Interact(None, pos, "interact", collision["target_map"], target_pos, dims=dims))
+            elif ttype == "fight":
+                self.walls_list.append(Interact(None, pos, "fight", dims=dims))
+            elif ttype == "heal":
+                self.walls_list.append(Interact(None, pos, "heal", dims=dims))
+            elif ttype == "yacht":
+                clock = Clock()
+                self.npc_list.append(Yacht("yacht", pos, clock))
+            elif ttype == "npc":
+                clock = Clock()
+                npc_name = self.load_npc()
+                if npc_name in self.npc_lost:
+                    npc = NPCWall(npc_name, pos, clock)
+                else:
+                    npc = NPC(npc_name, pos, clock)
+                self.npc_list.append(npc)
+
     #loads a new level, transitioning to the target map/position named on the interact tile that triggered it
     def new_level(self, target_map, target_pos, player):
         player.pos = target_pos
@@ -512,7 +605,9 @@ class Background:
         self.map_name = target_map
 
         player.interacting = False
-        self.Map = simplegui._load_local_image(('{}/Overworld/map_img/'.format(BASE_DIR))+self.map_name+".png")
+        map_data = _load_map_data(self.map_name)
+        self.is_object_format = "objects" in map_data
+        self.Map = simplegui._load_local_image(_background_image_path(self.map_name, map_data))
         self.load_wall()
 
     #loads the correct npcs
@@ -702,7 +797,7 @@ class Interaction:
 
                 if player.in_fight == True:
                     rand_int = random.random()
-                    if rand_int < 0.007:
+                    if WILD_ENCOUNTERS_ENABLED and rand_int < 0.007:
                         pokerange = self.game.background.load_pokelvl()
                         pokelvl = random.randint(pokerange[0], pokerange[1])
                         num_lines = sum(1 for line in open(('{}/Overworld/map_poke/'.format(BASE_DIR))+self.game.background.map_name+".txt"))
@@ -719,27 +814,52 @@ class Interaction:
                         self.game.fight = Fight([Wpokemon], self.player.pokemon_list, self.game.Kbd, False)
                         self.game.fightB = True
                     player.in_fight = False
-                    
-        self.game.background.draw(canvas)
-        self.player.draw(canvas)
-        for y in self.game.background.npc_list:
-            y.draw(canvas)
-            y.move_to_player(self.player)
-            col = y.collision(self.player)
-            if col == True:
-                fightB = y.interact(self.player)
-                if fightB == True:
-                    self.player.lock = True
-                    self.game.text = Text(y.image_name, self.player, (50,405), True, self.game.txtcount, self.game.txtclock)
-                    self.game.text.draw(canvas)
-                    self.game.txtcount = self.game.text.count
-                    if self.game.text.display == False:
-                        self.player.lock = False
-                        self.game.txtcount = 0
-                        self.game.fightB = True
-                        self.game.fight = Fight(self.game.background.npc_list[0].pokemon_list, self.player.pokemon_list, self.game.Kbd, True)
 
-#sets up main class        
+        if self.game.background.is_object_format:
+            self._draw_sorted(canvas)
+        else:
+            self.game.background.draw(canvas)
+            self.player.draw(canvas)
+            for y in self.game.background.npc_list:
+                y.draw(canvas)
+                self._npc_interact(canvas, y)
+
+    #resolves NPC movement/collision and the resulting dialogue-or-fight trigger; shared by both
+    #draw paths below. Returns the NPC to show dialogue for, if its interaction just fired one.
+    def _npc_interact(self, canvas, y):
+        y.move_to_player(self.player)
+        col = y.collision(self.player)
+        if col == True:
+            fightB = y.interact(self.player)
+            if fightB == True:
+                self.player.lock = True
+                self.game.text = Text(y.image_name, self.player, (50,405), True, self.game.txtcount, self.game.txtclock)
+                self.game.text.draw(canvas)
+                self.game.txtcount = self.game.text.count
+                if self.game.text.display == False:
+                    self.player.lock = False
+                    self.game.txtcount = 0
+                    self.game.fightB = True
+                    self.game.fight = Fight(self.game.background.npc_list[0].pokemon_list, self.player.pokemon_list, self.game.Kbd, True)
+
+    #map-builder maps: ground layer once, then player/NPCs/objects drawn in Y-sorted order so a
+    #tall object can occlude the player (and vice versa) instead of the player always being on top
+    def _draw_sorted(self, canvas):
+        self.game.background.draw(canvas)
+
+        drawables = [(self.player.pos.y + (self.player.frame_dim[1]//2)*self.player.scale_factor, self.player.draw)]
+        for y in self.game.background.npc_list:
+            drawables.append((y.pos.y + (y.frame_dim[1]//2)*y.scale_factor, y.draw))
+        for obj in self.game.background.visual_objects:
+            drawables.append((obj.base_y(), obj.draw))
+        drawables.sort(key=lambda item: item[0])
+        for _, draw_fn in drawables:
+            draw_fn(canvas)
+
+        for y in self.game.background.npc_list:
+            self._npc_interact(canvas, y)
+
+#sets up main class
 class Game:
     def __init__(self, welcome, tutorial, player, keyboard, background):
         self.player = player
