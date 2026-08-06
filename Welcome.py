@@ -1,8 +1,5 @@
-try:
-    import simplegui
-except ImportError:
-    import SimpleGUICS2Pygame.simpleguics2pygame as simplegui
 from vector import Vector
+from image_cache import load_image
 import os
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -12,7 +9,7 @@ class Welcome:
     global WIDTH
     global HEIGHT
     def __init__(self, img_name):
-        self.image = simplegui._load_local_image(('{}/Text/'.format(BASE_DIR))+img_name)
+        self.image = load_image(('{}/Text/'.format(BASE_DIR))+img_name)
         width = self.image.get_width()
         height = self.image.get_height()
         self.pos = Vector(WIDTH/2, HEIGHT/2)

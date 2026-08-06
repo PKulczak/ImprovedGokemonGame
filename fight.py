@@ -6,6 +6,7 @@ import time
 import random
 import os
 import json
+from image_cache import load_image
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -37,15 +38,15 @@ class Fight:
         self.kbd = keyboard
         self.npc = npc
         self.info = self.monster.name+" VS "+ self.pokemon.name
-        self.image = simplegui._load_local_image('{}/Fight/Other/fight_background.png'.format(BASE_DIR))
+        self.image = load_image('{}/Fight/Other/fight_background.png'.format(BASE_DIR))
         self.col1 = "White"
         self.col2 = "Grey"
         self.col3 = "Grey"
         self.col4 = "Grey"
         self.inte = 1
         self.run = False
-        self.bag = simplegui._load_local_image('{}/Fight/Other/bag.png'.format(BASE_DIR))
-        self.light = simplegui._load_local_image('{}/Fight/Other/highlight.png'.format(BASE_DIR))
+        self.bag = load_image('{}/Fight/Other/bag.png'.format(BASE_DIR))
+        self.light = load_image('{}/Fight/Other/highlight.png'.format(BASE_DIR))
         self.first = True
         self.change = False
         self.catch = False
@@ -296,7 +297,7 @@ class Pokemon:
             self.HP = HP
         
         # pokemon image
-        self.image = simplegui._load_local_image(('{}/Fight/pokemon/'.format(BASE_DIR))+name+".png")
+        self.image = load_image(('{}/Fight/pokemon/'.format(BASE_DIR))+name+".png")
         width = self.image.get_width()
         frame_width = width//5
         height = self.image.get_height()
@@ -320,7 +321,7 @@ class Pokemon:
                       "poison": 3,
                       "psychic": 2,
                       "rock": 2}
-        self.effectimg = simplegui._load_local_image(('{}/Fight/effects/'.format(BASE_DIR))+effect_img+".png")
+        self.effectimg = load_image(('{}/Fight/effects/'.format(BASE_DIR))+effect_img+".png")
         width = self.effectimg.get_width()
         frame_width = width//5
         height = self.effectimg.get_height()

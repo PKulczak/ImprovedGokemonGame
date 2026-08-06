@@ -11,6 +11,7 @@ from fight import Pokemon
 from fight import Fight
 from fight import Kbd
 from fight import POKEDEX
+from image_cache import load_image
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -179,7 +180,7 @@ class Player:
     def __init__(self, clock): 
         self.clock = clock
         self.name = ""
-        self.image = simplegui._load_local_image('{}/Overworld/Other/player.png'.format(BASE_DIR))
+        self.image = load_image('{}/Overworld/Other/player.png'.format(BASE_DIR))
         self.rows = 4
         self.columns = 4
         
@@ -205,7 +206,7 @@ class Player:
 
         self.lives = 6
         self.player_heal = False
-        self.heart_img = simplegui._load_local_image('{}/Overworld/Other/heart.png'.format(BASE_DIR))
+        self.heart_img = load_image('{}/Overworld/Other/heart.png'.format(BASE_DIR))
 
         self.player_left = self.pos.x - self.frame_center[0]
         self.player_right = self.pos.x + self.frame_center[0]
@@ -248,7 +249,7 @@ class NPC:
     def __init__(self, img_name, pos, clock):
         self.clock = clock
         self.image_name = img_name
-        self.image = simplegui._load_local_image(('{}/Overworld/NPC/'.format(BASE_DIR))+self.image_name+".png")
+        self.image = load_image(('{}/Overworld/NPC/'.format(BASE_DIR))+self.image_name+".png")
         
         self.rows = 1
         self.columns = 4
@@ -395,7 +396,7 @@ class Wall:
             self.image = None
             self.width, self.height = dims
         else:
-            self.image = simplegui._load_local_image(('{}/Overworld/Other/'.format(BASE_DIR))+name)
+            self.image = load_image(('{}/Overworld/Other/'.format(BASE_DIR))+name)
             self.width = self.image.get_width()
             self.height = self.image.get_height()
         self.pos = pos
@@ -489,7 +490,7 @@ class Background:
         self.map_name = Map
         map_data = _load_map_data(Map)
         self.is_object_format = "objects" in map_data
-        self.Map = simplegui._load_local_image(_background_image_path(Map, map_data))
+        self.Map = load_image(_background_image_path(Map, map_data))
         self.width = width
         self.height = height
 
@@ -561,7 +562,7 @@ class Background:
     def _load_objects(self, map_data):
         for obj in map_data["objects"]:
             if obj["sprite"] is not None:
-                image = simplegui._load_local_image('{}/Overworld/{}'.format(BASE_DIR, obj["sprite"]))
+                image = load_image('{}/Overworld/{}'.format(BASE_DIR, obj["sprite"]))
                 self.visual_objects.append(MapObject(image, obj["x"], obj["y"], obj["width"], obj["height"]))
 
             collision = obj.get("collision")
@@ -606,7 +607,7 @@ class Background:
         player.interacting = False
         map_data = _load_map_data(self.map_name)
         self.is_object_format = "objects" in map_data
-        self.Map = simplegui._load_local_image(_background_image_path(self.map_name, map_data))
+        self.Map = load_image(_background_image_path(self.map_name, map_data))
         self.load_wall()
 
     #loads the correct npcs
@@ -641,8 +642,8 @@ class Pokedex:
         self.first = True
         self.poke_list =[]
         self.index = 0
-        self.bag = simplegui._load_local_image('{}/Fight/Other/bag.png'.format(BASE_DIR))
-        self.light = simplegui._load_local_image('{}/Fight/Other/highlight.png'.format(BASE_DIR))
+        self.bag = load_image('{}/Fight/Other/bag.png'.format(BASE_DIR))
+        self.light = load_image('{}/Fight/Other/highlight.png'.format(BASE_DIR))
         self.pos = [[(348,145),(348,265),(348,380)],[(598,145),(598,265),(598,380)]]
 
     def draw(self, canvas):
@@ -729,7 +730,7 @@ class Text:
         self.box = box
         self.display = True
         self.clock = clock
-        self.txtbox = simplegui._load_local_image('{}/Text/box.png'.format(BASE_DIR))
+        self.txtbox = load_image('{}/Text/box.png'.format(BASE_DIR))
         self.alltxt = [line.format(player_name=player.name) for line in dialogue_lines(txtfile)]
         self.num_lines = len(self.alltxt)
 
