@@ -878,6 +878,44 @@ class Game:
         self.fight = Fight([pokemon2], [pokemon2], self.Kbd, False)
         self.fightB = False
 
+        #which top-level screen is active, dispatched via STATE_HANDLERS instead of nested
+        #if/elif checks. "tutorial" isn't its own state - it's an overlay toggle within
+        #welcome/start_menu (see _draw_welcome/_draw_start_menu), same as the original code.
+        self.state_handlers = {
+            "welcome": self._draw_welcome,
+            "start_menu": self._draw_start_menu,
+            "fight": self._draw_fight,
+            "pokedex": self._draw_pokedex,
+            "overworld": self._draw_overworld,
+        }
+        self.state = self._resolve_state()
+
+    #derives the current top-level screen from the keyboard/fight flags - same priority order
+    #as the original nested if/elif chain (fight takes priority over pokedex; both require
+    #keyboard.start and keyboard.startscreen to already be set)
+    def _resolve_state(self):
+        if not self.keyboard.start:
+            return "welcome"
+        if not self.keyboard.startscreen:
+            return "start_menu"
+        if self.fightB:
+            return "fight"
+        if self.keyboard.pokedex:
+            return "pokedex"
+        return "overworld"
+
+    #fires once on the frame a new state is entered - swaps the active keydown/keyup handler
+    #to the fight/pokedex-local Kbd. Only fires on entry (not every frame like the original
+    #inline calls did) since re-setting the same handler reference every frame was redundant.
+    #The handler is swapped *back* to self.keyboard from inside _draw_fight/_draw_pokedex
+    #themselves, not here - that swap-back intentionally happens as soon as the battle/pokedex
+    #interaction itself concludes, which can be several frames before the state actually changes
+    #(e.g. the post-fight win/lose text overlay keeps "fight" active while it plays out).
+    def _enter_state(self, state):
+        if state in ("fight", "pokedex"):
+            frame.set_keydown_handler(self.Kbd.keyDown)
+            frame.set_keyup_handler(self.Kbd.keyUp)
+
     #saves the current progress of player
     def save_game(self):
         save_data = {
@@ -934,23 +972,14 @@ class Game:
 
     #runs main game loop
     def draw(self, canvas):
-        if self.keyboard.start:
-            if self.keyboard.startscreen:
-                if self.fightB:
-                    self._draw_fight(canvas)
-                elif self.keyboard.pokedex:
-                    self._draw_pokedex(canvas)
-                else:
-                    self._draw_overworld(canvas)
-            else:
-                self._draw_start_menu(canvas)
-        else:
-            self._draw_welcome(canvas)
+        new_state = self._resolve_state()
+        if new_state != self.state:
+            self._enter_state(new_state)
+            self.state = new_state
+        self.state_handlers[self.state](canvas)
 
     #handles the active battle screen, including the win/lose outcome once a fight ends
     def _draw_fight(self, canvas):
-        frame.set_keydown_handler(self.Kbd.keyDown)
-        frame.set_keyup_handler(self.Kbd.keyUp)
         self.fight.draw(canvas)
 
         if (self.fight.end == True):
@@ -998,8 +1027,6 @@ class Game:
 
     #handles the Gokedex overlay
     def _draw_pokedex(self, canvas):
-        frame.set_keydown_handler(self.Kbd.keyDown)
-        frame.set_keyup_handler(self.Kbd.keyUp)
         self.pokedex.draw(canvas)
         if self.Kbd.quit:
             self.Kbd.KeyReset()
