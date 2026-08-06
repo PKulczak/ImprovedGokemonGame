@@ -5,25 +5,26 @@ except ImportError:
 import time
 import random
 import os
+import json
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-#loads each pokemon's base stats from Pokedex.txt once, keyed by name
+#loads each pokemon's base stats from Pokedex.json once, keyed by name
 def _load_pokedex():
-    pokedex = {}
-    with open('{}/Fight/Files/Pokedex.txt'.format(BASE_DIR), "r") as file:
-        for line in file:
-            fields = line.split()
-            pokedex[fields[0]] = {
-                "ATK": int(fields[1]),
-                "DEF": int(fields[2]),
-                "fullhp": int(fields[3]),
-                "effect_img": fields[4],
-                "row": int(fields[5]),
-            }
-    return pokedex
+    with open('{}/Fight/Files/Pokedex.json'.format(BASE_DIR), "r") as file:
+        return json.load(file)
 
 POKEDEX = _load_pokedex()
+
+#records a pokemon as seen in the player's Pokedex, if it isn't already
+def _mark_pokemon_seen(name):
+    path = '{}/Fight/Files/PlayerPokedex.json'.format(BASE_DIR)
+    with open(path, "r") as file:
+        seen = json.load(file)
+    if name not in seen:
+        seen.append(name)
+        with open(path, "w") as file:
+            json.dump(seen, file, indent=2)
 
 class Fight:
     def __init__(self, monster_list, pokemon_list, keyboard, npc):
@@ -190,15 +191,7 @@ class Fight:
                             self.monster.pos1 = self.pokemon.pos1
                             self.poke_list.append(monster)
                             self.mons_list.remove(self.monster)
-                            with open('{}/Fight/Files/PlayerPokedex.txt'.format(BASE_DIR),"r") as file:
-                                pokedex = file.readlines()
-                                beaten = False
-                                for pokemon in pokedex:
-                                    if str(pokemon) == (monster.name+"\n"):
-                                        beaten = True
-                                if beaten == False:
-                                    with open('{}/Fight/Files/PlayerPokedex.txt'.format(BASE_DIR),"a") as file1:
-                                        file1.write(monster.name+"\n")
+                            _mark_pokemon_seen(monster.name)
                             if len(self.mons_list) == 0:
                                 self.count = 0
                                 self.end = True
@@ -245,17 +238,9 @@ class Fight:
                         pokemon.give_exp = int(30+((3*pokemon.lvl)//1))
                     pokemon.exp -= pokemon.max_exp
                     pokemon.HP = pokemon.fullhp
-                    
-                with open('{}/Fight/Files/PlayerPokedex.txt'.format(BASE_DIR),"r") as file:
-                    pokedex = file.readlines()
-                    beaten = False
-                    for pokemon in pokedex:
-                        if str(pokemon) == (monster.name+"\n"):
-                            beaten = True
-                    if beaten == False:
-                        with open('{}/Fight/Files/PlayerPokedex.txt'.format(BASE_DIR),"a") as file1:
-                            file1.write(monster.name+"\n")
-             
+
+                _mark_pokemon_seen(monster.name)
+
                 self.mons_list.remove(monster)
                 if not(len(self.mons_list) == 0):
                     self.monster = self.mons_list[0]

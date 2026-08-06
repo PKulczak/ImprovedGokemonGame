@@ -10,6 +10,7 @@ from Welcome import Welcome
 from fight import Pokemon
 from fight import Fight
 from fight import Kbd
+from fight import POKEDEX
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -22,8 +23,8 @@ WILD_ENCOUNTERS_ENABLED = False
 #live save data isn't committed to the repo (see .gitignore) - only these bundled defaults are
 SAVE_FILE_TEMPLATES = [
     ("NewSave.json", "Save.json"),
-    ("NewPlayerPokedex.txt", "PlayerPokedex.txt"),
-    ("NewPlayerPokemon.txt", "PlayerPokemon.txt"),
+    ("NewPlayerPokedex.json", "PlayerPokedex.json"),
+    ("NewPlayerPokemon.json", "PlayerPokemon.json"),
 ]
 
 #overwrites a live save file with its bundled default
@@ -40,6 +41,12 @@ def ensure_save_files_exist():
         live_path = '{}/Fight/Files/{}'.format(BASE_DIR, live_name)
         if not os.path.exists(live_path):
             copy_template(template_name, live_name)
+
+#builds a party of Pokemon from a JSON file of {"name", "hp", "lvl", "exp"} entries
+def _load_pokemon_party(path, pos, pos1):
+    with open(path, "r") as file:
+        party = json.load(file)
+    return [Pokemon(entry["name"], entry["hp"], entry["lvl"], entry["exp"], pos, pos1) for entry in party]
 
 #Used for animation/transitioning
 class Clock:
@@ -193,8 +200,9 @@ class Player:
         self.interacting = False
         self.lock = False
         self.scale_factor = 0.26
-        self.encounters = self.num_lines = sum(1 for line in open('{}/Fight/Files/PlayerPokedex.txt'.format(BASE_DIR)))
-        
+        with open('{}/Fight/Files/PlayerPokedex.json'.format(BASE_DIR), "r") as file:
+            self.encounters = self.num_lines = len(json.load(file))
+
         self.lives = 6
         self.player_heal = False
         self.heart_img = simplegui._load_local_image('{}/Overworld/Other/heart.png'.format(BASE_DIR))
@@ -205,13 +213,8 @@ class Player:
         self.player_bot = self.pos.y + self.frame_center[1]
 
         #loads the players pokemon
-        self.pokemon_list = []
-        with open('{}/Fight/Files/PlayerPokemon.txt'.format(BASE_DIR),"r") as file:
-            party = file.readlines()
-            for pokemonL in party:
-                pokemonL = pokemonL.split()
-                pokemon = Pokemon(pokemonL[0], int(pokemonL[1]), int(pokemonL[2]), int(pokemonL[3]), [210, 250], [570, 140])
-                self.pokemon_list.append(pokemon)
+        self.pokemon_list = _load_pokemon_party(
+            '{}/Fight/Files/PlayerPokemon.json'.format(BASE_DIR), [210, 250], [570, 140])
 
     #draws the player on screen
     def draw(self, canvas):
@@ -221,7 +224,8 @@ class Player:
         lives = "x"+str(self.lives)
         canvas.draw_text(lives, [30,20], 24, "Black")
 
-        self.encounters = self.num_lines = sum(1 for line in open('{}/Fight/Files/PlayerPokedex.txt'.format(BASE_DIR)))
+        with open('{}/Fight/Files/PlayerPokedex.json'.format(BASE_DIR), "r") as file:
+            self.encounters = self.num_lines = len(json.load(file))
         canvas.draw_text("Gokedex entries: "+str(self.encounters), [300,20], 24, "Black")
             
         self.clock.tick()
@@ -268,13 +272,8 @@ class NPC:
         self.wall_top = self.pos.y - (self.frame_dim[1]//2*self.scale_factor)
         self.wall_bot = self.pos.y + (self.frame_dim[1]//2*self.scale_factor)
 
-        self.pokemon_list = []
-        with open(('{}/Overworld/NPC/'.format(BASE_DIR))+self.image_name+".txt","r") as file:
-            party = file.readlines()
-            for pokemonL in party:
-                pokemonL = pokemonL.split()
-                pokemon = Pokemon(pokemonL[0], int(pokemonL[1]), int(pokemonL[2]), int(pokemonL[3]), [570, 140], [200, 250])
-                self.pokemon_list.append(pokemon)
+        self.pokemon_list = _load_pokemon_party(
+            ('{}/Overworld/NPC/'.format(BASE_DIR))+self.image_name+".json", [570, 140], [200, 250])
 
     #draws the NPC on screen
     def draw(self, canvas):
@@ -650,30 +649,24 @@ class Pokedex:
         self.player_pokedex = []
         self.pokedex = []
         #loads the gokemon the player has in their gokedex
-        with open('{}/Fight/Files/PlayerPokedex.txt'.format(BASE_DIR),"r") as file:
-            all_lines = file.readlines()
-            for pokemon_line in all_lines:
-                pokemon = pokemon_line.split()
-                self.player_pokedex.append(pokemon[0])
+        with open('{}/Fight/Files/PlayerPokedex.json'.format(BASE_DIR),"r") as file:
+            self.player_pokedex = json.load(file)
 
         #fills out the gokedex file
         count = 0
-        with open('{}/Fight/Files/Pokedex.txt'.format(BASE_DIR),"r") as file:
-            all_lines = file.readlines()
-            temp_list = []
-            for pokemon_line in all_lines:
-                pokemon = pokemon_line.split()
-                count += 1
-                if pokemon[0] in self.player_pokedex:
-                    temp_list.append(str(count)+"    "+pokemon[0])
-                else:
-                    temp_list.append(str(count)+"    ?????")
-                if len(temp_list) >= 6:
-                    self.pokedex.append(temp_list)
-                    temp_list = []
-            if len(temp_list) != 0:
+        temp_list = []
+        for name in POKEDEX:
+            count += 1
+            if name in self.player_pokedex:
+                temp_list.append(str(count)+"    "+name)
+            else:
+                temp_list.append(str(count)+"    ?????")
+            if len(temp_list) >= 6:
                 self.pokedex.append(temp_list)
                 temp_list = []
+        if len(temp_list) != 0:
+            self.pokedex.append(temp_list)
+            temp_list = []
         #draws gokedex       
         self.poke_list = self.pokedex[self.index]
         canvas.draw_image(self.bag, (375,250), (750,500), (400,240), (735,490))
@@ -901,13 +894,10 @@ class Game:
         }
         with open('{}/Fight/Files/Save.json'.format(BASE_DIR),"w") as file1:
             json.dump(save_data, file1, indent=2)
-        poketxt = ""
-        for pokemon in self.player.pokemon_list:
-            poketxt += pokemon.name+" "+str(pokemon.HP)+" "+str(pokemon.lvl)+" "+str(pokemon.exp)
-            if not(pokemon == self.player.pokemon_list[len(self.player.pokemon_list)-1]):
-                poketxt += "\n"
-        with open('{}/Fight/Files/PlayerPokemon.txt'.format(BASE_DIR),"w") as file2:
-            file2.write(poketxt)
+        party_data = [{"name": pokemon.name, "hp": pokemon.HP, "lvl": pokemon.lvl, "exp": pokemon.exp}
+                      for pokemon in self.player.pokemon_list]
+        with open('{}/Fight/Files/PlayerPokemon.json'.format(BASE_DIR),"w") as file2:
+            json.dump(party_data, file2, indent=2)
                 
     #loads the game from the save files; falls back to a fresh game if Save.json is missing/corrupted
     def load_game(self, allow_fallback=True):
@@ -937,13 +927,8 @@ class Game:
         if confirmation == "yes":
             for template_name, live_name in SAVE_FILE_TEMPLATES:
                 copy_template(template_name, live_name)
-            self.player.pokemon_list = []
-            with open('{}/Fight/Files/PlayerPokemon.txt'.format(BASE_DIR),"r") as file:
-                party = file.readlines()
-                for pokemonL in party:
-                    pokemonL = pokemonL.split()
-                    pokemon = Pokemon(pokemonL[0], int(pokemonL[1]), int(pokemonL[2]), int(pokemonL[3]), [210, 250], [570, 140])
-                    self.player.pokemon_list.append(pokemon)
+            self.player.pokemon_list = _load_pokemon_party(
+                '{}/Fight/Files/PlayerPokemon.json'.format(BASE_DIR), [210, 250], [570, 140])
             self.load_game(allow_fallback=False)
 
     #runs main game loop

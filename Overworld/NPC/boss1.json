@@ -1,0 +1,38 @@
+[
+  {
+    "name": "Espeon",
+    "hp": -1,
+    "lvl": 16,
+    "exp": 0
+  },
+  {
+    "name": "Shinx",
+    "hp": -1,
+    "lvl": 16,
+    "exp": 0
+  },
+  {
+    "name": "Mareep",
+    "hp": -1,
+    "lvl": 16,
+    "exp": 0
+  },
+  {
+    "name": "Breloom",
+    "hp": -1,
+    "lvl": 16,
+    "exp": 0
+  },
+  {
+    "name": "Absol",
+    "hp": -1,
+    "lvl": 16,
+    "exp": 0
+  },
+  {
+    "name": "Zorua",
+    "hp": -1,
+    "lvl": 17,
+    "exp": 0
+  }
+]

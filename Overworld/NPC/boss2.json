@@ -1,0 +1,38 @@
+[
+  {
+    "name": "Regigigas",
+    "hp": -1,
+    "lvl": 20,
+    "exp": 0
+  },
+  {
+    "name": "Lugia",
+    "hp": -1,
+    "lvl": 20,
+    "exp": 0
+  },
+  {
+    "name": "Ho-oh",
+    "hp": -1,
+    "lvl": 20,
+    "exp": 0
+  },
+  {
+    "name": "Rayquaza",
+    "hp": -1,
+    "lvl": 20,
+    "exp": 0
+  },
+  {
+    "name": "Groudon",
+    "hp": -1,
+    "lvl": 20,
+    "exp": 0
+  },
+  {
+    "name": "Giratina",
+    "hp": -1,
+    "lvl": 20,
+    "exp": 0
+  }
+]
