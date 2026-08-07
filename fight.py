@@ -4,6 +4,7 @@ import random
 import os
 import json
 from image_cache import load_image
+import balance
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -30,7 +31,7 @@ class Fight:
         self.monster = monster_list[0]
         self.poke_list = pokemon_list
         self.pokemon = pokemon_list[0]
-        self.count = 70
+        self.count = balance.SHORT_MESSAGE_FRAMES
         self.attack = True
         self.kbd = keyboard
         self.npc = npc
@@ -137,13 +138,13 @@ class Fight:
                         if self.inte <=3 :
                             self.fight(self.pokemon, self.monster, self.inte, canvas)
                             self.kbd.select = False
-                            self.count = 130
+                            self.count = balance.PLAYER_TURN_MESSAGE_FRAMES
                         elif self.inte == 4:
                             self.change = True
                             self.kbd.select = False
                 else:
                     self.fight(self.pokemon, self.monster, self.inte, canvas)
-                    self.count = 110
+                    self.count = balance.MONSTER_TURN_MESSAGE_FRAMES
 
     #does all the calculations for the fight
     def fight(self, pokemon, monster, inte, canvas):
@@ -168,22 +169,22 @@ class Fight:
                     self.info = pokemon.name+" attack "+monster.name
                     self.attack = False
                 elif inte == 2:
-                    run = random.randint(1,4)
+                    run = random.randint(1, balance.ESCAPE_SUCCESS_ROLL_MAX)
                     if run == 1:
                         self.info = "You escaped!"
                         self.run = True
-                        self.count = 70
+                        self.count = balance.SHORT_MESSAGE_FRAMES
                         self.end = True
                     else:
                         self.info = "Escape failed!"
                         self.attack = False
                 elif inte == 3:
                     if self.npc == True:
-                        catch = 5
+                        catch = balance.CATCH_SUCCESS_ROLL_MAX  # trainer pokemon can never be caught
                     else:
-                        catch = random.randint(1,5)
+                        catch = random.randint(1, balance.CATCH_SUCCESS_ROLL_MAX)
                     if catch == 1:
-                        if len(self.poke_list) < 6:
+                        if len(self.poke_list) < balance.MAX_PARTY_SIZE:
                             self.info = "Catch succeed!"
                             self.monster.pos = self.pokemon.pos
                             self.monster.pos1 = self.pokemon.pos1
@@ -216,24 +217,24 @@ class Fight:
                 else:
                     self.info = "Fight end,You lose"
                     self.attack = False
-                    self.count = 70
+                    self.count = balance.SHORT_MESSAGE_FRAMES
                     self.lost = True
                     self.end = True
             elif pokemon.HP > 0:
                 pokemon.exp += monster.give_exp
                 if pokemon.exp >= pokemon.max_exp:
-                    if pokemon.lvl <= 25:
+                    if pokemon.lvl <= balance.MAX_LEVEL:
                         pokemon.lvl += 1
                         base_stats = POKEDEX[pokemon.name]
                         pokemon.ATK = base_stats["ATK"]
                         pokemon.DEF = base_stats["DEF"]
                         pokemon.fullhp = base_stats["fullhp"]
-                        pokemon.max_exp = 100
-                        pokemon.ATK = int(pokemon.ATK+(((pokemon.ATK*0.1)*pokemon.lvl)//1))
-                        pokemon.DEF = int(pokemon.DEF+(((pokemon.DEF*0.01)*pokemon.lvl)//1))
-                        pokemon.fullhp = int(pokemon.fullhp+(((pokemon.fullhp*0.1)*pokemon.lvl)//1))
-                        pokemon.max_exp = int(100+((10*pokemon.lvl)//1))
-                        pokemon.give_exp = int(30+((3*pokemon.lvl)//1))
+                        pokemon.max_exp = balance.BASE_MAX_EXP
+                        pokemon.ATK = int(pokemon.ATK+(((pokemon.ATK*balance.ATK_GROWTH_RATE)*pokemon.lvl)//1))
+                        pokemon.DEF = int(pokemon.DEF+(((pokemon.DEF*balance.DEF_GROWTH_RATE)*pokemon.lvl)//1))
+                        pokemon.fullhp = int(pokemon.fullhp+(((pokemon.fullhp*balance.HP_GROWTH_RATE)*pokemon.lvl)//1))
+                        pokemon.max_exp = int(balance.BASE_MAX_EXP+((balance.MAX_EXP_PER_LEVEL*pokemon.lvl)//1))
+                        pokemon.give_exp = int(balance.BASE_GIVE_EXP+((balance.GIVE_EXP_PER_LEVEL*pokemon.lvl)//1))
                     pokemon.exp -= pokemon.max_exp
                     pokemon.HP = pokemon.fullhp
 
@@ -282,12 +283,12 @@ class Pokemon:
         #pokemon scaling
         self.lvl = lvl
         self.exp = exp
-        self.max_exp = 100
-        self.ATK = int(self.ATK+(((self.ATK*0.1)*self.lvl)//1))
-        self.DEF = int(self.DEF+(((self.DEF*0.01)*self.lvl)//1))
-        self.fullhp = int(self.fullhp+(((self.fullhp*0.1)*self.lvl)//1))
-        self.max_exp = int(100+((10*self.lvl)//1))
-        self.give_exp = int(30+((3*self.lvl)//1))
+        self.max_exp = balance.BASE_MAX_EXP
+        self.ATK = int(self.ATK+(((self.ATK*balance.ATK_GROWTH_RATE)*self.lvl)//1))
+        self.DEF = int(self.DEF+(((self.DEF*balance.DEF_GROWTH_RATE)*self.lvl)//1))
+        self.fullhp = int(self.fullhp+(((self.fullhp*balance.HP_GROWTH_RATE)*self.lvl)//1))
+        self.max_exp = int(balance.BASE_MAX_EXP+((balance.MAX_EXP_PER_LEVEL*self.lvl)//1))
+        self.give_exp = int(balance.BASE_GIVE_EXP+((balance.GIVE_EXP_PER_LEVEL*self.lvl)//1))
         if HP == -1:
             self.HP = self.fullhp
         else:
@@ -337,7 +338,7 @@ class Pokemon:
                                self.frame_center[1] + self.frame_index[1] * self.frame_dim[1]],
                               self.frame_dim, [self.pos[0], self.pos[1]],
                               [self.frame_dim[0]*3,self.frame_dim[1]*3])
-            if self.count%10 == 0:
+            if self.count % balance.POKEMON_IDLE_ANIMATION_CADENCE == 0:
                 self.next_frame()
             self.count +=1
     
@@ -363,7 +364,7 @@ class Pokemon:
                            self.frame_center1[1] + self.frame_index1[1] * self.frame_dim1[1]],
                           self.frame_dim1, [self.pos1[0], self.pos1[1]],
                           [self.frame_dim1[0]+35,self.frame_dim1[1]+35])
-        if self.count%4 == 0:
+        if self.count % balance.ATTACK_EFFECT_ANIMATION_CADENCE == 0:
                 self.next_effect()
 
 #Sets up the keyboard handlers for fight and gokedex 

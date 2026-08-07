@@ -11,6 +11,7 @@ from fight import POKEDEX
 from image_cache import load_image
 from canvas import Canvas
 from frame import Frame
+import balance
 
 pygame.init()
 
@@ -205,7 +206,7 @@ class Player:
         with open('{}/Fight/Files/PlayerPokedex.json'.format(BASE_DIR), "r") as file:
             self.encounters = self.num_lines = len(json.load(file))
 
-        self.lives = 6
+        self.lives = balance.STARTING_LIVES
         self.player_heal = False
         self.heart_img = load_image('{}/Overworld/Other/heart.png'.format(BASE_DIR))
 
@@ -231,7 +232,7 @@ class Player:
         canvas.draw_text("Gokedex entries: "+str(self.encounters), [300,20], 24, "Black")
             
         self.clock.tick()
-        move_on = self.clock.transition(6)
+        move_on = self.clock.transition(balance.WALK_ANIMATION_CADENCE_FRAMES)
         if move_on == True:
             self.next_frame()
 
@@ -284,7 +285,7 @@ class NPC:
         if self.moving:
             self.update()
         self.clock.tick()
-        move_on = self.clock.transition(6)
+        move_on = self.clock.transition(balance.WALK_ANIMATION_CADENCE_FRAMES)
         if move_on == True:
             self.next_frame()
 
@@ -373,7 +374,7 @@ class Yacht(NPC):
             self.update()
         
         self.clock.tick()
-        move_on = self.clock.transition(20)
+        move_on = self.clock.transition(balance.YACHT_ACCELERATION_INTERVAL_FRAMES)
         if move_on == True:
             self.vel.add(self.vel)
             self.clock.time = 0
@@ -743,7 +744,7 @@ class Text:
 
                             
         self.clock.tick()
-        move_on = self.clock.transition(140)
+        move_on = self.clock.transition(balance.DIALOGUE_LINE_FRAMES)
         if move_on:
             self.count += 1
             if self.count >= self.num_lines:
@@ -792,7 +793,7 @@ class Interaction:
 
                 if player.in_fight == True:
                     rand_int = random.random()
-                    if WILD_ENCOUNTERS_ENABLED and rand_int < 0.007:
+                    if WILD_ENCOUNTERS_ENABLED and rand_int < balance.WILD_ENCOUNTER_CHANCE:
                         pokerange = self.game.background.load_pokelvl()
                         pokelvl = random.randint(pokerange[0], pokerange[1])
                         num_lines = sum(1 for line in open(('{}/Overworld/map_poke/'.format(BASE_DIR))+self.game.background.map_name+".txt"))
@@ -1051,7 +1052,7 @@ class Game:
         if (self.complete == False) and ("boss2" in self.npc_lost):
             self.credits.draw(canvas)
             self.txtclock.tick()
-            move_on = self.txtclock.transition(200)
+            move_on = self.txtclock.transition(balance.CREDITS_AND_COMPLETION_FRAMES)
             if move_on:
                 self.complete = True
 
@@ -1061,7 +1062,7 @@ class Game:
             else:
                 self.caughtAll.draw(canvas)
                 self.txtclock.tick()
-                move_on = self.txtclock.transition(200)
+                move_on = self.txtclock.transition(balance.CREDITS_AND_COMPLETION_FRAMES)
                 if move_on:
                     self.pokecomplete = True
 
@@ -1090,7 +1091,7 @@ class Game:
                 self.txtcount = 0
 
         if self.player.lives == 0:
-            self.player.lives = 6
+            self.player.lives = balance.STARTING_LIVES
             self.new_game("yes")
 
     #handles the start-screen / tutorial toggle shown before pressing space to enter the overworld
