@@ -1,0 +1,463 @@
+import pygame
+import random
+import os
+import json
+from vector import Vector
+from Welcome import Welcome
+from fight import Pokemon
+from fight import Fight
+from fight import Kbd
+from entities import _load_pokemon_party
+from world import Background
+from ui import Text, Pokedex
+from clock import Clock
+import balance
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+WIDTH = 800
+HEIGHT = 480
+
+#TEMP: set True to re-enable random wild encounters (disabled for map/collision QA)
+WILD_ENCOUNTERS_ENABLED = False
+
+#live save data isn't committed to the repo (see .gitignore) - only these bundled defaults are
+SAVE_FILE_TEMPLATES = [
+    ("NewSave.json", "Save.json"),
+    ("NewPlayerPokedex.json", "PlayerPokedex.json"),
+    ("NewPlayerPokemon.json", "PlayerPokemon.json"),
+]
+
+#overwrites a live save file with its bundled default
+def copy_template(template_name, live_name):
+    with open('{}/Fight/Files/{}'.format(BASE_DIR, template_name), "r") as src:
+        text = src.read()
+    with open('{}/Fight/Files/{}'.format(BASE_DIR, live_name), "w") as dst:
+        dst.write(text)
+
+#creates the live save files from the bundled defaults if they don't exist yet -
+#e.g. right after cloning the repo, since the live files themselves aren't committed
+def ensure_save_files_exist():
+    for template_name, live_name in SAVE_FILE_TEMPLATES:
+        live_path = '{}/Fight/Files/{}'.format(BASE_DIR, live_name)
+        if not os.path.exists(live_path):
+            copy_template(template_name, live_name)
+
+#Sets up the keyboard handlers for overworld
+class Keyboard:
+    def __init__(self):
+        self.right = False
+        self.left = False
+        self.up = False
+        self.down = False
+        self.pokedex = False
+        self.start = False
+        self.startscreen = False
+        self.tutorial = False
+        self.back = False
+        self.save = False
+
+    def keyDown(self, key):
+        if key == pygame.K_RIGHT:
+            self.right = True
+        if key == pygame.K_LEFT:
+            self.left = True
+        if key == pygame.K_UP:
+            self.up = True
+        if key == pygame.K_DOWN:
+            self.down = True
+        if key == pygame.K_SPACE:
+            if self.start == False:
+                self.start = True
+            else:
+                self.startscreen = True
+        if key == pygame.K_p:
+            self.pokedex = True
+        if key == pygame.K_s:
+            self.save = True
+        if key == pygame.K_q:
+            self.back = True
+        if key == pygame.K_t:
+            self.tutorial = True
+
+
+    def keyUp(self, key):
+        if key == pygame.K_RIGHT:
+            self.right = False
+        if key == pygame.K_LEFT:
+            self.left = False
+        if key == pygame.K_UP:
+            self.up = False
+        if key == pygame.K_DOWN:
+            self.down = False
+
+    def KeyReset(self):
+        self.right = False
+        self.left = False
+        self.up = False
+        self.down = False
+
+#responsible for collisions
+class Interaction:
+    def __init__(self, player, keyboard, game):
+        self.player = player
+        self.keyboard = keyboard
+        self.game = game
+
+    #sets the players velocity
+    def update(self):
+        if self.keyboard.start:
+            if self.player.lock == False:
+                if self.keyboard.right:
+                    self.player.vel = Vector(2, 0)
+                    self.player.frame_index[1] = 2
+                    self.player.moving = True
+                elif self.keyboard.left:
+                    self.player.vel = Vector(-2,0)
+                    self.player.frame_index[1] = 1
+                    self.player.moving = True
+                elif self.keyboard.up:
+                    self.player.vel = Vector(0,-2)
+                    self.player.frame_index[1] = 3
+                    self.player.moving = True
+                elif self.keyboard.down:
+                    self.player.vel = Vector(0,2)
+                    self.player.frame_index[1] = 0
+                    self.player.moving = True
+                else:
+                    self.player.moving = False
+                    self.player.vel = Vector(0,0)
+
+    #goes through the wall and npc lists
+    def draw(self, canvas):
+        for x in self.game.background.walls_list:
+            x.draw(canvas)
+            col = x.collision(self.player)
+            if col == True:
+                x.interact(self.player)
+                if self.player.interacting == True:
+                    self.game.background.new_level(x.target_map, x.target_pos, self.player)
+
+                if self.player.in_fight == True:
+                    rand_int = random.random()
+                    if WILD_ENCOUNTERS_ENABLED and rand_int < balance.WILD_ENCOUNTER_CHANCE:
+                        pokerange = self.game.background.load_pokelvl()
+                        pokelvl = random.randint(pokerange[0], pokerange[1])
+                        num_lines = sum(1 for line in open(('{}/Overworld/map_poke/'.format(BASE_DIR))+self.game.background.map_name+".txt"))
+                        poke_num = random.randint(1,num_lines)
+                        with open(('{}/Overworld/map_poke/'.format(BASE_DIR))+self.game.background.map_name+".txt","r") as file:
+                            area = file.readlines()
+                            count = 1
+                            for pokemon in area:
+                                pokemon = pokemon.split()
+                                if count == poke_num:
+                                    pokeName = pokemon[0]
+                                count += 1
+                        Wpokemon = Pokemon(pokeName, -1, pokelvl, 0, [570, 140], [200, 250])
+                        self.game.fight = Fight([Wpokemon], self.player.pokemon_list, self.game.Kbd, False)
+                        self.game.fightB = True
+                    self.player.in_fight = False
+
+        if self.game.background.is_object_format:
+            self._draw_sorted(canvas)
+        else:
+            self.game.background.draw(canvas)
+            self.player.draw(canvas)
+            for y in self.game.background.npc_list:
+                y.draw(canvas)
+                self._npc_interact(canvas, y)
+
+    #resolves NPC movement/collision and the resulting dialogue-or-fight trigger; shared by both
+    #draw paths below. Returns the NPC to show dialogue for, if its interaction just fired one.
+    def _npc_interact(self, canvas, y):
+        y.move_to_player(self.player)
+        col = y.collision(self.player)
+        if col == True:
+            fightB = y.interact(self.player)
+            if fightB == True:
+                self.player.lock = True
+                self.game.text = Text(y.image_name, self.player, (50,405), True, self.game.txtcount, self.game.txtclock)
+                self.game.text.draw(canvas)
+                self.game.txtcount = self.game.text.count
+                if self.game.text.display == False:
+                    self.player.lock = False
+                    self.game.txtcount = 0
+                    self.game.fightB = True
+                    self.game.fight = Fight(self.game.background.npc_list[0].pokemon_list, self.player.pokemon_list, self.game.Kbd, True)
+
+    #map-builder maps: ground layer once, then player/NPCs/objects drawn in Y-sorted order so a
+    #tall object can occlude the player (and vice versa) instead of the player always being on top
+    def _draw_sorted(self, canvas):
+        self.game.background.draw(canvas)
+
+        drawables = [(self.player.pos.y + (self.player.frame_dim[1]//2)*self.player.scale_factor, self.player.draw)]
+        for y in self.game.background.npc_list:
+            drawables.append((y.pos.y + (y.frame_dim[1]//2)*y.scale_factor, y.draw))
+        for obj in self.game.background.visual_objects:
+            drawables.append((obj.base_y(), obj.draw))
+        drawables.sort(key=lambda item: item[0])
+        for _, draw_fn in drawables:
+            draw_fn(canvas)
+
+        for y in self.game.background.npc_list:
+            self._npc_interact(canvas, y)
+
+#sets up main class
+class Game:
+    def __init__(self, welcome, tutorial, player, keyboard, background, frame):
+        self.player = player
+        self.keyboard = keyboard
+        self.welcome = welcome
+        self.frame = frame
+        self.startscreen = Welcome("StartScreen.png")
+        self.credits = Welcome("credits.png")
+        self.caughtAll = Welcome("CaughtAll.png")
+        self.tutorial = tutorial
+        self.background = background
+        self.npc_lost = []
+        self.intro = False
+        self.complete = False
+        self.pokecomplete = False
+        self.txtcount = 0
+        self.txtclock = Clock()
+        self.text = Text("empty",self.player, (0,0), False, self.txtcount, self.txtclock)
+        self.inter = Interaction(self.player, self.keyboard, self)
+        self.Kbd = Kbd()
+        self.pokedex = Pokedex(self.Kbd)
+        pokemon2 = Pokemon('Palkia', 19, 5, 50, [210, 250], [570, 140])
+        self.fight = Fight([pokemon2], [pokemon2], self.Kbd, False)
+        self.fightB = False
+
+        #which top-level screen is active, dispatched via STATE_HANDLERS instead of nested
+        #if/elif checks. "tutorial" isn't its own state - it's an overlay toggle within
+        #welcome/start_menu (see _draw_welcome/_draw_start_menu), same as the original code.
+        self.state_handlers = {
+            "welcome": self._draw_welcome,
+            "start_menu": self._draw_start_menu,
+            "fight": self._draw_fight,
+            "pokedex": self._draw_pokedex,
+            "overworld": self._draw_overworld,
+        }
+        self.state = self._resolve_state()
+
+    #derives the current top-level screen from the keyboard/fight flags - same priority order
+    #as the original nested if/elif chain (fight takes priority over pokedex; both require
+    #keyboard.start and keyboard.startscreen to already be set)
+    def _resolve_state(self):
+        if not self.keyboard.start:
+            return "welcome"
+        if not self.keyboard.startscreen:
+            return "start_menu"
+        if self.fightB:
+            return "fight"
+        if self.keyboard.pokedex:
+            return "pokedex"
+        return "overworld"
+
+    #fires once on the frame a new state is entered - swaps the active keydown/keyup handler
+    #to the fight/pokedex-local Kbd. Only fires on entry (not every frame like the original
+    #inline calls did) since re-setting the same handler reference every frame was redundant.
+    #The handler is swapped *back* to self.keyboard from inside _draw_fight/_draw_pokedex
+    #themselves, not here - that swap-back intentionally happens as soon as the battle/pokedex
+    #interaction itself concludes, which can be several frames before the state actually changes
+    #(e.g. the post-fight win/lose text overlay keeps "fight" active while it plays out).
+    def _enter_state(self, state):
+        if state in ("fight", "pokedex"):
+            self.frame.set_keydown_handler(self.Kbd.keyDown)
+            self.frame.set_keyup_handler(self.Kbd.keyUp)
+
+    #saves the current progress of player
+    def save_game(self):
+        save_data = {
+            "intro": self.intro,
+            "complete": self.complete,
+            "pokecomplete": self.pokecomplete,
+            "npc_lost": list(self.npc_lost),
+            "player": {
+                "x": self.player.pos.x,
+                "y": self.player.pos.y,
+                "lives": self.player.lives,
+                "name": self.player.name if self.player.name != "" else None,
+            },
+            "map": self.background.map_name,
+        }
+        with open('{}/Fight/Files/Save.json'.format(BASE_DIR),"w") as file1:
+            json.dump(save_data, file1, indent=2)
+        party_data = [{"name": pokemon.name, "hp": pokemon.HP, "lvl": pokemon.lvl, "exp": pokemon.exp}
+                      for pokemon in self.player.pokemon_list]
+        with open('{}/Fight/Files/PlayerPokemon.json'.format(BASE_DIR),"w") as file2:
+            json.dump(party_data, file2, indent=2)
+
+    #loads the game from the save files; falls back to a fresh game if Save.json is missing/corrupted
+    def load_game(self, allow_fallback=True):
+        try:
+            with open('{}/Fight/Files/Save.json'.format(BASE_DIR),"r") as file:
+                save_data = json.load(file)
+            self.intro = save_data["intro"]
+            self.keyboard.startscreen = self.intro
+            self.complete = save_data["complete"]
+            self.pokecomplete = save_data["pokecomplete"]
+            self.npc_lost = list(save_data["npc_lost"])
+            player_data = save_data["player"]
+            self.player.pos.x = int(player_data["x"])
+            self.player.pos.y = int(player_data["y"])
+            self.player.lives = int(player_data["lives"])
+            self.player.name = player_data["name"] if player_data["name"] is not None else ""
+            self.background = Background(save_data["map"], WIDTH, HEIGHT, self.npc_lost)
+            self.background.load_wall()
+        except (OSError, IndexError, ValueError, KeyError) as error:
+            if not allow_fallback:
+                raise
+            print("Save data missing or corrupted ({}) - starting a new game.".format(error))
+            self.new_game("yes")
+
+    #creates a new game by replacing files
+    def new_game(self, confirmation):
+        if confirmation == "yes":
+            for template_name, live_name in SAVE_FILE_TEMPLATES:
+                copy_template(template_name, live_name)
+            self.player.pokemon_list = _load_pokemon_party(
+                '{}/Fight/Files/PlayerPokemon.json'.format(BASE_DIR), [210, 250], [570, 140])
+            self.load_game(allow_fallback=False)
+
+    #runs main game loop
+    def draw(self, canvas):
+        new_state = self._resolve_state()
+        if new_state != self.state:
+            self._enter_state(new_state)
+            self.state = new_state
+        self.state_handlers[self.state](canvas)
+
+    #handles the active battle screen, including the win/lose outcome once a fight ends
+    def _draw_fight(self, canvas):
+        self.fight.draw(canvas)
+
+        if (self.fight.end == True):
+            self.Kbd.KeyReset()
+            self.frame.set_keydown_handler(self.keyboard.keyDown)
+            self.frame.set_keyup_handler(self.keyboard.keyUp)
+            self.keyboard.KeyReset()
+
+            if self.fight.npc:
+                if (self.fight.catch == False) and (self.fight.run == False) and (self.fight.lost == False):
+                    npc_name = self.background.npc_list[0].image_name
+                    if npc_name not in self.npc_lost:
+                        self.npc_lost.append(npc_name)
+                    fight_state = "W"
+                else:
+                    fight_state = "L"
+
+                self.text = Text(self.background.npc_list[0].image_name+fight_state, self.player, (50,405), True, self.txtcount, self.txtclock)
+                self.text.draw(canvas)
+                self.txtcount = self.text.count
+
+                if self.text.display == False:
+                    self.background = Background(self.background.map_name, WIDTH, HEIGHT, self.npc_lost)
+                    self.background.load_wall()
+                    self.player.lock = False
+                    self.txtcount = 0
+                    self.fightB = False
+
+                    if self.fight.lost:
+                        self.player.pos.x +=50
+                        self.player.pos.y +=50
+                        self.player.lives -= 1
+                        for pokemon in self.player.pokemon_list:
+                            pokemon.HP = pokemon.fullhp
+
+                    if self.fight.run:
+                        self.player.pos.x +=50
+                        self.player.pos.y +=50
+            else:
+                if self.fight.lost:
+                    self.player.lives -= 1
+                    for pokemon in self.player.pokemon_list:
+                        pokemon.HP = pokemon.fullhp
+                self.fightB = False
+
+    #handles the Gokedex overlay
+    def _draw_pokedex(self, canvas):
+        self.pokedex.draw(canvas)
+        if self.Kbd.quit:
+            self.Kbd.KeyReset()
+            self.frame.set_keydown_handler(self.keyboard.keyDown)
+            self.frame.set_keyup_handler(self.keyboard.keyUp)
+            self.keyboard.KeyReset()
+            self.keyboard.pokedex = False
+            self.Kbd.quit = False
+
+    #handles normal overworld movement/interaction and its one-off text overlays
+    def _draw_overworld(self, canvas):
+        self.inter.update()
+        self.player.update()
+        self.background.draw(canvas)
+        self.inter.draw(canvas)
+
+        if self.keyboard.save:
+            self.save_game()
+            self.keyboard.save = False
+
+        if (self.complete == False) and ("boss2" in self.npc_lost):
+            self.credits.draw(canvas)
+            self.txtclock.tick()
+            move_on = self.txtclock.transition(balance.CREDITS_AND_COMPLETION_FRAMES)
+            if move_on:
+                self.complete = True
+
+        if (self.pokecomplete == False) and (self.player.encounters == 79):
+            if (self.complete == False) and ("boss2" in self.npc_lost):
+                pass
+            else:
+                self.caughtAll.draw(canvas)
+                self.txtclock.tick()
+                move_on = self.txtclock.transition(balance.CREDITS_AND_COMPLETION_FRAMES)
+                if move_on:
+                    self.pokecomplete = True
+
+        if self.player.player_heal:
+            self.player.lock = True
+            self.player.vel = Vector(0,0)
+            self.text = Text("heal", self.player, (50,405), True, self.txtcount, self.txtclock)
+            for y in self.player.pokemon_list:
+                y.HP = y.fullhp
+            self.text.draw(canvas)
+            self.txtcount = self.text.count
+            if self.text.display == False:
+                self.player.pos.y += 50
+                self.player.player_heal = False
+                self.player.lock = False
+                self.txtcount = 0
+
+        if not self.intro:
+            self.player.lock = True
+            self.text = Text("intro", self.player, (50,405), True, self.txtcount, self.txtclock)
+            self.text.draw(canvas)
+            self.txtcount = self.text.count
+            if self.text.display == False:
+                self.intro = True
+                self.player.lock = False
+                self.txtcount = 0
+
+        if self.player.lives == 0:
+            self.player.lives = balance.STARTING_LIVES
+            self.new_game("yes")
+
+    #handles the start-screen / tutorial toggle shown before pressing space to enter the overworld
+    def _draw_start_menu(self, canvas):
+        if not self.keyboard.tutorial:
+            self.startscreen.draw(canvas)
+        else:
+            self.tutorial.draw(canvas)
+            if self.keyboard.back:
+                self.keyboard.tutorial = False
+                self.keyboard.back = False
+
+    #handles the welcome screen / tutorial shown before pressing space the first time
+    def _draw_welcome(self, canvas):
+        if not self.keyboard.tutorial:
+            self.welcome.draw(canvas)
+        else:
+            self.tutorial.draw(canvas)
+            if self.keyboard.back:
+                self.keyboard.tutorial = False
+                self.keyboard.back = False
