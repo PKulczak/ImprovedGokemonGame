@@ -19,7 +19,7 @@ WIDTH = 800
 HEIGHT = 480
 
 #TEMP: set True to re-enable random wild encounters (disabled for map/collision QA)
-WILD_ENCOUNTERS_ENABLED = False
+WILD_ENCOUNTERS_ENABLED = True
 
 #live save data isn't committed to the repo (see .gitignore) - only these bundled defaults are
 SAVE_FILE_TEMPLATES = [

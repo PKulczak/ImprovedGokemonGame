@@ -53,98 +53,159 @@ class Fight:
         self.pos = [[(348,145),(348,265),(348,380)],[(598,145),(598,265),(598,380)]]
         self.end = False
 
+        #which of the fight screen's states is active, dispatched via state_handlers instead of
+        #the nested if/elif chain draw() used to be - derived fresh every frame from the exact
+        #same flags as before (change/catch/kbd.quit/kbd.select/run/count/attack), same priority
+        #order, so this is purely a readability change, not a new/different state machine. Some
+        #flag combinations are known dead ends kept as-is rather than "fixed" here - e.g. the
+        #catch-overflow confirm branch below never clears kbd.select/change, so the very next
+        #frame falls through into the switch-branch of bag_confirm too; count gets overwritten
+        #back to PLAYER_TURN_MESSAGE_FRAMES after every resolve_action regardless of what fight()
+        #set it to; self.attack only flips in fight()'s "still alive" branch, so a win takes an
+        #extra resolve_monster_turn cycle after the fatal hit before "Fight end, you win!" shows.
+        self.state_handlers = {
+            "bag_browse": self._draw_bag_browse,
+            "bag_confirm": self._draw_bag_confirm,
+            "bag_cancel": self._draw_bag_cancel,
+            "message": self._draw_message,
+            "choose_action": self._draw_choose_action,
+            "resolve_action": self._draw_resolve_action,
+            "resolve_monster_turn": self._draw_resolve_monster_turn,
+        }
+        self.state = self._resolve_state()
+
+    #derives the active state from the same flags draw() used to branch on inline
+    def _resolve_state(self):
+        if self.change:
+            if self.kbd.quit:
+                return "bag_cancel"
+            if self.kbd.select:
+                return "bag_confirm"
+            return "bag_browse"
+        if self.run or self.count != 0:
+            return "message"
+        if self.attack:
+            return "resolve_action" if self.kbd.select else "choose_action"
+        return "resolve_monster_turn"
+
     #responsible for drawing the fight
     def draw(self, canvas):
-        if self.change:
-            if not self.kbd.quit:
-                if not self.kbd.select:
-                    canvas.draw_image(self.bag, (375,250), (750,500), (400,240), (735,490))
-                    if not self.first:
-                        if self.kbd.left and self.centre[0] == 1:
-                            self.centre[0] = 0
-                            self.first = True
-                        elif self.kbd.down and self.centre[1] < 2:
-                            self.centre[1] += 1
-                            self.first = True
-                        elif self.kbd.right and self.centre[0] == 0:
-                            self.centre[0] = 1
-                            self.first = True
-                        elif self.kbd.up and self.centre[1] > 0:
-                            self.centre[1] -= 1
-                            self.first = True
-                    else:
-                        if not(self.kbd.left or self.kbd.right or self.kbd.up or self.kbd.down):
-                            self.first = False
-                    canvas.draw_image(self.light, (116,45), (233,91), self.pos[self.centre[0]][self.centre[1]], (233,91))
-                    for i in range(0,len(self.poke_list)):
-                        if i<3:
-                            canvas.draw_text(self.poke_list[i].name, (270, 130+(i*120)), 25, 'Black')
-                            canvas.draw_text("HP:"+str(self.poke_list[i].HP), (350, 160+(i*120)), 25, 'Black')
-                        else:
-                            canvas.draw_text(self.poke_list[i].name, (520, 130+(i-3)*120), 25, 'Black')
-                            canvas.draw_text("HP:"+str(self.poke_list[i].HP), (600, 160+(i-3)*120), 25, 'Black')
-                else:
-                    if self.centre[0] == 0 :
-                        choice = self.centre[0]+self.centre[1]
-                    else:
-                        choice = self.centre[0]+self.centre[1]+2
-                    if self.catch:
-                        self.monster.pos = self.pokemon.pos
-                        self.monster.pos1 = self.pokemon.pos1
-                        self.poke_list[choice] = self.monster
-                        self.mons_list.remove(self.monster)
-                        if len(self.mons_list) == 0:
-                            self.end = True
-                        else:
-                            self.monster = self.mons_list[0]
-                        self.catch = False
-                    else:
-                        if len(self.poke_list)-1>=choice:
-                            self.pokemon = self.poke_list[choice]
-                            self.change = False
-                        self.kbd.select = False
-            else:
-                self.change = False
-                if self.catch:
-                    self.info = "You release it again."
-                    self.catch = False
+        self.state = self._resolve_state()
+        if self.state != "bag_browse" and self.state != "bag_confirm" and self.state != "bag_cancel":
+            self._draw_scene(canvas)
+        self.state_handlers[self.state](canvas)
+
+    #the fight background, both combatants' name/HP/level, and both sprites - shared by every
+    #state except the bag/switch menu (which replaces this whole scene with the party list)
+    def _draw_scene(self, canvas):
+        canvas.draw_image(self.image, (375,250), (750,500), (400,240), (735,490))
+        canvas.draw_text(self.monster.name, (155, 80), 25, 'Black')
+        canvas.draw_text("HP:"+str(self.monster.HP)+"   Lvl:"+str(self.monster.lvl), (190, 110), 25, 'Black')
+        canvas.draw_text(self.pokemon.name, (530, 255), 25, 'Black')
+        canvas.draw_text("HP:"+str(self.pokemon.HP)+"/"+str(self.pokemon.fullhp)+"  Lvl:"+str(self.pokemon.lvl), (530, 295), 25, 'Black')
+        self.pokemon.draw(canvas)
+        self.monster.draw(canvas)
+
+    #shows the escape message, or the previous turn's result message with its attack-effect
+    #animation, counting self.count down either way
+    def _draw_message(self, canvas):
+        if self.run:
+            canvas.draw_text(self.info, (120, 415), 25, 'White')
+            self.count = self.count - 1
         else:
-            canvas.draw_image(self.image, (375,250), (750,500), (400,240), (735,490))
-            canvas.draw_text(self.monster.name, (155, 80), 25, 'Black')
-            canvas.draw_text("HP:"+str(self.monster.HP)+"   Lvl:"+str(self.monster.lvl), (190, 110), 25, 'Black')
-            canvas.draw_text(self.pokemon.name, (530, 255), 25, 'Black')
-            canvas.draw_text("HP:"+str(self.pokemon.HP)+"/"+str(self.pokemon.fullhp)+"  Lvl:"+str(self.pokemon.lvl), (530, 295), 25, 'Black')
-            self.pokemon.draw(canvas)
-            self.monster.draw(canvas)
-            if self.run:
-                canvas.draw_text(self.info, (120, 415), 25, 'White')
-                self.count = self.count - 1
-            elif self.count != 0:
-                if not self.first:
-                    if self.attack:
-                        self.monster.draw_effect(canvas)
-                    else:
-                        self.pokemon.draw_effect(canvas)
-                canvas.draw_text(self.info, (120, 415), 25, 'White')
-                self.count = self.count - 1
-            else:
-                self.monster.frame_index1[1] = 0
-                self.pokemon.frame_index1[1] = 0
-                self.first = False
+            if not self.first:
                 if self.attack:
-                    if not self.kbd.select:
-                        self.inte = self.interact(self.inte, canvas)
-                    else:
-                        if self.inte <=3 :
-                            self.fight(self.pokemon, self.monster, self.inte, canvas)
-                            self.kbd.select = False
-                            self.count = balance.PLAYER_TURN_MESSAGE_FRAMES
-                        elif self.inte == 4:
-                            self.change = True
-                            self.kbd.select = False
+                    self.monster.draw_effect(canvas)
                 else:
-                    self.fight(self.pokemon, self.monster, self.inte, canvas)
-                    self.count = balance.MONSTER_TURN_MESSAGE_FRAMES
+                    self.pokemon.draw_effect(canvas)
+            canvas.draw_text(self.info, (120, 415), 25, 'White')
+            self.count = self.count - 1
+
+    #resets the attack-effect sprite frame and clears the one-time "don't show an effect yet"
+    #flag - runs once every time a message finishes, before the next choice/resolution is made
+    def _reset_effect_frames(self):
+        self.monster.frame_index1[1] = 0
+        self.pokemon.frame_index1[1] = 0
+        self.first = False
+
+    #shows the Attack/Catch/Run/Bag menu and reads the player's choice
+    def _draw_choose_action(self, canvas):
+        self._reset_effect_frames()
+        self.inte = self.interact(self.inte, canvas)
+
+    #the frame the player confirms an action - either resolves it, or opens the bag/switch menu
+    def _draw_resolve_action(self, canvas):
+        self._reset_effect_frames()
+        if self.inte <=3 :
+            self.fight(self.pokemon, self.monster, self.inte, canvas)
+            self.kbd.select = False
+            self.count = balance.PLAYER_TURN_MESSAGE_FRAMES
+        elif self.inte == 4:
+            self.change = True
+            self.kbd.select = False
+
+    #the monster's turn - always resolves immediately, no menu of its own
+    def _draw_resolve_monster_turn(self, canvas):
+        self._reset_effect_frames()
+        self.fight(self.pokemon, self.monster, self.inte, canvas)
+        self.count = balance.MONSTER_TURN_MESSAGE_FRAMES
+
+    #browsing the party grid (the bag hotkey, or a forced switch/catch-overflow prompt)
+    def _draw_bag_browse(self, canvas):
+        canvas.draw_image(self.bag, (375,250), (750,500), (400,240), (735,490))
+        if not self.first:
+            if self.kbd.left and self.centre[0] == 1:
+                self.centre[0] = 0
+                self.first = True
+            elif self.kbd.down and self.centre[1] < 2:
+                self.centre[1] += 1
+                self.first = True
+            elif self.kbd.right and self.centre[0] == 0:
+                self.centre[0] = 1
+                self.first = True
+            elif self.kbd.up and self.centre[1] > 0:
+                self.centre[1] -= 1
+                self.first = True
+        else:
+            if not(self.kbd.left or self.kbd.right or self.kbd.up or self.kbd.down):
+                self.first = False
+        canvas.draw_image(self.light, (116,45), (233,91), self.pos[self.centre[0]][self.centre[1]], (233,91))
+        for i in range(0,len(self.poke_list)):
+            if i<3:
+                canvas.draw_text(self.poke_list[i].name, (270, 130+(i*120)), 25, 'Black')
+                canvas.draw_text("HP:"+str(self.poke_list[i].HP), (350, 160+(i*120)), 25, 'Black')
+            else:
+                canvas.draw_text(self.poke_list[i].name, (520, 130+(i-3)*120), 25, 'Black')
+                canvas.draw_text("HP:"+str(self.poke_list[i].HP), (600, 160+(i-3)*120), 25, 'Black')
+
+    #confirms the currently-highlighted party slot
+    def _draw_bag_confirm(self, canvas):
+        if self.centre[0] == 0 :
+            choice = self.centre[0]+self.centre[1]
+        else:
+            choice = self.centre[0]+self.centre[1]+2
+        if self.catch:
+            self.monster.pos = self.pokemon.pos
+            self.monster.pos1 = self.pokemon.pos1
+            self.poke_list[choice] = self.monster
+            self.mons_list.remove(self.monster)
+            if len(self.mons_list) == 0:
+                self.end = True
+            else:
+                self.monster = self.mons_list[0]
+            self.catch = False
+        else:
+            if len(self.poke_list)-1>=choice:
+                self.pokemon = self.poke_list[choice]
+                self.change = False
+            self.kbd.select = False
+
+    #cancels the bag/switch menu
+    def _draw_bag_cancel(self, canvas):
+        self.change = False
+        if self.catch:
+            self.info = "You release it again."
+            self.catch = False
 
     #does all the calculations for the fight
     def fight(self, pokemon, monster, inte, canvas):
