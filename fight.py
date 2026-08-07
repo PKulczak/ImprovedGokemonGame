@@ -1,10 +1,10 @@
 import pygame
 import time
-import random
 import os
 import json
 from image_cache import load_image
 import balance
+import battle_rules
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -150,27 +150,16 @@ class Fight:
     def fight(self, pokemon, monster, inte, canvas):
         if pokemon.HP > 0 and monster.HP > 0:
             if not self.attack:
-                if monster.ATK>pokemon.DEF:
-                    pokemon.HP = pokemon.HP-(monster.ATK - pokemon.DEF)
-                else:
-                    pokemon.HP = pokemon.HP-1
-                if pokemon.HP < 0:
-                    pokemon.HP = 0
+                pokemon.HP = max(0, pokemon.HP - battle_rules.damage_amount(monster.ATK, pokemon.DEF))
                 self.info = monster.name+" attack "+pokemon.name
                 self.attack = True
             else:
                 if inte == 1:
-                    if pokemon.ATK>monster.DEF:
-                        monster.HP = monster.HP-(pokemon.ATK - monster.DEF)
-                    else:
-                        monster.HP = monster.HP-1
-                    if monster.HP<0:
-                        monster.HP = 0
+                    monster.HP = max(0, monster.HP - battle_rules.damage_amount(pokemon.ATK, monster.DEF))
                     self.info = pokemon.name+" attack "+monster.name
                     self.attack = False
                 elif inte == 2:
-                    run = random.randint(1, balance.ESCAPE_SUCCESS_ROLL_MAX)
-                    if run == 1:
+                    if battle_rules.escape_succeeds():
                         self.info = "You escaped!"
                         self.run = True
                         self.count = balance.SHORT_MESSAGE_FRAMES
@@ -179,11 +168,7 @@ class Fight:
                         self.info = "Escape failed!"
                         self.attack = False
                 elif inte == 3:
-                    if self.npc == True:
-                        catch = balance.CATCH_SUCCESS_ROLL_MAX  # trainer pokemon can never be caught
-                    else:
-                        catch = random.randint(1, balance.CATCH_SUCCESS_ROLL_MAX)
-                    if catch == 1:
+                    if battle_rules.catch_succeeds(self.npc):
                         if len(self.poke_list) < balance.MAX_PARTY_SIZE:
                             self.info = "Catch succeed!"
                             self.monster.pos = self.pokemon.pos
@@ -226,15 +211,9 @@ class Fight:
                     if pokemon.lvl <= balance.MAX_LEVEL:
                         pokemon.lvl += 1
                         base_stats = POKEDEX[pokemon.name]
-                        pokemon.ATK = base_stats["ATK"]
-                        pokemon.DEF = base_stats["DEF"]
-                        pokemon.fullhp = base_stats["fullhp"]
-                        pokemon.max_exp = balance.BASE_MAX_EXP
-                        pokemon.ATK = int(pokemon.ATK+(((pokemon.ATK*balance.ATK_GROWTH_RATE)*pokemon.lvl)//1))
-                        pokemon.DEF = int(pokemon.DEF+(((pokemon.DEF*balance.DEF_GROWTH_RATE)*pokemon.lvl)//1))
-                        pokemon.fullhp = int(pokemon.fullhp+(((pokemon.fullhp*balance.HP_GROWTH_RATE)*pokemon.lvl)//1))
-                        pokemon.max_exp = int(balance.BASE_MAX_EXP+((balance.MAX_EXP_PER_LEVEL*pokemon.lvl)//1))
-                        pokemon.give_exp = int(balance.BASE_GIVE_EXP+((balance.GIVE_EXP_PER_LEVEL*pokemon.lvl)//1))
+                        (pokemon.ATK, pokemon.DEF, pokemon.fullhp,
+                         pokemon.max_exp, pokemon.give_exp) = battle_rules.level_up_stats(
+                            base_stats["ATK"], base_stats["DEF"], base_stats["fullhp"], pokemon.lvl)
                     pokemon.exp -= pokemon.max_exp
                     pokemon.HP = pokemon.fullhp
 
@@ -283,12 +262,8 @@ class Pokemon:
         #pokemon scaling
         self.lvl = lvl
         self.exp = exp
-        self.max_exp = balance.BASE_MAX_EXP
-        self.ATK = int(self.ATK+(((self.ATK*balance.ATK_GROWTH_RATE)*self.lvl)//1))
-        self.DEF = int(self.DEF+(((self.DEF*balance.DEF_GROWTH_RATE)*self.lvl)//1))
-        self.fullhp = int(self.fullhp+(((self.fullhp*balance.HP_GROWTH_RATE)*self.lvl)//1))
-        self.max_exp = int(balance.BASE_MAX_EXP+((balance.MAX_EXP_PER_LEVEL*self.lvl)//1))
-        self.give_exp = int(balance.BASE_GIVE_EXP+((balance.GIVE_EXP_PER_LEVEL*self.lvl)//1))
+        (self.ATK, self.DEF, self.fullhp,
+         self.max_exp, self.give_exp) = battle_rules.level_up_stats(self.ATK, self.DEF, self.fullhp, self.lvl)
         if HP == -1:
             self.HP = self.fullhp
         else:
