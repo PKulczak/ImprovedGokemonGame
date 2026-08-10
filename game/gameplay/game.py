@@ -56,6 +56,7 @@ class Keyboard:
         self.tutorial = False
         self.back = False
         self.save = False
+        self.select = False
 
     def keyDown(self, key):
         if key == pygame.K_RIGHT:
@@ -71,6 +72,10 @@ class Keyboard:
                 self.start = True
             else:
                 self.startscreen = True
+            #distinct from start/startscreen above (one-shot latches for the welcome/start
+            #screens) - this is a per-press "advance the current dialogue line" signal, cleared
+            #by whichever Text.draw() call consumes it, same pattern as Kbd.select in battle
+            self.select = True
         if key == pygame.K_p:
             self.pokedex = True
         if key == pygame.K_s:
@@ -177,7 +182,8 @@ class Interaction:
             if fightB == True:
                 self.player.lock = True
                 self.game.text = Text(y.image_name, self.player, (50,405), True, self.game.txtcount, self.game.txtclock)
-                self.game.text.draw(canvas)
+                self.game.text.draw(canvas, select=self.game.keyboard.select)
+                self.game.keyboard.select = False
                 self.game.txtcount = self.game.text.count
                 if self.game.text.display == False:
                     self.player.lock = False
@@ -348,7 +354,8 @@ class Game:
                     fight_state = "L"
 
                 self.text = Text(self.background.npc_list[0].image_name+fight_state, self.player, (50,405), True, self.txtcount, self.txtclock)
-                self.text.draw(canvas)
+                self.text.draw(canvas, select=self.keyboard.select)
+                self.keyboard.select = False
                 self.txtcount = self.text.count
 
                 if self.text.display == False:
@@ -420,7 +427,8 @@ class Game:
             self.text = Text("heal", self.player, (50,405), True, self.txtcount, self.txtclock)
             for y in self.player.pokemon_list:
                 y.HP = y.fullhp
-            self.text.draw(canvas)
+            self.text.draw(canvas, select=self.keyboard.select)
+            self.keyboard.select = False
             self.txtcount = self.text.count
             if self.text.display == False:
                 self.player.pos.y += 50
@@ -431,7 +439,8 @@ class Game:
         if not self.intro:
             self.player.lock = True
             self.text = Text("intro", self.player, (50,405), True, self.txtcount, self.txtclock)
-            self.text.draw(canvas)
+            self.text.draw(canvas, select=self.keyboard.select)
+            self.keyboard.select = False
             self.txtcount = self.text.count
             if self.text.display == False:
                 self.intro = True

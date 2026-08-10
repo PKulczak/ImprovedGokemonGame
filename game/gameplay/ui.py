@@ -99,7 +99,9 @@ class Text:
         self.alltxt = [line.format(player_name=player.name) for line in dialogue_lines(txtfile)]
         self.num_lines = len(self.alltxt)
 
-    def draw(self, canvas):
+    #select fast-forwards the current line's countdown instead of waiting it out, advancing by
+    #exactly one line, same as the timer completing naturally would
+    def draw(self, canvas, select=False):
         if self.display:
             if self.box:
                 canvas.draw_image(self.txtbox, (400,75), (800,150), (400,405), (800,150))
@@ -108,6 +110,9 @@ class Text:
 
         self.clock.tick()
         move_on = self.clock.transition(balance.DIALOGUE_LINE_FRAMES)
+        if select and not move_on:
+            move_on = True
+            self.clock.time = 0
         if move_on:
             self.count += 1
             if self.count >= self.num_lines:

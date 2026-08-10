@@ -146,6 +146,12 @@ class Fight:
                     self.pokemon.draw_effect(canvas)
             canvas.draw_text(self.info, (120, 415), 25, 'White')
             self.count = self.count - 1
+        #lets the player fast-forward this message's countdown instead of waiting it out - the
+        #same select key already used to confirm menu choices, safe to consume here since no
+        #other state handler reads it while "message" is the active state
+        if self.kbd.select:
+            self.count = 0
+            self.kbd.select = False
 
     #resets the attack-effect sprite frame and clears the one-time "don't show an effect yet"
     #flag - runs once every time a message finishes, before the next choice/resolution is made
