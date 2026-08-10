@@ -79,14 +79,18 @@ class Player:
         self.player_heal = False
         self.heart_img = load_image('{}/Overworld/Other/heart.png'.format(BASE_DIR))
 
-        self.player_left = self.pos.x - self.frame_center[0]
-        self.player_right = self.pos.x + self.frame_center[0]
-        self.player_top = self.pos.y
-        self.player_bot = self.pos.y + self.frame_center[1]
-
         #loads the players pokemon
         self.pokemon_list = _load_pokemon_party(
             '{}/Fight/Files/PlayerPokemon.json'.format(BASE_DIR), [210, 250], [570, 140])
+
+    #the player's collision box - left/right/top/bottom, centered on pos, scaled by
+    #scale_factor - the single source of truth for Wall/NPC collision, which used to each
+    #independently recompute their own (and, between the two, disagreeing) version of this
+    def bbox(self):
+        half_width = (self.frame_dim[0]//2) * self.scale_factor
+        half_height = (self.frame_dim[1]//2) * self.scale_factor
+        return (self.pos.x - half_width, self.pos.x + half_width,
+                self.pos.y - half_height, self.pos.y + half_height)
 
     #draws the player on screen
     def draw(self, canvas):
@@ -166,10 +170,7 @@ class NPC:
 
     #checks for collision between the player and NPC
     def collision(self, player):
-        player.player_left = player.pos.x - ((player.frame_dim[0]//2)*player.scale_factor)
-        player.player_right = player.pos.x + ((player.frame_dim[0]//2)*player.scale_factor)
-        player.player_top = player.pos.y - ((player.frame_dim[1]//2)*player.scale_factor)
-        player.player_bot = player.pos.y + ((player.frame_dim[1]//2)*player.scale_factor)
+        player_left, player_right, player_top, player_bot = player.bbox()
 
         self.wall_left = self.pos.x - (self.frame_dim[0]//2*self.scale_factor)
         self.wall_right = self.pos.x + (self.frame_dim[0]//2*self.scale_factor)
@@ -177,7 +178,7 @@ class NPC:
         self.wall_bot = self.pos.y + (self.frame_dim[1]//2*self.scale_factor)
 
         return aabb_overlap(self.wall_left, self.wall_right, self.wall_top, self.wall_bot,
-                             player.player_left, player.player_right, player.player_top, player.player_bot)
+                             player_left, player_right, player_top, player_bot)
 
     def interact(self, player):
         self.vel = Vector(0,0)
@@ -186,11 +187,10 @@ class NPC:
 
     #moves the npc towards the player
     def move_to_player(self,player):
-        player.player_left = player.pos.x - ((player.frame_dim[0]//2)*player.scale_factor)
-        player.player_right = player.pos.x + ((player.frame_dim[0]//2)*player.scale_factor)
+        player_left, player_right, _, _ = player.bbox()
 
-        col_left = ((self.wall_left - player.player_right) >= 0)
-        col_right = ((player.player_left - self.wall_right) >= 0)
+        col_left = ((self.wall_left - player_right) >= 0)
+        col_right = ((player_left - self.wall_right) >= 0)
 
         distance = player.pos.y - self.pos.y
         if distance < 96:
@@ -288,13 +288,10 @@ class Wall:
 
     #checks for collision
     def collision(self, player):
-        player.player_left = player.pos.x - ((player.frame_dim[0]//2)*player.scale_factor)
-        player.player_right = player.pos.x + ((player.frame_dim[0]//2)*player.scale_factor)
-        player.player_top = player.pos.y
-        player.player_bot = player.pos.y + ((player.frame_dim[1]//2)*player.scale_factor)
+        player_left, player_right, player_top, player_bot = player.bbox()
 
         return aabb_overlap(self.wall_left, self.wall_right, self.wall_top, self.wall_bot,
-                             player.player_left, player.player_right, player.player_top, player.player_bot)
+                             player_left, player_right, player_top, player_bot)
 
     #blocks the player from moving through
     def interact(self, player):
@@ -305,7 +302,7 @@ class Wall:
         if player.vel.y > 0:
             player.pos.y = self.wall_top-((player.frame_dim[1]//2)*player.scale_factor)-1
         if player.vel.y < 0:
-            player.pos.y = self.wall_bot+1
+            player.pos.y = self.wall_bot+((player.frame_dim[1]//2)*player.scale_factor)+1
 
 #creates an Interactive wall (subclass of wall)
 class Interact(Wall):
