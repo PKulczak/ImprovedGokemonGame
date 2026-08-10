@@ -107,4 +107,11 @@ class Frame:
                 self._draw_handler(self.canvas, dt)
             pygame.display.flip()
             elapsed_ms = clock.tick(self.fps)
-            dt = min((elapsed_ms / 1000.0) * self.fps, balance.MAX_DT_FRAMES)
+            #holding Shift fast-forwards the whole game (movement/animation/dialogue/message
+            #timers all read dt, so multiplying it here speeds all of them up uniformly) -
+            #polled directly rather than tracked via KEYDOWN/KEYUP so it can't get stuck on if a
+            #KEYUP is ever missed (e.g. released while the R/N text-entry modal has focus)
+            keys = pygame.key.get_pressed()
+            fast_forward = keys[pygame.K_LSHIFT] or keys[pygame.K_RSHIFT]
+            multiplier = balance.FAST_FORWARD_MULTIPLIER if fast_forward else 1
+            dt = min((elapsed_ms / 1000.0) * self.fps * multiplier, balance.MAX_DT_FRAMES)

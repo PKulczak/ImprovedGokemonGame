@@ -41,3 +41,7 @@ CREDITS_AND_COMPLETION_FRAMES = 200
 #GC/OS pause, alt-tabbing away and back) can't move the player through walls in one jump, dump a
 #fight message straight to its end, or spike the wild-encounter roll to near-certain that frame
 MAX_DT_FRAMES = 5
+
+#holding the fast-forward key (see frame.py) multiplies dt by this before the MAX_DT_FRAMES cap
+#above is applied, so fast-forwarding through a real stall still can't exceed the normal cap
+FAST_FORWARD_MULTIPLIER = 2

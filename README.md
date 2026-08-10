@@ -30,6 +30,7 @@ Asset and save-data paths are resolved relative to the script's own location, so
 |---|---|
 | R | Rename your player - opens a text-entry overlay |
 | N | Reset to a new game - opens a text-entry overlay, type `yes` to confirm |
+| Shift (hold) | Fast-forward - speeds up movement, animations, and message/dialogue timers while held |
 
 **Overworld**
 | Key | Action |
