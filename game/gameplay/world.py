@@ -53,7 +53,9 @@ class MapObject:
         self.width = width
         self.height = height
 
-    def draw(self, canvas):
+    #dt is unused - MapObject has no animation/timing of its own - but accepted so it can share
+    #a uniform (canvas, dt) call signature with Player/NPC in _draw_sorted's Y-sorted drawables
+    def draw(self, canvas, dt):
         canvas.draw_image(self.image, (self.width/2, self.height/2), (self.width, self.height),
                            (self.x, self.y), (self.width, self.height))
 

@@ -134,7 +134,7 @@ class Interaction:
                     self.player.vel = Vector(0,0)
 
     #goes through the wall and npc lists
-    def draw(self, canvas):
+    def draw(self, canvas, dt):
         for x in self.game.background.walls_list:
             x.draw(canvas)
             col = x.collision(self.player)
@@ -145,7 +145,7 @@ class Interaction:
 
                 if self.player.in_fight == True:
                     rand_int = random.random()
-                    if WILD_ENCOUNTERS_ENABLED and rand_int < balance.WILD_ENCOUNTER_CHANCE:
+                    if WILD_ENCOUNTERS_ENABLED and rand_int < balance.WILD_ENCOUNTER_CHANCE * dt:
                         pokerange = self.game.background.load_pokelvl()
                         pokelvl = random.randint(pokerange[0], pokerange[1])
                         with open('{}/Overworld/map_poke/{}.txt'.format(BASE_DIR, self.game.background.map_name), "r") as file:
@@ -157,17 +157,17 @@ class Interaction:
                     self.player.in_fight = False
 
         if self.game.background.is_object_format:
-            self._draw_sorted(canvas)
+            self._draw_sorted(canvas, dt)
         else:
             self.game.background.draw(canvas)
-            self.player.draw(canvas)
+            self.player.draw(canvas, dt)
             for y in self.game.background.npc_list:
-                y.draw(canvas)
-                self._npc_interact(canvas, y)
+                y.draw(canvas, dt)
+                self._npc_interact(canvas, y, dt)
 
     #resolves NPC movement/collision and the resulting dialogue-or-fight trigger; shared by both
     #draw paths below. Returns the NPC to show dialogue for, if its interaction just fired one.
-    def _npc_interact(self, canvas, y):
+    def _npc_interact(self, canvas, y, dt):
         y.move_to_player(self.player)
         col = y.collision(self.player)
         if col == True:
@@ -175,7 +175,7 @@ class Interaction:
             if fightB == True:
                 self.player.lock = True
                 self.game.text = Text(y.image_name, self.player, (50,405), True, self.game.txtcount, self.game.txtclock)
-                self.game.text.draw(canvas, select=self.game.keyboard.select)
+                self.game.text.draw(canvas, dt, select=self.game.keyboard.select)
                 self.game.keyboard.select = False
                 self.game.txtcount = self.game.text.count
                 if self.game.text.display == False:
@@ -186,7 +186,7 @@ class Interaction:
 
     #map-builder maps: ground layer once, then player/NPCs/objects drawn in Y-sorted order so a
     #tall object can occlude the player (and vice versa) instead of the player always being on top
-    def _draw_sorted(self, canvas):
+    def _draw_sorted(self, canvas, dt):
         self.game.background.draw(canvas)
 
         drawables = [(self.player.pos.y + (self.player.frame_dim[1]//2)*self.player.scale_factor, self.player.draw)]
@@ -196,10 +196,10 @@ class Interaction:
             drawables.append((obj.base_y(), obj.draw))
         drawables.sort(key=lambda item: item[0])
         for _, draw_fn in drawables:
-            draw_fn(canvas)
+            draw_fn(canvas, dt)
 
         for y in self.game.background.npc_list:
-            self._npc_interact(canvas, y)
+            self._npc_interact(canvas, y, dt)
 
 #sets up main class
 class Game:
@@ -320,16 +320,16 @@ class Game:
             self.load_game(allow_fallback=False)
 
     #runs main game loop
-    def draw(self, canvas):
+    def draw(self, canvas, dt):
         new_state = self._resolve_state()
         if new_state != self.state:
             self._enter_state(new_state)
             self.state = new_state
-        self.state_handlers[self.state](canvas)
+        self.state_handlers[self.state](canvas, dt)
 
     #handles the active battle screen, including the win/lose outcome once a fight ends
-    def _draw_fight(self, canvas):
-        self.fight.draw(canvas)
+    def _draw_fight(self, canvas, dt):
+        self.fight.draw(canvas, dt)
 
         if (self.fight.end == True):
             self.Kbd.KeyReset()
@@ -347,7 +347,7 @@ class Game:
                     fight_state = "L"
 
                 self.text = Text(self.background.npc_list[0].image_name+fight_state, self.player, (50,405), True, self.txtcount, self.txtclock)
-                self.text.draw(canvas, select=self.keyboard.select)
+                self.text.draw(canvas, dt, select=self.keyboard.select)
                 self.keyboard.select = False
                 self.txtcount = self.text.count
 
@@ -375,8 +375,9 @@ class Game:
                         pokemon.HP = pokemon.fullhp
                 self.fightB = False
 
-    #handles the Gokedex overlay
-    def _draw_pokedex(self, canvas):
+    #handles the Gokedex overlay. dt unused - Pokedex has no timing of its own, but every
+    #state_handlers entry is invoked through the same uniform (canvas, dt) call in draw()
+    def _draw_pokedex(self, canvas, dt):
         self.pokedex.draw(canvas)
         if self.Kbd.quit:
             self.Kbd.KeyReset()
@@ -387,11 +388,11 @@ class Game:
             self.Kbd.quit = False
 
     #handles normal overworld movement/interaction and its one-off text overlays
-    def _draw_overworld(self, canvas):
+    def _draw_overworld(self, canvas, dt):
         self.inter.update()
-        self.player.update()
+        self.player.update(dt)
         self.background.draw(canvas)
-        self.inter.draw(canvas)
+        self.inter.draw(canvas, dt)
 
         if self.keyboard.save:
             self.save_game()
@@ -399,7 +400,7 @@ class Game:
 
         if (self.complete == False) and ("boss2" in self.npc_lost):
             self.credits.draw(canvas)
-            self.txtclock.tick()
+            self.txtclock.tick(dt)
             move_on = self.txtclock.transition(balance.CREDITS_AND_COMPLETION_FRAMES)
             if move_on:
                 self.complete = True
@@ -409,7 +410,7 @@ class Game:
                 pass
             else:
                 self.caughtAll.draw(canvas)
-                self.txtclock.tick()
+                self.txtclock.tick(dt)
                 move_on = self.txtclock.transition(balance.CREDITS_AND_COMPLETION_FRAMES)
                 if move_on:
                     self.pokecomplete = True
@@ -420,7 +421,7 @@ class Game:
             self.text = Text("heal", self.player, (50,405), True, self.txtcount, self.txtclock)
             for y in self.player.pokemon_list:
                 y.HP = y.fullhp
-            self.text.draw(canvas, select=self.keyboard.select)
+            self.text.draw(canvas, dt, select=self.keyboard.select)
             self.keyboard.select = False
             self.txtcount = self.text.count
             if self.text.display == False:
@@ -432,7 +433,7 @@ class Game:
         if not self.intro:
             self.player.lock = True
             self.text = Text("intro", self.player, (50,405), True, self.txtcount, self.txtclock)
-            self.text.draw(canvas, select=self.keyboard.select)
+            self.text.draw(canvas, dt, select=self.keyboard.select)
             self.keyboard.select = False
             self.txtcount = self.text.count
             if self.text.display == False:
@@ -444,8 +445,9 @@ class Game:
             self.player.lives = balance.STARTING_LIVES
             self.new_game("yes")
 
-    #handles the start-screen / tutorial toggle shown before pressing space to enter the overworld
-    def _draw_start_menu(self, canvas):
+    #handles the start-screen / tutorial toggle shown before pressing space to enter the
+    #overworld. dt unused - no timing here - but part of the uniform state_handlers call shape
+    def _draw_start_menu(self, canvas, dt):
         if not self.keyboard.tutorial:
             self.startscreen.draw(canvas)
         else:
@@ -454,8 +456,9 @@ class Game:
                 self.keyboard.tutorial = False
                 self.keyboard.back = False
 
-    #handles the welcome screen / tutorial shown before pressing space the first time
-    def _draw_welcome(self, canvas):
+    #handles the welcome screen / tutorial shown before pressing space the first time. dt unused,
+    #same reason as _draw_start_menu above
+    def _draw_welcome(self, canvas, dt):
         if not self.keyboard.tutorial:
             self.welcome.draw(canvas)
         else:

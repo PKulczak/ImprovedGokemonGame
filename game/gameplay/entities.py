@@ -92,7 +92,7 @@ class Player:
                 self.pos.y - half_height, self.pos.y + half_height)
 
     #draws the player on screen
-    def draw(self, canvas):
+    def draw(self, canvas, dt):
         draw_frame(canvas, self.image, self.frame_center, self.frame_index, self.frame_dim, self.pos, self.scale_factor, self.moving)
 
         canvas.draw_image(self.heart_img, [8,8], [16,16], [16,16], [16,16])
@@ -102,7 +102,7 @@ class Player:
         self.encounters = self.num_lines = len(load_seen_pokemon())
         canvas.draw_text("Gokedex entries: "+str(self.encounters), [300,20], 24, "Black")
 
-        self.clock.tick()
+        self.clock.tick(dt)
         move_on = self.clock.transition(balance.WALK_ANIMATION_CADENCE_FRAMES)
         if move_on == True:
             self.next_frame()
@@ -111,8 +111,8 @@ class Player:
     def next_frame(self):
         advance_frame(self.frame_index, self.columns)
 
-    def update(self):
-        self.pos.add(self.vel)
+    def update(self, dt):
+        self.pos.add(self.vel * dt)
 
     def add_name(self, name):
         self.name = name
@@ -150,12 +150,12 @@ class NPC:
             ('{}/Overworld/NPC/'.format(BASE_DIR))+self.image_name+".json", [570, 140], [200, 250])
 
     #draws the NPC on screen
-    def draw(self, canvas):
+    def draw(self, canvas, dt):
         draw_frame(canvas, self.image, self.frame_center, self.frame_index, self.frame_dim, self.pos, self.scale_factor, self.moving)
 
         if self.moving:
-            self.update()
-        self.clock.tick()
+            self.update(dt)
+        self.clock.tick(dt)
         move_on = self.clock.transition(balance.WALK_ANIMATION_CADENCE_FRAMES)
         if move_on == True:
             self.next_frame()
@@ -163,8 +163,8 @@ class NPC:
     def next_frame(self):
         advance_frame(self.frame_index, self.columns)
 
-    def update(self):
-        self.pos.add(self.vel)
+    def update(self, dt):
+        self.pos.add(self.vel * dt)
 
     #checks for collision between the player and NPC
     def collision(self, player):
@@ -231,24 +231,24 @@ class Yacht(NPC):
         self.frame_center = [width/2, height/2]
         self.frame_dim = [width, height]
 
-    def draw(self, canvas):
+    def draw(self, canvas, dt):
         if self.pos.y > -100:
             canvas.draw_image(self.image,
                     [self.frame_center[0] + 0 * self.frame_dim[0],
                     self.frame_center[1] + self.frame_index[1] * self.frame_dim[1]],
                     self.frame_dim, [self.pos.x,self.pos.y], [self.frame_dim[0]*self.scale_factor,self.frame_dim[1]*self.scale_factor])
         if self.moving:
-            self.update()
+            self.update(dt)
 
-        self.clock.tick()
+        self.clock.tick(dt)
         move_on = self.clock.transition(balance.YACHT_ACCELERATION_INTERVAL_FRAMES)
         if move_on == True:
             self.vel.add(self.vel)
             self.clock.time = 0
 
     #accelerates away off screen
-    def update(self):
-        self.pos.add(self.vel)
+    def update(self, dt):
+        self.pos.add(self.vel * dt)
 
     def move_to_player(self,player):
         pass

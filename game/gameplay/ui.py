@@ -101,14 +101,14 @@ class Text:
 
     #select fast-forwards the current line's countdown instead of waiting it out, advancing by
     #exactly one line, same as the timer completing naturally would
-    def draw(self, canvas, select=False):
+    def draw(self, canvas, dt, select=False):
         if self.display:
             if self.box:
                 canvas.draw_image(self.txtbox, (400,75), (800,150), (400,405), (800,150))
             canvas.draw_text(self.alltxt[self.count], self.pos, 20, 'White')
 
 
-        self.clock.tick()
+        self.clock.tick(dt)
         move_on = self.clock.transition(balance.DIALOGUE_LINE_FRAMES)
         if select and not move_on:
             move_on = True

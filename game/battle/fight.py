@@ -100,7 +100,9 @@ class Fight:
         }
         self.state = self._resolve_state()
 
-    #derives the active state from the same flags draw() used to branch on inline
+    #derives the active state from the same flags draw() used to branch on inline. count > 0
+    #(not != 0) since count is now a real-time countdown (see _draw_message) that can overshoot
+    #past exactly zero in one dt step, rather than an integer that only ever decremented to it
     def _resolve_state(self):
         if self.change:
             if self.kbd.quit:
@@ -108,36 +110,36 @@ class Fight:
             if self.kbd.select:
                 return "bag_confirm"
             return "bag_browse"
-        if self.run or self.count != 0:
+        if self.run or self.count > 0:
             return "message"
         if self.attack:
             return "resolve_action" if self.kbd.select else "choose_action"
         return "resolve_monster_turn"
 
     #responsible for drawing the fight
-    def draw(self, canvas):
+    def draw(self, canvas, dt):
         self.state = self._resolve_state()
         if self.state != "bag_browse" and self.state != "bag_confirm" and self.state != "bag_cancel":
-            self._draw_scene(canvas)
-        self.state_handlers[self.state](canvas)
+            self._draw_scene(canvas, dt)
+        self.state_handlers[self.state](canvas, dt)
 
     #the fight background, both combatants' name/HP/level, and both sprites - shared by every
     #state except the bag/switch menu (which replaces this whole scene with the party list)
-    def _draw_scene(self, canvas):
+    def _draw_scene(self, canvas, dt):
         canvas.draw_image(self.image, (375,250), (750,500), (400,240), (735,490))
         canvas.draw_text(self.monster.name, (155, 80), 25, 'Black')
         canvas.draw_text("HP:"+str(self.monster.HP)+"   Lvl:"+str(self.monster.lvl), (190, 110), 25, 'Black')
         canvas.draw_text(self.pokemon.name, (530, 255), 25, 'Black')
         canvas.draw_text("HP:"+str(self.pokemon.HP)+"/"+str(self.pokemon.fullhp)+"  Lvl:"+str(self.pokemon.lvl), (530, 295), 25, 'Black')
-        self.pokemon.draw(canvas)
-        self.monster.draw(canvas)
+        self.pokemon.draw(canvas, dt)
+        self.monster.draw(canvas, dt)
 
     #shows the escape message, or the previous turn's result message with its attack-effect
     #animation, counting self.count down either way
-    def _draw_message(self, canvas):
+    def _draw_message(self, canvas, dt):
         if self.run:
             canvas.draw_text(self.info, (120, 415), 25, 'White')
-            self.count = self.count - 1
+            self.count = self.count - dt
         else:
             if not self.first:
                 if self.attack:
@@ -145,7 +147,7 @@ class Fight:
                 else:
                     self.pokemon.draw_effect(canvas)
             canvas.draw_text(self.info, (120, 415), 25, 'White')
-            self.count = self.count - 1
+            self.count = self.count - dt
         #lets the player fast-forward this message's countdown instead of waiting it out - the
         #same select key already used to confirm menu choices, safe to consume here since no
         #other state handler reads it while "message" is the active state
@@ -160,13 +162,15 @@ class Fight:
         self.pokemon.frame_index1[1] = 0
         self.first = False
 
-    #shows the Attack/Catch/Run/Bag menu and reads the player's choice
-    def _draw_choose_action(self, canvas):
+    #shows the Attack/Catch/Run/Bag menu and reads the player's choice. dt is unused here and in
+    #every other state handler below - only _draw_scene/_draw_message have their own timing -
+    #but all of state_handlers is invoked through one uniform (canvas, dt) call in draw()
+    def _draw_choose_action(self, canvas, dt):
         self._reset_effect_frames()
         self.inte = self.interact(self.inte, canvas)
 
     #the frame the player confirms an action - either resolves it, or opens the bag/switch menu
-    def _draw_resolve_action(self, canvas):
+    def _draw_resolve_action(self, canvas, dt):
         self._reset_effect_frames()
         if self.inte <=3 :
             self.fight(self.pokemon, self.monster, self.inte, canvas)
@@ -177,13 +181,13 @@ class Fight:
             self.kbd.select = False
 
     #the monster's turn - always resolves immediately, no menu of its own
-    def _draw_resolve_monster_turn(self, canvas):
+    def _draw_resolve_monster_turn(self, canvas, dt):
         self._reset_effect_frames()
         self.fight(self.pokemon, self.monster, self.inte, canvas)
         self.count = balance.MONSTER_TURN_MESSAGE_FRAMES
 
     #browsing the party grid (the bag hotkey, or a forced switch/catch-overflow prompt)
-    def _draw_bag_browse(self, canvas):
+    def _draw_bag_browse(self, canvas, dt):
         self.first = self.grid.update(self.kbd, self.first)
         self.grid.draw_highlight(canvas, self.bag, self.light)
         for i in range(0,len(self.poke_list)):
@@ -195,7 +199,7 @@ class Fight:
                 canvas.draw_text("HP:"+str(self.poke_list[i].HP), (600, 160+(i-3)*120), 25, 'Black')
 
     #confirms the currently-highlighted party slot
-    def _draw_bag_confirm(self, canvas):
+    def _draw_bag_confirm(self, canvas, dt):
         if self.grid.centre[0] == 0 :
             choice = self.grid.centre[0]+self.grid.centre[1]
         else:
@@ -217,7 +221,7 @@ class Fight:
             self.kbd.select = False
 
     #cancels the bag/switch menu
-    def _draw_bag_cancel(self, canvas):
+    def _draw_bag_cancel(self, canvas, dt):
         self.change = False
         if self.catch:
             self.info = "You release it again."
@@ -335,6 +339,7 @@ class Pokemon:
         effect_img = base_stats["effect_img"]
         row = base_stats["row"]
         self.count = 0
+        self._prev_count = 0
 
         #pokemon scaling
         self.lvl = lvl
@@ -384,16 +389,17 @@ class Pokemon:
         self.frame_index1 = [0,0]
         self.row1 = row1
 
-    def draw(self, canvas):
+    def draw(self, canvas, dt):
             canvas.draw_image(self.image,
                               [self.frame_center[0] + self.frame_index[0] * self.frame_dim[0],
                                self.frame_center[1] + self.frame_index[1] * self.frame_dim[1]],
                               self.frame_dim, [self.pos[0], self.pos[1]],
                               [self.frame_dim[0]*3,self.frame_dim[1]*3])
-            if self.count % balance.POKEMON_IDLE_ANIMATION_CADENCE == 0:
+            self._prev_count = self.count
+            self.count += dt
+            if self._cadence_crossed(balance.POKEMON_IDLE_ANIMATION_CADENCE):
                 self.next_frame()
-            self.count +=1
-    
+
     def next_frame(self):
         self.frame_index[0] += 1
         if self.frame_index[0] >= 5:
@@ -401,7 +407,7 @@ class Pokemon:
             self.frame_index[1] +=1
             if self.frame_index[1] >= self.row:
                 self.frame_index[1] = 0
-                
+
     def next_effect(self):
         self.frame_index1[0] += 1
         if self.frame_index1[0] >= 5:
@@ -409,14 +415,20 @@ class Pokemon:
             self.frame_index1[1] +=1
             if self.frame_index1[1] >= self.row1:
                 self.frame_index1[1] = 0
-                
+
+    #true once per real-time interval of `cadence` frame-equivalents since draw() last advanced
+    #self.count - a boundary-crossing check rather than the exact modulo-equality this replaced,
+    #so it still fires correctly even when a single dt step skips straight past a boundary
+    def _cadence_crossed(self, cadence):
+        return int(self._prev_count // cadence) != int(self.count // cadence)
+
     def draw_effect(self, canvas):
         canvas.draw_image(self.effectimg,
                           [self.frame_center1[0] + self.frame_index1[0] * self.frame_dim1[0],
                            self.frame_center1[1] + self.frame_index1[1] * self.frame_dim1[1]],
                           self.frame_dim1, [self.pos1[0], self.pos1[1]],
                           [self.frame_dim1[0]+35,self.frame_dim1[1]+35])
-        if self.count % balance.ATTACK_EFFECT_ANIMATION_CADENCE == 0:
+        if self._cadence_crossed(balance.ATTACK_EFFECT_ANIMATION_CADENCE):
                 self.next_effect()
 
 #Sets up the keyboard handlers for fight and gokedex 

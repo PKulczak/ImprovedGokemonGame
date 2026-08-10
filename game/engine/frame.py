@@ -1,6 +1,8 @@
 import sys
 import pygame
 
+from game.engine import balance
+
 pygame.font.init()
 
 _PROMPT_FONT_SIZE = 28
@@ -76,6 +78,13 @@ class Frame:
     def start(self):
         self._running = True
         clock = pygame.time.Clock()
+        #dt is in frame-equivalents (1.0 == one frame at the nominal self.fps design rate),
+        #derived from how long the *previous* iteration actually took - there's no way to know
+        #the current one's duration before it happens, so every real-time game loop works one
+        #iteration behind like this. Starts at exactly 1.0 (one nominal frame) since there's no
+        #previous iteration yet, and is capped so a one-off stall can't blow through walls,
+        #fast-forward a message to its end, or spike the wild-encounter roll in a single jump
+        dt = 1.0
         while self._running:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -95,6 +104,7 @@ class Frame:
 
             self.screen.fill(self.bg_color)
             if self._draw_handler is not None:
-                self._draw_handler(self.canvas)
+                self._draw_handler(self.canvas, dt)
             pygame.display.flip()
-            clock.tick(self.fps)
+            elapsed_ms = clock.tick(self.fps)
+            dt = min((elapsed_ms / 1000.0) * self.fps, balance.MAX_DT_FRAMES)
