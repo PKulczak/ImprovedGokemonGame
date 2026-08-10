@@ -2,18 +2,18 @@ import pygame
 import random
 import os
 import json
-from vector import Vector
-from Welcome import Welcome
-from fight import Pokemon
-from fight import Fight
-from fight import Kbd
-from entities import _load_pokemon_party
-from world import Background
-from ui import Text, Pokedex
-from clock import Clock
-import balance
+from game.engine.vector import Vector
+from game.gameplay.Welcome import Welcome
+from game.battle.fight import Pokemon
+from game.battle.fight import Fight
+from game.battle.fight import Kbd
+from game.gameplay.entities import _load_pokemon_party
+from game.gameplay.world import Background
+from game.gameplay.ui import Text, Pokedex
+from game.gameplay.clock import Clock
+from game.engine import balance
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 WIDTH = 800
 HEIGHT = 480

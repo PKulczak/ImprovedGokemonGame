@@ -2,11 +2,11 @@ import pygame
 import time
 import os
 import json
-from image_cache import load_image
-import balance
-import battle_rules
+from game.engine.image_cache import load_image
+from game.engine import balance
+from game.battle import battle_rules
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 #loads each pokemon's base stats from Pokedex.json once, keyed by name
 def _load_pokedex():

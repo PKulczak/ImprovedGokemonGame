@@ -1,11 +1,11 @@
 import pygame
-from Welcome import Welcome
-from canvas import Canvas
-from frame import Frame
-from clock import Clock
-from entities import Player
-from world import Background
-from game import Game, Keyboard, WIDTH, HEIGHT, ensure_save_files_exist
+from game.gameplay.Welcome import Welcome
+from game.engine.canvas import Canvas
+from game.engine.frame import Frame
+from game.gameplay.clock import Clock
+from game.gameplay.entities import Player
+from game.gameplay.world import Background
+from game.gameplay.game import Game, Keyboard, WIDTH, HEIGHT, ensure_save_files_exist
 
 pygame.init()
 

@@ -1,10 +1,10 @@
 import os
 import json
-from image_cache import load_image
-import balance
-from fight import POKEDEX
+from game.engine.image_cache import load_image
+from game.engine import balance
+from game.battle.fight import POKEDEX
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 #creates the Gokedex
 class Pokedex:

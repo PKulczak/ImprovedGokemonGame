@@ -1,11 +1,11 @@
 import os
 import json
-from vector import Vector
-from fight import Pokemon
-from image_cache import load_image
-import balance
+from game.engine.vector import Vector
+from game.battle.fight import Pokemon
+from game.engine.image_cache import load_image
+from game.engine import balance
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 #builds a party of Pokemon from a JSON file of {"name", "hp", "lvl", "exp"} entries
 def _load_pokemon_party(path, pos, pos1):

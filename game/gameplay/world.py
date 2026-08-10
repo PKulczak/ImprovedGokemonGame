@@ -1,11 +1,11 @@
 import os
 import json
-from vector import Vector
-from image_cache import load_image
-from clock import Clock
-from entities import Wall, Interact, NPC, NPCWall, Yacht
+from game.engine.vector import Vector
+from game.engine.image_cache import load_image
+from game.gameplay.clock import Clock
+from game.gameplay.entities import Wall, Interact, NPC, NPCWall, Yacht
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 #pixel offset applied to a tile's grid (x,y) from Overworld/maps/*.json, keyed by tile type
 TILE_OFFSETS = {

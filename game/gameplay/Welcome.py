@@ -1,8 +1,8 @@
-from vector import Vector
-from image_cache import load_image
+from game.engine.vector import Vector
+from game.engine.image_cache import load_image
 import os
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 #sets a class used to display full screen image
 class Welcome:

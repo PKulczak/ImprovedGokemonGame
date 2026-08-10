@@ -13,10 +13,10 @@ env/
 
 plans/
 
-# live save data - generated from Fight/Files/New* templates at startup, not shipped in the repo
-Fight/Files/Save.json
-Fight/Files/PlayerPokedex.json
-Fight/Files/PlayerPokemon.json
+# live save data - generated from game/Fight/Files/New* templates at startup, not shipped in the repo
+game/Fight/Files/Save.json
+game/Fight/Files/PlayerPokedex.json
+game/Fight/Files/PlayerPokemon.json
 
 # map builder: in-progress projects and staged export output are local working files
 MapBuilder/projects/*

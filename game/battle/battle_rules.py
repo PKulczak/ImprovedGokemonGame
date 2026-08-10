@@ -1,5 +1,5 @@
 import random
-import balance
+from game.engine import balance
 
 #pure damage formula - ATK vs DEF, minimum 1 damage. Doesn't touch any Pokemon/canvas object,
 #so it can be tested with plain numbers, independent of rendering.
