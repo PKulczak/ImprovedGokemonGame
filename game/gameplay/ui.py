@@ -3,7 +3,7 @@ import json
 from game.engine.image_cache import load_image
 from game.engine import balance
 from game.engine.party_grid import PartyGrid
-from game.battle.fight import POKEDEX
+from game.battle.fight import POKEDEX, load_seen_pokemon, seen_pokemon_version
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -19,6 +19,8 @@ class Pokedex:
         self.grid = PartyGrid(on_page=self._turn_page)
         self.bag = load_image('{}/Fight/Other/bag.png'.format(BASE_DIR))
         self.light = load_image('{}/Fight/Other/highlight.png'.format(BASE_DIR))
+        #forces the first draw() to build self.pokedex, since no real version is ever -1
+        self._built_from_version = -1
 
     #turns to the next/previous page of 6 pokedex entries, called by the grid when down is
     #pressed at the bottom row or up is pressed at the top row
@@ -31,27 +33,30 @@ class Pokedex:
                 self.index -= 1
 
     def draw(self, canvas):
-        self.player_pokedex = []
-        self.pokedex = []
-        #loads the gokemon the player has in their gokedex
-        with open('{}/Fight/Files/PlayerPokedex.json'.format(BASE_DIR),"r") as file:
-            self.player_pokedex = json.load(file)
-
-        #fills out the gokedex file
-        count = 0
-        temp_list = []
-        for name in POKEDEX:
-            count += 1
-            if name in self.player_pokedex:
-                temp_list.append(str(count)+"    "+name)
-            else:
-                temp_list.append(str(count)+"    ?????")
-            if len(temp_list) >= 6:
+        #loads the gokemon the player has in their gokedex - a cheap mtime check unless
+        #something actually changed (a catch, or a save reset), rather than a raw file
+        #open+parse every frame
+        self.player_pokedex = load_seen_pokemon()
+        version = seen_pokemon_version()
+        if version != self._built_from_version:
+            #rebuilds the paginated ?????/name display list - only needed when the seen-list
+            #itself changed, not every frame the Gokedex screen happens to be open
+            self.pokedex = []
+            count = 0
+            temp_list = []
+            for name in POKEDEX:
+                count += 1
+                if name in self.player_pokedex:
+                    temp_list.append(str(count)+"    "+name)
+                else:
+                    temp_list.append(str(count)+"    ?????")
+                if len(temp_list) >= 6:
+                    self.pokedex.append(temp_list)
+                    temp_list = []
+            if len(temp_list) != 0:
                 self.pokedex.append(temp_list)
                 temp_list = []
-        if len(temp_list) != 0:
-            self.pokedex.append(temp_list)
-            temp_list = []
+            self._built_from_version = version
         #draws gokedex
         self.poke_list = self.pokedex[self.index]
         self.first = self.grid.update(self.kbd, self.first)

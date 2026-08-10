@@ -1,7 +1,7 @@
 import os
 import json
 from game.engine.vector import Vector
-from game.battle.fight import Pokemon
+from game.battle.fight import Pokemon, load_seen_pokemon
 from game.engine.image_cache import load_image
 from game.engine import balance
 
@@ -72,8 +72,7 @@ class Player:
         self.interacting = False
         self.lock = False
         self.scale_factor = 0.26
-        with open('{}/Fight/Files/PlayerPokedex.json'.format(BASE_DIR), "r") as file:
-            self.encounters = self.num_lines = len(json.load(file))
+        self.encounters = self.num_lines = len(load_seen_pokemon())
 
         self.lives = balance.STARTING_LIVES
         self.player_heal = False
@@ -100,8 +99,7 @@ class Player:
         lives = "x"+str(self.lives)
         canvas.draw_text(lives, [30,20], 24, "Black")
 
-        with open('{}/Fight/Files/PlayerPokedex.json'.format(BASE_DIR), "r") as file:
-            self.encounters = self.num_lines = len(json.load(file))
+        self.encounters = self.num_lines = len(load_seen_pokemon())
         canvas.draw_text("Gokedex entries: "+str(self.encounters), [300,20], 24, "Black")
 
         self.clock.tick()

@@ -16,15 +16,41 @@ def _load_pokedex():
 
 POKEDEX = _load_pokedex()
 
+_SEEN_POKEMON_PATH = '{}/Fight/Files/PlayerPokedex.json'.format(BASE_DIR)
+_seen_pokemon_cache = None
+_seen_pokemon_mtime = None
+_seen_pokemon_version = 0
+
+#returns the player's seen-pokemon list, re-reading from disk only when the file's mtime has
+#changed since the last read - avoids a full file-open+json-parse every single frame (both
+#Player's Gokedex-entry counter and the Pokedex screen itself used to do this) for data that's
+#almost always unchanged. Refreshes correctly whether the file changed via _mark_pokemon_seen
+#below or via a wholesale save reset (Game.new_game), since both bump the file's mtime.
+def load_seen_pokemon():
+    global _seen_pokemon_cache, _seen_pokemon_mtime, _seen_pokemon_version
+    mtime = os.path.getmtime(_SEEN_POKEMON_PATH)
+    if _seen_pokemon_cache is None or mtime != _seen_pokemon_mtime:
+        with open(_SEEN_POKEMON_PATH, "r") as file:
+            _seen_pokemon_cache = json.load(file)
+        _seen_pokemon_mtime = mtime
+        _seen_pokemon_version += 1
+    return _seen_pokemon_cache
+
+#bumps whenever load_seen_pokemon()'s cache actually changes - lets callers that keep their own
+#derived data (e.g. Pokedex's paginated display list) skip rebuilding it on unchanged frames
+def seen_pokemon_version():
+    return _seen_pokemon_version
+
 #records a pokemon as seen in the player's Pokedex, if it isn't already
 def _mark_pokemon_seen(name):
-    path = '{}/Fight/Files/PlayerPokedex.json'.format(BASE_DIR)
-    with open(path, "r") as file:
-        seen = json.load(file)
+    global _seen_pokemon_mtime, _seen_pokemon_version
+    seen = load_seen_pokemon()
     if name not in seen:
         seen.append(name)
-        with open(path, "w") as file:
+        with open(_SEEN_POKEMON_PATH, "w") as file:
             json.dump(seen, file, indent=2)
+        _seen_pokemon_mtime = os.path.getmtime(_SEEN_POKEMON_PATH)
+        _seen_pokemon_version += 1
 
 class Fight:
     def __init__(self, monster_list, pokemon_list, keyboard, npc):
