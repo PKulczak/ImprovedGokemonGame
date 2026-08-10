@@ -148,16 +148,9 @@ class Interaction:
                     if WILD_ENCOUNTERS_ENABLED and rand_int < balance.WILD_ENCOUNTER_CHANCE:
                         pokerange = self.game.background.load_pokelvl()
                         pokelvl = random.randint(pokerange[0], pokerange[1])
-                        num_lines = sum(1 for line in open(('{}/Overworld/map_poke/'.format(BASE_DIR))+self.game.background.map_name+".txt"))
-                        poke_num = random.randint(1,num_lines)
-                        with open(('{}/Overworld/map_poke/'.format(BASE_DIR))+self.game.background.map_name+".txt","r") as file:
+                        with open('{}/Overworld/map_poke/{}.txt'.format(BASE_DIR, self.game.background.map_name), "r") as file:
                             area = file.readlines()
-                            count = 1
-                            for pokemon in area:
-                                pokemon = pokemon.split()
-                                if count == poke_num:
-                                    pokeName = pokemon[0]
-                                count += 1
+                        pokeName = area[random.randint(0, len(area)-1)].split()[0]
                         Wpokemon = Pokemon(pokeName, -1, pokelvl, 0, [570, 140], [200, 250])
                         self.game.fight = Fight([Wpokemon], self.player.pokemon_list, self.game.Kbd, False)
                         self.game.fightB = True
