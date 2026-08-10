@@ -41,6 +41,7 @@ Asset and save-data paths are resolved relative to the script's own location, so
 | S | Save game |
 | Q | Back / quit a screen |
 | T | Open the tutorial |
+| Esc | Pause - shows this controls list in-game |
 
 **Battle & menu screens**
 | Key | Action |

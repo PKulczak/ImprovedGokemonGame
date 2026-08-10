@@ -18,6 +18,19 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 WIDTH = 800
 HEIGHT = 480
 
+#shown on the pause overlay - the only place these are visible in-game (otherwise README.md only)
+PAUSE_CONTROLS = [
+    "Arrow keys - Move",
+    "Space - Start / advance dialogue",
+    "P - Open the Gokedex",
+    "S - Save game",
+    "Q - Back / quit a screen",
+    "T - Open the tutorial",
+    "R - Rename your player",
+    "N - Reset to a new game",
+    "Shift (hold) - Fast-forward",
+]
+
 #TEMP: set True to re-enable random wild encounters (disabled for map/collision QA)
 WILD_ENCOUNTERS_ENABLED = True
 
@@ -57,6 +70,7 @@ class Keyboard:
         self.back = False
         self.save = False
         self.select = False
+        self.paused = False
 
     def keyDown(self, key):
         if key == pygame.K_RIGHT:
@@ -84,6 +98,13 @@ class Keyboard:
             self.back = True
         if key == pygame.K_t:
             self.tutorial = True
+        if key == pygame.K_ESCAPE:
+            #a plain toggle rather than a one-shot latch (like the pokedex/fight flags below
+            #it) - Esc both opens and closes the pause overlay with the same key, standard
+            #pause-menu behaviour. Only takes effect in states where self.keyboard is the
+            #active keydown handler (welcome/start_menu/overworld/pause), same as every other
+            #key here - fight/pokedex swap the handler to their own Kbd instead.
+            self.paused = not self.paused
 
 
     def keyUp(self, key):
@@ -211,6 +232,7 @@ class Game:
         self.startscreen = Welcome("StartScreen.png")
         self.credits = Welcome("credits.png")
         self.caughtAll = Welcome("CaughtAll.png")
+        self.pauseScreen = Welcome("pause.png")
         self.tutorial = tutorial
         self.background = background
         self.npc_lost = []
@@ -235,6 +257,7 @@ class Game:
             "start_menu": self._draw_start_menu,
             "fight": self._draw_fight,
             "pokedex": self._draw_pokedex,
+            "pause": self._draw_pause,
             "overworld": self._draw_overworld,
         }
         self.state = self._resolve_state()
@@ -251,6 +274,8 @@ class Game:
             return "fight"
         if self.keyboard.pokedex:
             return "pokedex"
+        if self.keyboard.paused:
+            return "pause"
         return "overworld"
 
     #fires once on the frame a new state is entered - swaps the active keydown/keyup handler
@@ -386,6 +411,23 @@ class Game:
             self.keyboard.KeyReset()
             self.keyboard.pokedex = False
             self.Kbd.quit = False
+
+    #handles the pause overlay - a full-screen image + controls list, same pattern as
+    #credits/CaughtAll, replacing the overworld draw entirely rather than layering on top of
+    #it (so overworld movement/timers are simply not ticked while paused, no extra flag needed).
+    #dt unused, same reason as _draw_start_menu/_draw_welcome below
+    def _draw_pause(self, canvas, dt):
+        self.pauseScreen.draw(canvas)
+        canvas.draw_text("Paused", (340, 60), 44, 'White')
+        for i, line in enumerate(PAUSE_CONTROLS):
+            canvas.draw_text(line, (220, 130 + i * 32), 22, 'White')
+        canvas.draw_text("Esc or Q to resume", (250, 130 + len(PAUSE_CONTROLS) * 32 + 20), 24, 'Yellow')
+
+        #Q reuses the same "back out of a screen" key/flag as every other overlay
+        #(pokedex/tutorial); Esc itself already toggles keyboard.paused back off in keyDown
+        if self.keyboard.back:
+            self.keyboard.paused = False
+            self.keyboard.back = False
 
     #handles normal overworld movement/interaction and its one-off text overlays
     def _draw_overworld(self, canvas, dt):
