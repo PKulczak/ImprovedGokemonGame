@@ -2,6 +2,7 @@ import os
 import json
 from game.engine.image_cache import load_image
 from game.engine import balance
+from game.engine.party_grid import PartyGrid
 from game.battle.fight import POKEDEX
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -12,13 +13,22 @@ class Pokedex:
         self.player_pokedex = []
         self.pokedex = []
         self.kbd = kbd
-        self.centre = [0,0]
         self.first = True
         self.poke_list =[]
         self.index = 0
+        self.grid = PartyGrid(on_page=self._turn_page)
         self.bag = load_image('{}/Fight/Other/bag.png'.format(BASE_DIR))
         self.light = load_image('{}/Fight/Other/highlight.png'.format(BASE_DIR))
-        self.pos = [[(348,145),(348,265),(348,380)],[(598,145),(598,265),(598,380)]]
+
+    #turns to the next/previous page of 6 pokedex entries, called by the grid when down is
+    #pressed at the bottom row or up is pressed at the top row
+    def _turn_page(self, direction):
+        if direction > 0:
+            if not (self.index == len(self.pokedex)-1):
+                self.index += 1
+        else:
+            if not (self.index == 0):
+                self.index -= 1
 
     def draw(self, canvas):
         self.player_pokedex = []
@@ -44,32 +54,8 @@ class Pokedex:
             temp_list = []
         #draws gokedex
         self.poke_list = self.pokedex[self.index]
-        canvas.draw_image(self.bag, (375,250), (750,500), (400,240), (735,490))
-        if not self.first:
-            if self.kbd.left and self.centre[0] == 1:
-                self.centre[0] = 0
-                self.first = True
-            elif self.kbd.down and self.centre[1] < 2:
-                self.centre[1] += 1
-                self.first = True
-            elif self.kbd.down and self.centre[1] == 2:
-                if not (self.index == len(self.pokedex)-1):
-                    self.index += 1
-                self.first = True
-            elif self.kbd.up and self.centre[1] == 0:
-                if not (self.index == 0):
-                    self.index -= 1
-                self.first = True
-            elif self.kbd.right and self.centre[0] == 0:
-                self.centre[0] = 1
-                self.first = True
-            elif self.kbd.up and self.centre[1] > 0:
-                self.centre[1] -= 1
-                self.first = True
-        else:
-            if not(self.kbd.left or self.kbd.right or self.kbd.up or self.kbd.down):
-                self.first = False
-        canvas.draw_image(self.light, (116,45), (233,91), self.pos[self.centre[0]][self.centre[1]], (233,91))
+        self.first = self.grid.update(self.kbd, self.first)
+        self.grid.draw_highlight(canvas, self.bag, self.light)
         for i in range(0,len(self.poke_list)):
             if i<3:
                 canvas.draw_text(self.poke_list[i], (290, 150+(i*120)), 25, 'Black')

@@ -67,6 +67,8 @@ Asset and save-data paths are resolved relative to the script's own location, so
     `battle_rules.py` (pure damage/catch/escape/level-up formulas, independent of rendering)
   - `engine/` — generic pygame plumbing shared by both: `canvas.py` (image/text drawing surface),
     `frame.py` (event loop, input dispatch, the R/N text-entry overlay), `image_cache.py`
-    (path-keyed image cache), `vector.py` (2D vector math), `balance.py` (named tuning constants)
+    (path-keyed image cache), `vector.py` (2D vector math), `balance.py` (named tuning constants),
+    `party_grid.py` (the shared party-grid-cursor logic used by both the Gokedex and the fight
+    screen's bag/switch menu)
   - `credits.txt`, `requirements.txt`
 - `MapBuilder/` — a standalone map-editing tool, independent of the game itself (see its own [README](MapBuilder/README.md))

@@ -4,6 +4,7 @@ import os
 import json
 from game.engine.image_cache import load_image
 from game.engine import balance
+from game.engine.party_grid import PartyGrid
 from game.battle import battle_rules
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -49,8 +50,7 @@ class Fight:
         self.change = False
         self.catch = False
         self.lost = False
-        self.centre = [0,0]
-        self.pos = [[(348,145),(348,265),(348,380)],[(598,145),(598,265),(598,380)]]
+        self.grid = PartyGrid()
         self.end = False
 
         #which of the fight screen's states is active, dispatched via state_handlers instead of
@@ -152,24 +152,8 @@ class Fight:
 
     #browsing the party grid (the bag hotkey, or a forced switch/catch-overflow prompt)
     def _draw_bag_browse(self, canvas):
-        canvas.draw_image(self.bag, (375,250), (750,500), (400,240), (735,490))
-        if not self.first:
-            if self.kbd.left and self.centre[0] == 1:
-                self.centre[0] = 0
-                self.first = True
-            elif self.kbd.down and self.centre[1] < 2:
-                self.centre[1] += 1
-                self.first = True
-            elif self.kbd.right and self.centre[0] == 0:
-                self.centre[0] = 1
-                self.first = True
-            elif self.kbd.up and self.centre[1] > 0:
-                self.centre[1] -= 1
-                self.first = True
-        else:
-            if not(self.kbd.left or self.kbd.right or self.kbd.up or self.kbd.down):
-                self.first = False
-        canvas.draw_image(self.light, (116,45), (233,91), self.pos[self.centre[0]][self.centre[1]], (233,91))
+        self.first = self.grid.update(self.kbd, self.first)
+        self.grid.draw_highlight(canvas, self.bag, self.light)
         for i in range(0,len(self.poke_list)):
             if i<3:
                 canvas.draw_text(self.poke_list[i].name, (270, 130+(i*120)), 25, 'Black')
@@ -180,10 +164,10 @@ class Fight:
 
     #confirms the currently-highlighted party slot
     def _draw_bag_confirm(self, canvas):
-        if self.centre[0] == 0 :
-            choice = self.centre[0]+self.centre[1]
+        if self.grid.centre[0] == 0 :
+            choice = self.grid.centre[0]+self.grid.centre[1]
         else:
-            choice = self.centre[0]+self.centre[1]+2
+            choice = self.grid.centre[0]+self.grid.centre[1]+2
         if self.catch:
             self.monster.pos = self.pokemon.pos
             self.monster.pos1 = self.pokemon.pos1
