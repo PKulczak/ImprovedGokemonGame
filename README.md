@@ -54,6 +54,8 @@ Asset and save-data paths are resolved relative to the script's own location, so
 
 `game/Fight/Files/Save.json`, `PlayerPokemon.json`, and `PlayerPokedex.json` hold your current progress. They're gitignored — not committed to the repo — and get created automatically from the bundled `NewSave.json`/`NewPlayerPokemon.json`/`NewPlayerPokedex.json` templates the first time you run the game (or any time one of them is missing), so a fresh clone works with no setup step. Pressing **N** and typing `yes` resets them from those same templates.
 
+Running out of lives does **not** wipe your save - a "Game Over" screen shows first, and continuing past it fully heals your team, restores your lives, and drops you at the last Pokecenter you visited (or the starting one, if you haven't visited one yet).
+
 ## Project structure
 
 - `gokemon_game.py` — main entry point; wires everything in `game/` together and runs the event loop

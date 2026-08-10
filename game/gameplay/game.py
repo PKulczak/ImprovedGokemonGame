@@ -34,6 +34,16 @@ PAUSE_CONTROLS = [
 #TEMP: set True to re-enable random wild encounters (disabled for map/collision QA)
 WILD_ENCOUNTERS_ENABLED = True
 
+#both Pokecenter interior maps (game/Overworld/maps/pokecenter.json, pokecenter2.json) share this
+#exact door-entry position - it's already the target_pos used by the town-side door tiles that
+#lead into them (map.json/map3.json), reused here as the "safe interior" spot a game-over respawn
+#lands on, rather than inventing a new coordinate
+POKECENTER_ENTRY_POS = (406, 424)
+POKECENTER_MAPS = ("pokecenter", "pokecenter2")
+#used until the player has actually visited either Pokecenter this session (map2y, the starting
+#map, has no heal tile of its own)
+DEFAULT_POKECENTER_MAP = "pokecenter"
+
 #live save data isn't committed to the repo (see .gitignore) - only these bundled defaults are
 SAVE_FILE_TEMPLATES = [
     ("NewSave.json", "Save.json"),
@@ -233,12 +243,17 @@ class Game:
         self.credits = Welcome("credits.png")
         self.caughtAll = Welcome("CaughtAll.png")
         self.pauseScreen = Welcome("pause.png")
+        self.gameOverScreen = Welcome("gameover.png")
         self.tutorial = tutorial
         self.background = background
         self.npc_lost = []
         self.intro = False
         self.complete = False
         self.pokecomplete = False
+        self.game_over = False
+        #not persisted to Save.json - a fresh load just falls back to the default Pokecenter,
+        #same as a session that hasn't visited one yet
+        self.last_pokecenter_map = DEFAULT_POKECENTER_MAP
         self.txtcount = 0
         self.txtclock = Clock()
         self.text = Text("empty",self.player, (0,0), False, self.txtcount, self.txtclock)
@@ -258,6 +273,7 @@ class Game:
             "fight": self._draw_fight,
             "pokedex": self._draw_pokedex,
             "pause": self._draw_pause,
+            "game_over": self._draw_game_over,
             "overworld": self._draw_overworld,
         }
         self.state = self._resolve_state()
@@ -276,6 +292,8 @@ class Game:
             return "pokedex"
         if self.keyboard.paused:
             return "pause"
+        if self.game_over:
+            return "game_over"
         return "overworld"
 
     #fires once on the frame a new state is entered - swaps the active keydown/keyup handler
@@ -429,6 +447,30 @@ class Game:
             self.keyboard.paused = False
             self.keyboard.back = False
 
+    #handles the "ran out of lives" screen - requires a keypress rather than firing the reset on
+    #the very next frame like it used to. No data wipe: unlike new_game("yes"), this keeps
+    #Save.json/PlayerPokemon.json/PlayerPokedex.json untouched, just restores lives/HP and drops
+    #the player at the last Pokecenter they visited (or the default one if they haven't yet),
+    #mirroring a normal fight loss's full-heal rather than mainline Pokemon's cash/item penalty
+    def _draw_game_over(self, canvas, dt):
+        self.gameOverScreen.draw(canvas)
+        canvas.draw_text("Game Over", (270, 140), 48, 'White')
+        canvas.draw_text("You ran out of lives.", (250, 210), 24, 'White')
+        canvas.draw_text("Your team is fully healed and lives are restored -", (110, 250), 22, 'White')
+        canvas.draw_text("no progress lost.", (310, 280), 22, 'White')
+        canvas.draw_text("Press Space to continue", (250, 360), 24, 'Yellow')
+
+        if self.keyboard.select:
+            self.keyboard.select = False
+            self.player.lives = balance.STARTING_LIVES
+            for pokemon in self.player.pokemon_list:
+                pokemon.HP = pokemon.fullhp
+            self.background = Background(self.last_pokecenter_map, WIDTH, HEIGHT, self.npc_lost)
+            self.background.load_wall()
+            self.player.pos.x, self.player.pos.y = POKECENTER_ENTRY_POS
+            self.player.lock = False
+            self.game_over = False
+
     #handles normal overworld movement/interaction and its one-off text overlays
     def _draw_overworld(self, canvas, dt):
         self.inter.update()
@@ -483,9 +525,13 @@ class Game:
                 self.player.lock = False
                 self.txtcount = 0
 
+        if self.background.map_name in POKECENTER_MAPS:
+            self.last_pokecenter_map = self.background.map_name
+
         if self.player.lives == 0:
-            self.player.lives = balance.STARTING_LIVES
-            self.new_game("yes")
+            self.game_over = True
+            self.player.lock = True
+            self.player.vel = Vector(0, 0)
 
     #handles the start-screen / tutorial toggle shown before pressing space to enter the
     #overworld. dt unused - no timing here - but part of the uniform state_handlers call shape
