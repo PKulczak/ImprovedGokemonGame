@@ -126,7 +126,7 @@ class Background:
                 self.npc_list.append(yacht)
             elif ttype == "npc":
                 clock = Clock()
-                npc_name = self.load_npc()
+                npc_name = map_data["npc_species"]
                 if npc_name in self.npc_lost:
                     npc = NPCWall(npc_name, pos, clock)
                 else:
@@ -134,7 +134,7 @@ class Background:
                 self.npc_list.append(npc)
 
     #map-builder format: ground image + explicit per-object position/size, Y-sorted at draw time.
-    #"npc"/"yacht" still resolve their actual sprite through the existing per-map lookups below,
+    #"npc"/"yacht" still resolve their actual sprite through the map's own "npc_species" field,
     #same as the legacy format - the builder only marks where they go, not which species/asset
     def _load_objects(self, map_data):
         for obj in map_data["objects"]:
@@ -168,7 +168,7 @@ class Background:
                 self.npc_list.append(Yacht("yacht", pos, clock))
             elif ttype == "npc":
                 clock = Clock()
-                npc_name = self.load_npc()
+                npc_name = map_data["npc_species"]
                 if npc_name in self.npc_lost:
                     npc = NPCWall(npc_name, pos, clock)
                 else:
@@ -187,24 +187,6 @@ class Background:
         self.Map = load_image(_background_image_path(self.map_name, map_data))
         self.load_wall()
 
-    #loads the correct npcs
-    def load_npc(self):
-        npc_str =  {"gym2": "boss1",
-                    "bossfight3": "boss2",
-                    "bossfight1": "boss3",
-                    "bossfight2": "boss4"}
-        npc_name = npc_str[self.map_name]
-        return npc_name
-
-    #loads the pokemon level range
+    #the current map's wild-encounter level range, from its own "wild_level_range" field
     def load_pokelvl(self):
-        wildpoke = {"map2y": [1,5],
-                   "map": [6,10],
-                   "map2": [1,5],
-                   "map3": [11,15],
-                   "route1":[1,5],
-                   "route2": [6,10],
-                   "route3": [11,15],
-                   "route4": [16,21]}
-        pokerange = wildpoke[self.map_name]
-        return pokerange
+        return _load_map_data(self.map_name)["wild_level_range"]
