@@ -78,11 +78,29 @@ class Fight:
         self.mons_list = monster_list
         self.monster = monster_list[0]
         self.poke_list = pokemon_list
-        self.pokemon = pokemon_list[0]
+        #skips a fainted lead (e.g. it fainted in an earlier fight this session and hasn't been
+        #healed since) and opens on the first Pokemon that can actually still battle, rather
+        #than starting the fight on a dead one. Falls back to pokemon_list[0] if the whole party
+        #is somehow fainted - shouldn't happen, since losing a fight already fully heals the
+        #party before the player's back in the overworld to trigger a new one
+        self.pokemon = next((p for p in pokemon_list if p.HP > 0), pokemon_list[0])
         self.count = balance.SHORT_MESSAGE_FRAMES
-        #whoever's faster leads off - ties (the common case today, see balance.DEFAULT_SPD)
-        #favour the player, matching the old always-player-first behaviour
-        self.attack = self.pokemon.SPD >= self.monster.SPD
+        #True is just a neutral default here - it no longer gates whether the player gets to
+        #choose an action (see _resolve_state/_draw_resolve_turn below, which always show the
+        #choose-action menu first regardless of speed). It's only still meaningful as the
+        #trigger for _draw_resolve_monster_turn, the one remaining place that still bypasses a
+        #speed check entirely: an item/potion use always resolves immediately, with the monster
+        #getting an unconditional free follow-up turn after, same as before this change
+        self.attack = True
+        #the player's committed action for the current round (set once they confirm Attack/Run/
+        #Catch, cleared once the round is fully resolved) - see _draw_resolve_turn for why a
+        #round needs this instead of resolving the instant the player picks something: both
+        #sides' actions are decided before either is revealed, then whoever's faster (checked
+        #fresh every round, via self._player_first) goes first
+        self.queued_inte = None
+        self.queued_move = None
+        self._actions_done = 0
+        self._player_first = True
         self.kbd = keyboard
         self.npc = npc
         self.info = self.monster.name+" VS "+ self.pokemon.name
@@ -115,15 +133,11 @@ class Fight:
         self.move_index = 0
 
         #which of the fight screen's states is active, dispatched via state_handlers instead of
-        #the nested if/elif chain draw() used to be - derived fresh every frame from the exact
-        #same flags as before (change/catch/kbd.quit/kbd.select/run/count/attack), same priority
-        #order, so this is purely a readability change, not a new/different state machine. Some
-        #flag combinations are known dead ends kept as-is rather than "fixed" here - e.g. the
-        #catch-overflow confirm branch below never clears kbd.select/change, so the very next
-        #frame falls through into the switch-branch of bag_confirm too; count gets overwritten
-        #back to PLAYER_TURN_MESSAGE_FRAMES after every resolve_action regardless of what fight()
-        #set it to; self.attack only flips in fight()'s "still alive" branch, so a win takes an
-        #extra resolve_monster_turn cycle after the fatal hit before "Fight end, you win!" shows.
+        #a nested if/elif chain. Some flag combinations are known dead ends kept as-is rather
+        #than "fixed" here - e.g. the catch-overflow confirm branch below never clears
+        #kbd.select/change, so the very next frame falls through into the switch-branch of
+        #bag_confirm too; count gets overwritten back to PLAYER_TURN_MESSAGE_FRAMES after every
+        #resolve_action regardless of what fight() set it to.
         self.state_handlers = {
             "bag_browse": self._draw_bag_browse,
             "bag_confirm": self._draw_bag_confirm,
@@ -137,13 +151,16 @@ class Fight:
             "message": self._draw_message,
             "choose_action": self._draw_choose_action,
             "resolve_action": self._draw_resolve_action,
+            "resolve_turn": self._draw_resolve_turn,
             "resolve_monster_turn": self._draw_resolve_monster_turn,
         }
         self.state = self._resolve_state()
 
     #derives the active state from the same flags draw() used to branch on inline. count > 0
     #(not != 0) since count is now a real-time countdown (see _draw_message) that can overshoot
-    #past exactly zero in one dt step, rather than an integer that only ever decremented to it
+    #past exactly zero in one dt step, rather than an integer that only ever decremented to it.
+    #choose_action is always reachable here regardless of speed - a faster monster no longer
+    #gets an automatic free attack before the player even picks something (see _draw_resolve_turn)
     def _resolve_state(self):
         if self.move_menu:
             if self.kbd.quit:
@@ -165,9 +182,11 @@ class Fight:
             return "bag_browse"
         if self.run or self.count > 0:
             return "message"
-        if self.attack:
-            return "resolve_action" if self.kbd.select else "choose_action"
-        return "resolve_monster_turn"
+        if self.queued_inte is not None:
+            return "resolve_turn"
+        if not self.attack:
+            return "resolve_monster_turn"
+        return "resolve_action" if self.kbd.select else "choose_action"
 
     #states that replace the whole battle scene with a menu, rather than drawing over it
     _MENU_STATES = ("bag_browse", "bag_confirm", "bag_cancel", "item_browse", "item_confirm", "item_cancel")
@@ -225,7 +244,9 @@ class Fight:
         self._reset_effect_frames()
         self.inte = self.interact(self.inte, canvas)
 
-    #the frame the player confirms an action - either resolves it, or opens the bag/move/switch menu
+    #the frame the player confirms an action - either opens the move/bag menu, or (Run/Catch)
+    #commits the action for _draw_resolve_turn to resolve once speed order is decided, rather
+    #than resolving it immediately here
     def _draw_resolve_action(self, canvas, dt):
         self._reset_effect_frames()
         if self.inte == 1:
@@ -233,18 +254,50 @@ class Fight:
             self.move_index = 0
             self.kbd.select = False
         elif self.inte <=3 :
-            self.fight(self.pokemon, self.monster, self.inte, canvas)
             self.kbd.select = False
-            self.count = balance.PLAYER_TURN_MESSAGE_FRAMES
+            self.queued_inte = self.inte
+            self.queued_move = None
         elif self.inte == 4:
             self.item_menu = True
             self.kbd.select = False
 
-    #the monster's turn - always resolves immediately, no menu of its own
+    #the monster's automatic follow-up after an item/potion use, which (unlike Attack/Run/Catch)
+    #still always resolves the item immediately and unconditionally gives the monster the next
+    #turn, regardless of speed - see the comment on self.attack in __init__
     def _draw_resolve_monster_turn(self, canvas, dt):
         self._reset_effect_frames()
         self.fight(self.pokemon, self.monster, self.inte, canvas)
         self.count = balance.MONSTER_TURN_MESSAGE_FRAMES
+
+    #a round's resolution, once the player has committed an action (self.queued_inte) - whichever
+    #side is faster (checked fresh each round via self.pokemon.SPD/self.monster.SPD) resolves
+    #first, automatically, with no further input; if the fight is still going normally afterward,
+    #the other side's action (the monster's AI move, or the player's own already-chosen one)
+    #follows the same way. This is what makes both sides effectively choose blind - the player's
+    #choice is locked in before they see what a faster opponent does, not after.
+    #
+    #Runs more than twice in a row if fight() itself needs extra bookkeeping-only cycles after a
+    #fatal hit (see its own comments on the win/lose message needing an extra cycle) - "both
+    #still alive" is the actual signal a round is over, not "two actions happened", since the
+    #second action might only be bookkeeping rather than a real attack.
+    def _draw_resolve_turn(self, canvas, dt):
+        self._reset_effect_frames()
+        if self._actions_done == 0:
+            self._player_first = self.pokemon.SPD >= self.monster.SPD
+            resolving_player = self._player_first
+        else:
+            resolving_player = not self._player_first
+        self.attack = resolving_player
+        self.fight(self.pokemon, self.monster, self.queued_inte, canvas, move=self.queued_move)
+        self.count = balance.PLAYER_TURN_MESSAGE_FRAMES if resolving_player else balance.MONSTER_TURN_MESSAGE_FRAMES
+        self._actions_done += 1
+
+        both_alive = self.pokemon.HP > 0 and self.monster.HP > 0
+        if self.end or self.change or (self._actions_done >= 2 and both_alive):
+            self.queued_inte = None
+            self.queued_move = None
+            self._actions_done = 0
+            self.attack = True
 
     #picking a move - up/down toggles between the two, matching the vertical stack they're
     #drawn in (unlike the top-level Attack/Catch/Run/Bag choice, these aren't side by side)
@@ -260,33 +313,40 @@ class Fight:
         elif self.kbd.down:
             self.move_index = 1
 
-    #confirms the highlighted move and resolves the player's turn with it
+    #confirms the highlighted move - commits it for _draw_resolve_turn, same as Run/Catch above
     def _draw_move_confirm(self, canvas, dt):
         self.kbd.select = False
         self.move_menu = False
-        self.fight(self.pokemon, self.monster, 1, canvas, move=self.pokemon.moves[self.move_index])
-        self.count = balance.PLAYER_TURN_MESSAGE_FRAMES
+        self.queued_inte = 1
+        self.queued_move = self.pokemon.moves[self.move_index]
 
     #cancels the move menu, back to Attack/Catch/Run/Bag with no turn spent
     def _draw_move_cancel(self, canvas, dt):
         self.move_menu = False
 
-    #browsing the party grid (the bag hotkey, or a forced switch/catch-overflow prompt)
+    #browsing the party grid (the bag hotkey, or a forced switch/catch-overflow prompt) - a
+    #fainted (HP 0) Pokemon can't be sent out to battle, so its name/HP are greyed out here to
+    #match _draw_bag_confirm below refusing to select it
     def _draw_bag_browse(self, canvas, dt):
         self.first = self.grid.update(self.kbd, self.first)
         self.grid.draw_highlight(canvas, self.bag, self.light)
         for i in range(0,len(self.poke_list)):
+            #DarkRed rather than the move-menu's Grey - the party grid's own tile backdrop is
+            #already light grey, so plain Grey text nearly disappears against it
+            colour = 'DarkRed' if self.poke_list[i].HP <= 0 else 'Black'
             if i<3:
-                canvas.draw_text(self.poke_list[i].name, (270, 130+(i*120)), 25, 'Black')
-                canvas.draw_text("HP:"+str(self.poke_list[i].HP), (350, 160+(i*120)), 25, 'Black')
+                canvas.draw_text(self.poke_list[i].name, (270, 130+(i*120)), 25, colour)
+                canvas.draw_text("HP:"+str(self.poke_list[i].HP), (350, 160+(i*120)), 25, colour)
             else:
-                canvas.draw_text(self.poke_list[i].name, (520, 130+(i-3)*120), 25, 'Black')
-                canvas.draw_text("HP:"+str(self.poke_list[i].HP), (600, 160+(i-3)*120), 25, 'Black')
+                canvas.draw_text(self.poke_list[i].name, (520, 130+(i-3)*120), 25, colour)
+                canvas.draw_text("HP:"+str(self.poke_list[i].HP), (600, 160+(i-3)*120), 25, colour)
 
     #confirms the currently-highlighted party slot
     def _draw_bag_confirm(self, canvas, dt):
         choice = self.grid.selected_index()
         if self.catch:
+            #swapping OUT an existing party member for the newly caught one - a fainted member
+            #is a perfectly sensible (often preferred) pick here, so no HP restriction
             self.monster.pos = self.pokemon.pos
             self.monster.pos1 = self.pokemon.pos1
             self.poke_list[choice] = self.monster
@@ -294,13 +354,14 @@ class Fight:
             if len(self.mons_list) == 0:
                 self.end = True
             else:
+                #no speed recompute needed - _draw_resolve_turn checks it fresh every round
                 self.monster = self.mons_list[0]
-                #a freshly-sent-out Pokemon is a new matchup - let Speed decide who leads
-                #against it, same as the opening turn of the fight
-                self.attack = self.pokemon.SPD >= self.monster.SPD
             self.catch = False
         else:
-            if len(self.poke_list)-1>=choice:
+            #sending this Pokemon out to battle - a fainted (HP 0) one can't fight, so the
+            #selection is simply ignored (same "stay on the menu, nothing happens" pattern as
+            #an empty item slot) rather than letting a 0-HP Pokemon become the active battler
+            if len(self.poke_list)-1>=choice and self.poke_list[choice].HP > 0:
                 self.pokemon = self.poke_list[choice]
                 self.change = False
             self.kbd.select = False
@@ -348,10 +409,8 @@ class Fight:
                     self.count = 0
                     self.end = True
                 else:
+                    #no speed recompute needed - _draw_resolve_turn checks it fresh every round
                     self.monster = self.mons_list[0]
-                    #a freshly-sent-out Pokemon is a new matchup - let Speed decide who leads
-                    #against it, same as the opening turn of the fight
-                    self.attack = self.pokemon.SPD >= self.monster.SPD
             else:
                 self.change = True
                 self.catch = True
@@ -509,10 +568,8 @@ class Fight:
 
                 self.mons_list.remove(monster)
                 if not(len(self.mons_list) == 0):
+                    #no speed recompute needed - _draw_resolve_turn checks it fresh every round
                     self.monster = self.mons_list[0]
-                    #a freshly-sent-out Pokemon is a new matchup - let Speed decide who leads
-                    #against it, same as the opening turn of the fight
-                    self.attack = pokemon.SPD >= self.monster.SPD
                 
     def interact(self, inte, canvas):
         canvas.draw_text("What will "+self.pokemon.name+" do?", (120, 415), 25, 'White')
