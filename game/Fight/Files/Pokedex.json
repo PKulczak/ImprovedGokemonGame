@@ -4,552 +4,1500 @@
     "DEF": 7,
     "fullhp": 20,
     "effect_img": "electric",
-    "row": 6
+    "row": 6,
+    "moves": [
+      {
+        "name": "Thunder Shock",
+        "type": "electric",
+        "power": 50
+      },
+      {
+        "name": "Struggle",
+        "type": "normal",
+        "power": 40
+      }
+    ]
   },
   "Jolteon": {
     "ATK": 12,
     "DEF": 6,
     "fullhp": 18,
     "effect_img": "electric",
-    "row": 4
+    "row": 4,
+    "moves": [
+      {
+        "name": "Thunder Shock",
+        "type": "electric",
+        "power": 50
+      },
+      {
+        "name": "Struggle",
+        "type": "normal",
+        "power": 40
+      }
+    ]
   },
   "Turtwig": {
     "ATK": 7,
     "DEF": 12,
     "fullhp": 22,
     "effect_img": "grass",
-    "row": 5
+    "row": 5,
+    "moves": [
+      {
+        "name": "Vine Whip",
+        "type": "grass",
+        "power": 50
+      },
+      {
+        "name": "Struggle",
+        "type": "normal",
+        "power": 40
+      }
+    ]
   },
   "Shinx": {
     "ATK": 16,
     "DEF": 3,
     "fullhp": 16,
     "effect_img": "electric",
-    "row": 4
+    "row": 4,
+    "moves": [
+      {
+        "name": "Thunder Shock",
+        "type": "electric",
+        "power": 50
+      },
+      {
+        "name": "Struggle",
+        "type": "normal",
+        "power": 40
+      }
+    ]
   },
   "Squirtle": {
     "ATK": 8,
     "DEF": 11,
     "fullhp": 20,
     "effect_img": "water",
-    "row": 5
+    "row": 5,
+    "moves": [
+      {
+        "name": "Water Slash",
+        "type": "water",
+        "power": 50
+      },
+      {
+        "name": "Struggle",
+        "type": "normal",
+        "power": 40
+      }
+    ]
   },
   "Zorua": {
     "ATK": 12,
     "DEF": 7,
     "fullhp": 19,
     "effect_img": "dark",
-    "row": 4
+    "row": 4,
+    "moves": [
+      {
+        "name": "Shadow Strike",
+        "type": "dark",
+        "power": 50
+      },
+      {
+        "name": "Struggle",
+        "type": "normal",
+        "power": 40
+      }
+    ]
   },
   "Cyndaquil": {
     "ATK": 11,
     "DEF": 7,
     "fullhp": 19,
     "effect_img": "fire",
-    "row": 6
+    "row": 6,
+    "moves": [
+      {
+        "name": "Ember",
+        "type": "fire",
+        "power": 50
+      },
+      {
+        "name": "Struggle",
+        "type": "normal",
+        "power": 40
+      }
+    ]
   },
   "Jigglypuff": {
     "ATK": 7,
     "DEF": 7,
     "fullhp": 25,
     "effect_img": "fairy",
-    "row": 5
+    "row": 5,
+    "moves": [
+      {
+        "name": "Fairy Wind",
+        "type": "fairy",
+        "power": 50
+      },
+      {
+        "name": "Struggle",
+        "type": "normal",
+        "power": 40
+      }
+    ]
   },
   "Litten": {
     "ATK": 11,
     "DEF": 6,
     "fullhp": 18,
     "effect_img": "fire",
-    "row": 4
+    "row": 4,
+    "moves": [
+      {
+        "name": "Ember",
+        "type": "fire",
+        "power": 50
+      },
+      {
+        "name": "Struggle",
+        "type": "normal",
+        "power": 40
+      }
+    ]
   },
   "Mareep": {
     "ATK": 7,
     "DEF": 10,
     "fullhp": 30,
     "effect_img": "electric",
-    "row": 4
+    "row": 4,
+    "moves": [
+      {
+        "name": "Thunder Shock",
+        "type": "electric",
+        "power": 50
+      },
+      {
+        "name": "Struggle",
+        "type": "normal",
+        "power": 40
+      }
+    ]
   },
   "Quagsire": {
     "ATK": 6,
     "DEF": 11,
     "fullhp": 26,
     "effect_img": "water",
-    "row": 5
+    "row": 5,
+    "moves": [
+      {
+        "name": "Water Slash",
+        "type": "water",
+        "power": 50
+      },
+      {
+        "name": "Struggle",
+        "type": "normal",
+        "power": 40
+      }
+    ]
   },
   "Nidorina": {
     "ATK": 9,
     "DEF": 8,
     "fullhp": 21,
     "effect_img": "rock",
-    "row": 5
+    "row": 5,
+    "moves": [
+      {
+        "name": "Rock Throw",
+        "type": "rock",
+        "power": 50
+      },
+      {
+        "name": "Struggle",
+        "type": "normal",
+        "power": 40
+      }
+    ]
   },
   "Oshawott": {
     "ATK": 11,
     "DEF": 8,
     "fullhp": 18,
     "effect_img": "water",
-    "row": 5
+    "row": 5,
+    "moves": [
+      {
+        "name": "Water Slash",
+        "type": "water",
+        "power": 50
+      },
+      {
+        "name": "Struggle",
+        "type": "normal",
+        "power": 40
+      }
+    ]
   },
   "Popplio": {
     "ATK": 12,
     "DEF": 5,
     "fullhp": 17,
     "effect_img": "water",
-    "row": 5
+    "row": 5,
+    "moves": [
+      {
+        "name": "Water Slash",
+        "type": "water",
+        "power": 50
+      },
+      {
+        "name": "Struggle",
+        "type": "normal",
+        "power": 40
+      }
+    ]
   },
   "Piplup": {
     "ATK": 11,
     "DEF": 7,
     "fullhp": 18,
     "effect_img": "water",
-    "row": 5
+    "row": 5,
+    "moves": [
+      {
+        "name": "Water Slash",
+        "type": "water",
+        "power": 50
+      },
+      {
+        "name": "Struggle",
+        "type": "normal",
+        "power": 40
+      }
+    ]
   },
   "Cubone": {
     "ATK": 14,
     "DEF": 9,
     "fullhp": 19,
     "effect_img": "rock",
-    "row": 5
+    "row": 5,
+    "moves": [
+      {
+        "name": "Rock Throw",
+        "type": "rock",
+        "power": 50
+      },
+      {
+        "name": "Struggle",
+        "type": "normal",
+        "power": 40
+      }
+    ]
   },
   "Fletchling": {
     "ATK": 12,
     "DEF": 5,
     "fullhp": 18,
     "effect_img": "fire",
-    "row": 6
+    "row": 6,
+    "moves": [
+      {
+        "name": "Ember",
+        "type": "fire",
+        "power": 50
+      },
+      {
+        "name": "Struggle",
+        "type": "normal",
+        "power": 40
+      }
+    ]
   },
   "Jirachi": {
     "ATK": 12,
     "DEF": 5,
     "fullhp": 19,
     "effect_img": "fairy",
-    "row": 4
+    "row": 4,
+    "moves": [
+      {
+        "name": "Fairy Wind",
+        "type": "fairy",
+        "power": 50
+      },
+      {
+        "name": "Struggle",
+        "type": "normal",
+        "power": 40
+      }
+    ]
   },
   "Icepix": {
     "ATK": 11,
     "DEF": 6,
     "fullhp": 21,
     "effect_img": "ice",
-    "row": 5
+    "row": 5,
+    "moves": [
+      {
+        "name": "Ice Shard",
+        "type": "ice",
+        "power": 50
+      },
+      {
+        "name": "Struggle",
+        "type": "normal",
+        "power": 40
+      }
+    ]
   },
   "Treecko": {
     "ATK": 11,
     "DEF": 7,
     "fullhp": 20,
     "effect_img": "grass",
-    "row": 6
+    "row": 6,
+    "moves": [
+      {
+        "name": "Vine Whip",
+        "type": "grass",
+        "power": 50
+      },
+      {
+        "name": "Struggle",
+        "type": "normal",
+        "power": 40
+      }
+    ]
   },
   "Misdreavus": {
     "ATK": 12,
     "DEF": 4,
     "fullhp": 19,
     "effect_img": "dark",
-    "row": 4
+    "row": 4,
+    "moves": [
+      {
+        "name": "Shadow Strike",
+        "type": "dark",
+        "power": 50
+      },
+      {
+        "name": "Struggle",
+        "type": "normal",
+        "power": 40
+      }
+    ]
   },
   "Charmander": {
     "ATK": 12,
     "DEF": 6,
     "fullhp": 19,
     "effect_img": "fire",
-    "row": 5
+    "row": 5,
+    "moves": [
+      {
+        "name": "Ember",
+        "type": "fire",
+        "power": 50
+      },
+      {
+        "name": "Struggle",
+        "type": "normal",
+        "power": 40
+      }
+    ]
   },
   "Totodile": {
     "ATK": 10,
     "DEF": 8,
     "fullhp": 21,
     "effect_img": "water",
-    "row": 5
+    "row": 5,
+    "moves": [
+      {
+        "name": "Water Slash",
+        "type": "water",
+        "power": 50
+      },
+      {
+        "name": "Struggle",
+        "type": "normal",
+        "power": 40
+      }
+    ]
   },
   "Breloom": {
     "ATK": 8,
     "DEF": 10,
     "fullhp": 20,
     "effect_img": "grass",
-    "row": 5
+    "row": 5,
+    "moves": [
+      {
+        "name": "Vine Whip",
+        "type": "grass",
+        "power": 50
+      },
+      {
+        "name": "Struggle",
+        "type": "normal",
+        "power": 40
+      }
+    ]
   },
   "Croconaw": {
     "ATK": 10,
     "DEF": 7,
     "fullhp": 22,
     "effect_img": "water",
-    "row": 5
+    "row": 5,
+    "moves": [
+      {
+        "name": "Water Slash",
+        "type": "water",
+        "power": 50
+      },
+      {
+        "name": "Struggle",
+        "type": "normal",
+        "power": 40
+      }
+    ]
   },
   "Rowlet": {
     "ATK": 7,
     "DEF": 9,
     "fullhp": 21,
     "effect_img": "flying",
-    "row": 5
+    "row": 5,
+    "moves": [
+      {
+        "name": "Wing Attack",
+        "type": "flying",
+        "power": 50
+      },
+      {
+        "name": "Struggle",
+        "type": "normal",
+        "power": 40
+      }
+    ]
   },
   "Pyukumuku": {
     "ATK": 6,
     "DEF": 12,
     "fullhp": 24,
     "effect_img": "poison",
-    "row": 6
+    "row": 6,
+    "moves": [
+      {
+        "name": "Toxic Sting",
+        "type": "poison",
+        "power": 50
+      },
+      {
+        "name": "Struggle",
+        "type": "normal",
+        "power": 40
+      }
+    ]
   },
   "Noibat": {
     "ATK": 11,
     "DEF": 6,
     "fullhp": 20,
     "effect_img": "flying",
-    "row": 5
+    "row": 5,
+    "moves": [
+      {
+        "name": "Wing Attack",
+        "type": "flying",
+        "power": 50
+      },
+      {
+        "name": "Struggle",
+        "type": "normal",
+        "power": 40
+      }
+    ]
   },
   "Ralts": {
     "ATK": 13,
     "DEF": 4,
     "fullhp": 15,
     "effect_img": "psychic",
-    "row": 5
+    "row": 5,
+    "moves": [
+      {
+        "name": "Psybeam",
+        "type": "psychic",
+        "power": 50
+      },
+      {
+        "name": "Struggle",
+        "type": "normal",
+        "power": 40
+      }
+    ]
   },
   "Typhlosion": {
     "ATK": 13,
     "DEF": 7,
     "fullhp": 20,
     "effect_img": "fire",
-    "row": 5
+    "row": 5,
+    "moves": [
+      {
+        "name": "Ember",
+        "type": "fire",
+        "power": 50
+      },
+      {
+        "name": "Struggle",
+        "type": "normal",
+        "power": 40
+      }
+    ]
   },
   "Absol": {
     "ATK": 12,
     "DEF": 6,
     "fullhp": 20,
     "effect_img": "dark",
-    "row": 5
+    "row": 5,
+    "moves": [
+      {
+        "name": "Shadow Strike",
+        "type": "dark",
+        "power": 50
+      },
+      {
+        "name": "Struggle",
+        "type": "normal",
+        "power": 40
+      }
+    ]
   },
   "Chikorita": {
     "ATK": 8,
     "DEF": 8,
     "fullhp": 26,
     "effect_img": "grass",
-    "row": 5
+    "row": 5,
+    "moves": [
+      {
+        "name": "Vine Whip",
+        "type": "grass",
+        "power": 50
+      },
+      {
+        "name": "Struggle",
+        "type": "normal",
+        "power": 40
+      }
+    ]
   },
   "Skitty": {
     "ATK": 10,
     "DEF": 7,
     "fullhp": 20,
     "effect_img": "fairy",
-    "row": 5
+    "row": 5,
+    "moves": [
+      {
+        "name": "Fairy Wind",
+        "type": "fairy",
+        "power": 50
+      },
+      {
+        "name": "Struggle",
+        "type": "normal",
+        "power": 40
+      }
+    ]
   },
   "Quilava": {
     "ATK": 11,
     "DEF": 6,
     "fullhp": 20,
     "effect_img": "fire",
-    "row": 5
+    "row": 5,
+    "moves": [
+      {
+        "name": "Ember",
+        "type": "fire",
+        "power": 50
+      },
+      {
+        "name": "Struggle",
+        "type": "normal",
+        "power": 40
+      }
+    ]
   },
   "Sylveon": {
     "ATK": 11,
     "DEF": 8,
     "fullhp": 15,
     "effect_img": "fairy",
-    "row": 4
+    "row": 4,
+    "moves": [
+      {
+        "name": "Fairy Wind",
+        "type": "fairy",
+        "power": 50
+      },
+      {
+        "name": "Struggle",
+        "type": "normal",
+        "power": 40
+      }
+    ]
   },
   "Weavile": {
     "ATK": 12,
     "DEF": 6,
     "fullhp": 19,
     "effect_img": "dark",
-    "row": 5
+    "row": 5,
+    "moves": [
+      {
+        "name": "Shadow Strike",
+        "type": "dark",
+        "power": 50
+      },
+      {
+        "name": "Struggle",
+        "type": "normal",
+        "power": 40
+      }
+    ]
   },
   "Spheal": {
     "ATK": 8,
     "DEF": 9,
     "fullhp": 28,
     "effect_img": "water",
-    "row": 5
+    "row": 5,
+    "moves": [
+      {
+        "name": "Water Slash",
+        "type": "water",
+        "power": 50
+      },
+      {
+        "name": "Struggle",
+        "type": "normal",
+        "power": 40
+      }
+    ]
   },
   "Caterpie": {
     "ATK": 8,
     "DEF": 12,
     "fullhp": 20,
     "effect_img": "grass",
-    "row": 5
+    "row": 5,
+    "moves": [
+      {
+        "name": "Vine Whip",
+        "type": "grass",
+        "power": 50
+      },
+      {
+        "name": "Struggle",
+        "type": "normal",
+        "power": 40
+      }
+    ]
   },
   "Phantump": {
     "ATK": 9,
     "DEF": 8,
     "fullhp": 21,
     "effect_img": "dark",
-    "row": 5
+    "row": 5,
+    "moves": [
+      {
+        "name": "Shadow Strike",
+        "type": "dark",
+        "power": 50
+      },
+      {
+        "name": "Struggle",
+        "type": "normal",
+        "power": 40
+      }
+    ]
   },
   "Pumpkaboo": {
     "ATK": 8,
     "DEF": 9,
     "fullhp": 21,
     "effect_img": "dark",
-    "row": 5
+    "row": 5,
+    "moves": [
+      {
+        "name": "Shadow Strike",
+        "type": "dark",
+        "power": 50
+      },
+      {
+        "name": "Struggle",
+        "type": "normal",
+        "power": 40
+      }
+    ]
   },
   "Litwick": {
     "ATK": 11,
     "DEF": 7,
     "fullhp": 22,
     "effect_img": "dark",
-    "row": 7
+    "row": 7,
+    "moves": [
+      {
+        "name": "Shadow Strike",
+        "type": "dark",
+        "power": 50
+      },
+      {
+        "name": "Struggle",
+        "type": "normal",
+        "power": 40
+      }
+    ]
   },
   "Drifloon": {
     "ATK": 9,
     "DEF": 7,
     "fullhp": 21,
     "effect_img": "dark",
-    "row": 6
+    "row": 6,
+    "moves": [
+      {
+        "name": "Shadow Strike",
+        "type": "dark",
+        "power": 50
+      },
+      {
+        "name": "Struggle",
+        "type": "normal",
+        "power": 40
+      }
+    ]
   },
   "Shuppet": {
     "ATK": 11,
     "DEF": 7,
     "fullhp": 19,
     "effect_img": "dark",
-    "row": 6
+    "row": 6,
+    "moves": [
+      {
+        "name": "Shadow Strike",
+        "type": "dark",
+        "power": 50
+      },
+      {
+        "name": "Struggle",
+        "type": "normal",
+        "power": 40
+      }
+    ]
   },
   "Houndour": {
     "ATK": 11,
     "DEF": 7,
     "fullhp": 21,
     "effect_img": "fire",
-    "row": 5
+    "row": 5,
+    "moves": [
+      {
+        "name": "Ember",
+        "type": "fire",
+        "power": 50
+      },
+      {
+        "name": "Struggle",
+        "type": "normal",
+        "power": 40
+      }
+    ]
   },
   "Gengar": {
     "ATK": 12,
     "DEF": 6,
     "fullhp": 20,
     "effect_img": "dark",
-    "row": 5
+    "row": 5,
+    "moves": [
+      {
+        "name": "Shadow Strike",
+        "type": "dark",
+        "power": 50
+      },
+      {
+        "name": "Struggle",
+        "type": "normal",
+        "power": 40
+      }
+    ]
   },
   "Poochyena": {
     "ATK": 10,
     "DEF": 7,
     "fullhp": 19,
     "effect_img": "dark",
-    "row": 5
+    "row": 5,
+    "moves": [
+      {
+        "name": "Shadow Strike",
+        "type": "dark",
+        "power": 50
+      },
+      {
+        "name": "Struggle",
+        "type": "normal",
+        "power": 40
+      }
+    ]
   },
   "Torchic": {
     "ATK": 11,
     "DEF": 7,
     "fullhp": 20,
     "effect_img": "fire",
-    "row": 5
+    "row": 5,
+    "moves": [
+      {
+        "name": "Ember",
+        "type": "fire",
+        "power": 50
+      },
+      {
+        "name": "Struggle",
+        "type": "normal",
+        "power": 40
+      }
+    ]
   },
   "Rattata": {
     "ATK": 10,
     "DEF": 9,
     "fullhp": 17,
     "effect_img": "poison",
-    "row": 6
+    "row": 6,
+    "moves": [
+      {
+        "name": "Toxic Sting",
+        "type": "poison",
+        "power": 50
+      },
+      {
+        "name": "Struggle",
+        "type": "normal",
+        "power": 40
+      }
+    ]
   },
   "Mudkip": {
     "ATK": 9,
     "DEF": 9,
     "fullhp": 20,
     "effect_img": "water",
-    "row": 5
+    "row": 5,
+    "moves": [
+      {
+        "name": "Water Slash",
+        "type": "water",
+        "power": 50
+      },
+      {
+        "name": "Struggle",
+        "type": "normal",
+        "power": 40
+      }
+    ]
   },
   "Bulbasaur": {
     "ATK": 9,
     "DEF": 8,
     "fullhp": 21,
     "effect_img": "grass",
-    "row": 4
+    "row": 4,
+    "moves": [
+      {
+        "name": "Vine Whip",
+        "type": "grass",
+        "power": 50
+      },
+      {
+        "name": "Struggle",
+        "type": "normal",
+        "power": 40
+      }
+    ]
   },
   "Duskull": {
     "ATK": 11,
     "DEF": 8,
     "fullhp": 20,
     "effect_img": "dark",
-    "row": 5
+    "row": 5,
+    "moves": [
+      {
+        "name": "Shadow Strike",
+        "type": "dark",
+        "power": 50
+      },
+      {
+        "name": "Struggle",
+        "type": "normal",
+        "power": 40
+      }
+    ]
   },
   "Growlithe": {
     "ATK": 11,
     "DEF": 7,
     "fullhp": 20,
     "effect_img": "fire",
-    "row": 5
+    "row": 5,
+    "moves": [
+      {
+        "name": "Ember",
+        "type": "fire",
+        "power": 50
+      },
+      {
+        "name": "Struggle",
+        "type": "normal",
+        "power": 40
+      }
+    ]
   },
   "Suicune": {
     "ATK": 12,
     "DEF": 7,
     "fullhp": 21,
     "effect_img": "water",
-    "row": 4
+    "row": 4,
+    "moves": [
+      {
+        "name": "Water Slash",
+        "type": "water",
+        "power": 50
+      },
+      {
+        "name": "Struggle",
+        "type": "normal",
+        "power": 40
+      }
+    ]
   },
   "Fennekin": {
     "ATK": 12,
     "DEF": 5,
     "fullhp": 19,
     "effect_img": "fire",
-    "row": 4
+    "row": 4,
+    "moves": [
+      {
+        "name": "Ember",
+        "type": "fire",
+        "power": 50
+      },
+      {
+        "name": "Struggle",
+        "type": "normal",
+        "power": 40
+      }
+    ]
   },
   "Moltres": {
     "ATK": 11,
     "DEF": 8,
     "fullhp": 21,
     "effect_img": "fire",
-    "row": 4
+    "row": 4,
+    "moves": [
+      {
+        "name": "Ember",
+        "type": "fire",
+        "power": 50
+      },
+      {
+        "name": "Struggle",
+        "type": "normal",
+        "power": 40
+      }
+    ]
   },
   "Zapdos": {
     "ATK": 11,
     "DEF": 8,
     "fullhp": 21,
     "effect_img": "electric",
-    "row": 4
+    "row": 4,
+    "moves": [
+      {
+        "name": "Thunder Shock",
+        "type": "electric",
+        "power": 50
+      },
+      {
+        "name": "Struggle",
+        "type": "normal",
+        "power": 40
+      }
+    ]
   },
   "Articuno": {
     "ATK": 11,
     "DEF": 8,
     "fullhp": 21,
     "effect_img": "ice",
-    "row": 4
+    "row": 4,
+    "moves": [
+      {
+        "name": "Ice Shard",
+        "type": "ice",
+        "power": 50
+      },
+      {
+        "name": "Struggle",
+        "type": "normal",
+        "power": 40
+      }
+    ]
   },
   "Pichu": {
     "ATK": 11,
     "DEF": 6,
     "fullhp": 19,
     "effect_img": "electric",
-    "row": 4
+    "row": 4,
+    "moves": [
+      {
+        "name": "Thunder Shock",
+        "type": "electric",
+        "power": 50
+      },
+      {
+        "name": "Struggle",
+        "type": "normal",
+        "power": 40
+      }
+    ]
   },
   "Raichu": {
     "ATK": 11,
     "DEF": 8,
     "fullhp": 21,
     "effect_img": "electric",
-    "row": 5
+    "row": 5,
+    "moves": [
+      {
+        "name": "Thunder Shock",
+        "type": "electric",
+        "power": 50
+      },
+      {
+        "name": "Struggle",
+        "type": "normal",
+        "power": 40
+      }
+    ]
   },
   "Ninetales": {
     "ATK": 11,
     "DEF": 6,
     "fullhp": 20,
     "effect_img": "fire",
-    "row": 4
+    "row": 4,
+    "moves": [
+      {
+        "name": "Ember",
+        "type": "fire",
+        "power": 50
+      },
+      {
+        "name": "Struggle",
+        "type": "normal",
+        "power": 40
+      }
+    ]
   },
   "Mew": {
     "ATK": 12,
     "DEF": 7,
     "fullhp": 22,
     "effect_img": "psychic",
-    "row": 5
+    "row": 5,
+    "moves": [
+      {
+        "name": "Psybeam",
+        "type": "psychic",
+        "power": 50
+      },
+      {
+        "name": "Struggle",
+        "type": "normal",
+        "power": 40
+      }
+    ]
   },
   "Leafeon": {
     "ATK": 10,
     "DEF": 7,
     "fullhp": 22,
     "effect_img": "grass",
-    "row": 4
+    "row": 4,
+    "moves": [
+      {
+        "name": "Vine Whip",
+        "type": "grass",
+        "power": 50
+      },
+      {
+        "name": "Struggle",
+        "type": "normal",
+        "power": 40
+      }
+    ]
   },
   "Glaceon": {
     "ATK": 12,
     "DEF": 5,
     "fullhp": 21,
     "effect_img": "ice",
-    "row": 4
+    "row": 4,
+    "moves": [
+      {
+        "name": "Ice Shard",
+        "type": "ice",
+        "power": 50
+      },
+      {
+        "name": "Struggle",
+        "type": "normal",
+        "power": 40
+      }
+    ]
   },
   "Umbreon": {
     "ATK": 10,
     "DEF": 9,
     "fullhp": 20,
     "effect_img": "dark",
-    "row": 4
+    "row": 4,
+    "moves": [
+      {
+        "name": "Shadow Strike",
+        "type": "dark",
+        "power": 50
+      },
+      {
+        "name": "Struggle",
+        "type": "normal",
+        "power": 40
+      }
+    ]
   },
   "Espeon": {
     "ATK": 12,
     "DEF": 7,
     "fullhp": 20,
     "effect_img": "psychic",
-    "row": 4
+    "row": 4,
+    "moves": [
+      {
+        "name": "Psybeam",
+        "type": "psychic",
+        "power": 50
+      },
+      {
+        "name": "Struggle",
+        "type": "normal",
+        "power": 40
+      }
+    ]
   },
   "Vaporeon": {
     "ATK": 11,
     "DEF": 8,
     "fullhp": 21,
     "effect_img": "water",
-    "row": 4
+    "row": 4,
+    "moves": [
+      {
+        "name": "Water Slash",
+        "type": "water",
+        "power": 50
+      },
+      {
+        "name": "Struggle",
+        "type": "normal",
+        "power": 40
+      }
+    ]
   },
   "Pikachu": {
     "ATK": 17,
     "DEF": 7,
     "fullhp": 21,
     "effect_img": "electric",
-    "row": 5
+    "row": 5,
+    "moves": [
+      {
+        "name": "Thunder Shock",
+        "type": "electric",
+        "power": 50
+      },
+      {
+        "name": "Struggle",
+        "type": "normal",
+        "power": 40
+      }
+    ]
   },
   "Eevee": {
     "ATK": 11,
     "DEF": 8,
     "fullhp": 20,
     "effect_img": "rock",
-    "row": 5
+    "row": 5,
+    "moves": [
+      {
+        "name": "Rock Throw",
+        "type": "rock",
+        "power": 50
+      },
+      {
+        "name": "Struggle",
+        "type": "normal",
+        "power": 40
+      }
+    ]
   },
   "Flareon": {
     "ATK": 12,
     "DEF": 7,
     "fullhp": 20,
     "effect_img": "fire",
-    "row": 4
+    "row": 4,
+    "moves": [
+      {
+        "name": "Ember",
+        "type": "fire",
+        "power": 50
+      },
+      {
+        "name": "Struggle",
+        "type": "normal",
+        "power": 40
+      }
+    ]
   },
   "Dialga": {
     "ATK": 10,
     "DEF": 10,
     "fullhp": 24,
     "effect_img": "ice",
-    "row": 2
+    "row": 2,
+    "moves": [
+      {
+        "name": "Ice Shard",
+        "type": "ice",
+        "power": 50
+      },
+      {
+        "name": "Struggle",
+        "type": "normal",
+        "power": 40
+      }
+    ]
   },
   "Palkia": {
     "ATK": 13,
     "DEF": 7,
     "fullhp": 24,
     "effect_img": "dragon",
-    "row": 3
+    "row": 3,
+    "moves": [
+      {
+        "name": "Dragon Rush",
+        "type": "dragon",
+        "power": 50
+      },
+      {
+        "name": "Struggle",
+        "type": "normal",
+        "power": 40
+      }
+    ]
   },
   "Reshiram": {
     "ATK": 11,
     "DEF": 10,
     "fullhp": 24,
     "effect_img": "dragon",
-    "row": 19
+    "row": 19,
+    "moves": [
+      {
+        "name": "Dragon Rush",
+        "type": "dragon",
+        "power": 50
+      },
+      {
+        "name": "Struggle",
+        "type": "normal",
+        "power": 40
+      }
+    ]
   },
   "Zekrom": {
     "ATK": 13,
     "DEF": 8,
     "fullhp": 24,
     "effect_img": "dragon",
-    "row": 20
+    "row": 20,
+    "moves": [
+      {
+        "name": "Dragon Rush",
+        "type": "dragon",
+        "power": 50
+      },
+      {
+        "name": "Struggle",
+        "type": "normal",
+        "power": 40
+      }
+    ]
   },
   "Rayquaza": {
     "ATK": 13,
     "DEF": 5,
     "fullhp": 21,
     "effect_img": "dragon",
-    "row": 19
+    "row": 19,
+    "moves": [
+      {
+        "name": "Dragon Rush",
+        "type": "dragon",
+        "power": 50
+      },
+      {
+        "name": "Struggle",
+        "type": "normal",
+        "power": 40
+      }
+    ]
   },
   "Groudon": {
     "ATK": 9,
     "DEF": 10,
     "fullhp": 24,
     "effect_img": "dragon",
-    "row": 12
+    "row": 12,
+    "moves": [
+      {
+        "name": "Dragon Rush",
+        "type": "dragon",
+        "power": 50
+      },
+      {
+        "name": "Struggle",
+        "type": "normal",
+        "power": 40
+      }
+    ]
   },
   "Regigigas": {
     "ATK": 7,
     "DEF": 11,
     "fullhp": 28,
     "effect_img": "rock",
-    "row": 16
+    "row": 16,
+    "moves": [
+      {
+        "name": "Rock Throw",
+        "type": "rock",
+        "power": 50
+      },
+      {
+        "name": "Struggle",
+        "type": "normal",
+        "power": 40
+      }
+    ]
   },
   "Giratina": {
     "ATK": 15,
     "DEF": 9,
     "fullhp": 21,
     "effect_img": "dragon",
-    "row": 14
+    "row": 14,
+    "moves": [
+      {
+        "name": "Dragon Rush",
+        "type": "dragon",
+        "power": 50
+      },
+      {
+        "name": "Struggle",
+        "type": "normal",
+        "power": 40
+      }
+    ]
   },
   "Ho-oh": {
     "ATK": 13,
     "DEF": 7,
     "fullhp": 19,
     "effect_img": "flying",
-    "row": 12
+    "row": 12,
+    "moves": [
+      {
+        "name": "Wing Attack",
+        "type": "flying",
+        "power": 50
+      },
+      {
+        "name": "Struggle",
+        "type": "normal",
+        "power": 40
+      }
+    ]
   },
   "Lugia": {
     "ATK": 10,
     "DEF": 10,
     "fullhp": 19,
     "effect_img": "flying",
-    "row": 7
+    "row": 7,
+    "moves": [
+      {
+        "name": "Wing Attack",
+        "type": "flying",
+        "power": 50
+      },
+      {
+        "name": "Struggle",
+        "type": "normal",
+        "power": 40
+      }
+    ]
   }
 }

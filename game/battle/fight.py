@@ -105,6 +105,11 @@ class Fight:
         #Player at all; game.py credits this to self.player.money once the fight ends, the same
         #place lives/HP already get applied post-fight
         self.money_earned = 0
+        #picking "Attack" opens this move-choice sub-menu instead of resolving immediately -
+        #left/right between the two moves (see Pokemon.moves), same left/right-to-highlight
+        #convention as the top-level Attack/Catch/Run/Bag choice
+        self.move_menu = False
+        self.move_index = 0
 
         #which of the fight screen's states is active, dispatched via state_handlers instead of
         #the nested if/elif chain draw() used to be - derived fresh every frame from the exact
@@ -123,6 +128,9 @@ class Fight:
             "item_browse": self._draw_item_browse,
             "item_confirm": self._draw_item_confirm,
             "item_cancel": self._draw_item_cancel,
+            "move_browse": self._draw_move_browse,
+            "move_confirm": self._draw_move_confirm,
+            "move_cancel": self._draw_move_cancel,
             "message": self._draw_message,
             "choose_action": self._draw_choose_action,
             "resolve_action": self._draw_resolve_action,
@@ -134,6 +142,12 @@ class Fight:
     #(not != 0) since count is now a real-time countdown (see _draw_message) that can overshoot
     #past exactly zero in one dt step, rather than an integer that only ever decremented to it
     def _resolve_state(self):
+        if self.move_menu:
+            if self.kbd.quit:
+                return "move_cancel"
+            if self.kbd.select:
+                return "move_confirm"
+            return "move_browse"
         if self.item_menu:
             if self.kbd.quit:
                 return "item_cancel"
@@ -208,10 +222,14 @@ class Fight:
         self._reset_effect_frames()
         self.inte = self.interact(self.inte, canvas)
 
-    #the frame the player confirms an action - either resolves it, or opens the bag/switch menu
+    #the frame the player confirms an action - either resolves it, or opens the bag/move/switch menu
     def _draw_resolve_action(self, canvas, dt):
         self._reset_effect_frames()
-        if self.inte <=3 :
+        if self.inte == 1:
+            self.move_menu = True
+            self.move_index = 0
+            self.kbd.select = False
+        elif self.inte <=3 :
             self.fight(self.pokemon, self.monster, self.inte, canvas)
             self.kbd.select = False
             self.count = balance.PLAYER_TURN_MESSAGE_FRAMES
@@ -224,6 +242,31 @@ class Fight:
         self._reset_effect_frames()
         self.fight(self.pokemon, self.monster, self.inte, canvas)
         self.count = balance.MONSTER_TURN_MESSAGE_FRAMES
+
+    #picking a move - up/down toggles between the two, matching the vertical stack they're
+    #drawn in (unlike the top-level Attack/Catch/Run/Bag choice, these aren't side by side)
+    def _draw_move_browse(self, canvas, dt):
+        move1, move2 = self.pokemon.moves
+        canvas.draw_text("Choose a move for "+self.pokemon.name+":", (120, 415), 22, 'White')
+        col1 = "White" if self.move_index == 0 else "Grey"
+        col2 = "White" if self.move_index == 1 else "Grey"
+        canvas.draw_text(move1["name"]+" (Pow "+str(move1["power"])+")", (450, 400), 20, col1)
+        canvas.draw_text(move2["name"]+" (Pow "+str(move2["power"])+")", (450, 435), 20, col2)
+        if self.kbd.up:
+            self.move_index = 0
+        elif self.kbd.down:
+            self.move_index = 1
+
+    #confirms the highlighted move and resolves the player's turn with it
+    def _draw_move_confirm(self, canvas, dt):
+        self.kbd.select = False
+        self.move_menu = False
+        self.fight(self.pokemon, self.monster, 1, canvas, move=self.pokemon.moves[self.move_index])
+        self.count = balance.PLAYER_TURN_MESSAGE_FRAMES
+
+    #cancels the move menu, back to Attack/Catch/Run/Bag with no turn spent
+    def _draw_move_cancel(self, canvas, dt):
+        self.move_menu = False
 
     #browsing the party grid (the bag hotkey, or a forced switch/catch-overflow prompt)
     def _draw_bag_browse(self, canvas, dt):
@@ -350,19 +393,24 @@ class Fight:
     def _draw_item_cancel(self, canvas, dt):
         self.item_menu = False
 
-    #does all the calculations for the fight
-    def fight(self, pokemon, monster, inte, canvas):
+    #does all the calculations for the fight. move is the player's chosen move (inte == 1 only) -
+    #the monster always uses its own first (highest-priority/STAB) move, since real move choice
+    #for the AI side is item 8's job, not this one
+    def fight(self, pokemon, monster, inte, canvas, move=None):
         if pokemon.HP > 0 and monster.HP > 0:
             if not self.attack:
+                monster_move = monster.moves[0]
                 pokemon.HP = max(0, pokemon.HP - battle_rules.type_effective_damage(
-                    monster.ATK, pokemon.DEF, monster.effect_img, pokemon.effect_img))
-                self.info = monster.name+" attack "+pokemon.name
+                    monster.ATK, pokemon.DEF, monster_move["type"], pokemon.effect_img,
+                    power=monster_move["power"]))
+                self.info = monster.name+" used "+monster_move["name"]+"!"
                 self.attack = True
             else:
                 if inte == 1:
                     monster.HP = max(0, monster.HP - battle_rules.type_effective_damage(
-                        pokemon.ATK, monster.DEF, pokemon.effect_img, monster.effect_img))
-                    self.info = pokemon.name+" attack "+monster.name
+                        pokemon.ATK, monster.DEF, move["type"], monster.effect_img,
+                        power=move["power"]))
+                    self.info = pokemon.name+" used "+move["name"]+"!"
                     self.attack = False
                 elif inte == 2:
                     if battle_rules.escape_succeeds():
@@ -463,6 +511,7 @@ class Pokemon:
         self.fullhp = base_stats["fullhp"]
         effect_img = base_stats["effect_img"]
         self.effect_img = effect_img
+        self.moves = base_stats["moves"]
         row = base_stats["row"]
         self.count = 0
         self._prev_count = 0

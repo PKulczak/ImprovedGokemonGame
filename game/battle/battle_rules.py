@@ -32,10 +32,14 @@ def type_multiplier(attacker_type, defender_type):
         return 0.5
     return 1
 
-#damage_amount() scaled by type effectiveness, re-clamped to the same minimum-1 floor (a 0.5x
-#multiplier on an already-minimal roll shouldn't round down to 0 damage)
-def type_effective_damage(attacker_atk, defender_def, attacker_type, defender_type):
-    base = damage_amount(attacker_atk, defender_def)
+#damage_amount() scaled by a move's power relative to MOVE_POWER_BASELINE (a move authored at
+#exactly that baseline reproduces damage_amount()'s output unchanged) and by type effectiveness,
+#re-clamped to the same minimum-1 floor (a 0.5x multiplier on an already-minimal roll shouldn't
+#round down to 0 damage). power defaults to the baseline so existing callers - and anything that
+#doesn't care about moves - see identical behaviour to before moves existed.
+def type_effective_damage(attacker_atk, defender_def, attacker_type, defender_type, power=balance.MOVE_POWER_BASELINE):
+    scaled_atk = attacker_atk * power / balance.MOVE_POWER_BASELINE
+    base = damage_amount(scaled_atk, defender_def)
     return max(1, int(base * type_multiplier(attacker_type, defender_type)))
 
 #rolls whether an escape attempt succeeds

@@ -15,6 +15,12 @@ ESCAPE_SUCCESS_ROLL_MAX = 4    # random.randint(1, this); a roll of 1 succeeds
 #items
 POTION_HEAL_AMOUNT = 20        # HP restored by using a Potion mid-battle, capped at the target's fullhp
 
+#moves - a move's "power" scales the plain ATK-DEF formula relative to this baseline, so a move
+#at exactly this power reproduces today's pre-moves damage output unchanged (see
+#battle_rules.type_effective_damage). Every species' primary move (Pokedex.json's "moves"[0]) is
+#authored at this power, so introducing moves doesn't shift existing balance on its own
+MOVE_POWER_BASELINE = 50
+
 #party & leveling
 MAX_PARTY_SIZE = 6
 MAX_LEVEL = 25
