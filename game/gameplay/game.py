@@ -9,7 +9,7 @@ from game.battle.fight import Fight
 from game.battle.fight import Kbd
 from game.gameplay.entities import _load_pokemon_party
 from game.gameplay.world import Background
-from game.gameplay.ui import Text, Pokedex
+from game.gameplay.ui import Text, Pokedex, Shop
 from game.gameplay.clock import Clock
 from game.engine import balance
 
@@ -261,6 +261,8 @@ class Game:
         self.inter = Interaction(self.player, self.keyboard, self)
         self.Kbd = Kbd()
         self.pokedex = Pokedex(self.Kbd)
+        self.shop = Shop(self.Kbd)
+        self.shop_open = False
         pokemon2 = Pokemon('Palkia', 19, 5, 50, [210, 250], [570, 140])
         self.fight = Fight([pokemon2], [pokemon2], self.Kbd, False)
         self.fightB = False
@@ -275,6 +277,7 @@ class Game:
             "pokedex": self._draw_pokedex,
             "pause": self._draw_pause,
             "game_over": self._draw_game_over,
+            "shop": self._draw_shop,
             "overworld": self._draw_overworld,
         }
         self.state = self._resolve_state()
@@ -295,17 +298,20 @@ class Game:
             return "pause"
         if self.game_over:
             return "game_over"
+        if self.shop_open:
+            return "shop"
         return "overworld"
 
     #fires once on the frame a new state is entered - swaps the active keydown/keyup handler
-    #to the fight/pokedex-local Kbd. Only fires on entry (not every frame like the original
+    #to the fight/pokedex/shop-local Kbd. Only fires on entry (not every frame like the original
     #inline calls did) since re-setting the same handler reference every frame was redundant.
-    #The handler is swapped *back* to self.keyboard from inside _draw_fight/_draw_pokedex
-    #themselves, not here - that swap-back intentionally happens as soon as the battle/pokedex
-    #interaction itself concludes, which can be several frames before the state actually changes
-    #(e.g. the post-fight win/lose text overlay keeps "fight" active while it plays out).
+    #The handler is swapped *back* to self.keyboard from inside _draw_fight/_draw_pokedex/
+    #_draw_shop themselves, not here - that swap-back intentionally happens as soon as the
+    #battle/pokedex/shop interaction itself concludes, which can be several frames before the
+    #state actually changes (e.g. the post-fight win/lose text overlay keeps "fight" active
+    #while it plays out).
     def _enter_state(self, state):
-        if state in ("fight", "pokedex"):
+        if state in ("fight", "pokedex", "shop"):
             self.frame.set_keydown_handler(self.Kbd.keyDown)
             self.frame.set_keyup_handler(self.Kbd.keyUp)
 
@@ -320,6 +326,7 @@ class Game:
                 "x": self.player.pos.x,
                 "y": self.player.pos.y,
                 "lives": self.player.lives,
+                "money": self.player.money,
                 "name": self.player.name if self.player.name != "" else None,
             },
             "map": self.background.map_name,
@@ -345,6 +352,10 @@ class Game:
             self.player.pos.x = int(player_data["x"])
             self.player.pos.y = int(player_data["y"])
             self.player.lives = int(player_data["lives"])
+            #.get with a fallback, not player_data["money"] - lets a save file written before
+            #the money/shop feature existed load cleanly instead of hitting the except-and-wipe
+            #fallback below over a merely-missing (not corrupted) field
+            self.player.money = int(player_data.get("money", balance.STARTING_MONEY))
             self.player.name = player_data["name"] if player_data["name"] is not None else ""
             self.background = Background(save_data["map"], WIDTH, HEIGHT, self.npc_lost)
             self.background.load_wall()
@@ -417,6 +428,7 @@ class Game:
                     self.player.lives -= 1
                     for pokemon in self.player.pokemon_list:
                         pokemon.HP = pokemon.fullhp
+                self.player.money += self.fight.money_earned
                 self.fightB = False
 
     #handles the Gokedex overlay. dt unused - Pokedex has no timing of its own, but every
@@ -429,6 +441,20 @@ class Game:
             self.frame.set_keyup_handler(self.keyboard.keyUp)
             self.keyboard.KeyReset()
             self.keyboard.pokedex = False
+            self.Kbd.quit = False
+
+    #handles the Pokecenter shop, offered after every heal (see the player_heal block in
+    #_draw_overworld). Same swap-the-keydown-handler-back-on-quit pattern as _draw_pokedex above
+    def _draw_shop(self, canvas, dt):
+        self.shop.draw(canvas, self.player)
+        if self.Kbd.quit:
+            self.Kbd.KeyReset()
+            self.frame.set_keydown_handler(self.keyboard.keyDown)
+            self.frame.set_keyup_handler(self.keyboard.keyUp)
+            self.keyboard.KeyReset()
+            self.shop.message = ""
+            self.shop.popup_active = False
+            self.shop_open = False
             self.Kbd.quit = False
 
     #handles the pause overlay - a full-screen image + controls list, same pattern as
@@ -514,6 +540,9 @@ class Game:
                 self.player.player_heal = False
                 self.player.lock = False
                 self.txtcount = 0
+                #the Pokecenter counter doubles as a shop once healing's done - Q backs out of
+                #it immediately with no purchase required, same as declining any other menu
+                self.shop_open = True
 
         if not self.intro:
             self.player.lock = True

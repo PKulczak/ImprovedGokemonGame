@@ -54,13 +54,15 @@ def _mark_pokemon_seen(name):
 
 _ITEMS_PATH = '{}/Fight/Files/PlayerItems.json'.format(BASE_DIR)
 
-#loaded fresh once per Fight (unlike load_seen_pokemon, no mtime caching needed - nothing else
-#reads this file while a battle is in progress)
-def _load_items():
+#public (unlike the seen-pokemon helpers' leading underscore) - the overworld shop (ui.py's Shop)
+#reads/writes the same PlayerItems.json outside of any battle. Loaded fresh each call - unlike
+#load_seen_pokemon, nothing needs the mtime-cache dance since it's read/written by whichever of
+#Fight/Shop is currently active, never both at once
+def load_items():
     with open(_ITEMS_PATH, "r") as file:
         return json.load(file)
 
-def _save_items(items):
+def save_items(items):
     with open(_ITEMS_PATH, "w") as file:
         json.dump(items, file, indent=2)
 
@@ -96,9 +98,13 @@ class Fight:
         self.lost = False
         self.grid = PartyGrid()
         self.end = False
-        self.items = _load_items()
+        self.items = load_items()
         self.item_menu = False
         self.item_grid = PartyGrid()
+        #tallied here rather than touching Player directly - Fight doesn't otherwise know about
+        #Player at all; game.py credits this to self.player.money once the fight ends, the same
+        #place lives/HP already get applied post-fight
+        self.money_earned = 0
 
         #which of the fight screen's states is active, dispatched via state_handlers instead of
         #the nested if/elif chain draw() used to be - derived fresh every frame from the exact
@@ -277,7 +283,7 @@ class Fight:
     #Consumes the ball regardless of outcome, same as mainline - a failed throw still costs you.
     def _attempt_catch(self, ball_name, ball_multiplier):
         self.items[ball_name] -= 1
-        _save_items(self.items)
+        save_items(self.items)
         monster = self.monster
         hp_fraction = monster.HP / monster.fullhp
         if not self.npc and battle_rules.catch_succeeds(ball_multiplier, hp_fraction):
@@ -327,7 +333,7 @@ class Fight:
         if name == "Potion":
             if self.items.get(name, 0) > 0 and self.pokemon.HP < self.pokemon.fullhp:
                 self.items[name] -= 1
-                _save_items(self.items)
+                save_items(self.items)
                 self.pokemon.HP = min(self.pokemon.fullhp, self.pokemon.HP + balance.POTION_HEAL_AMOUNT)
                 self.info = "Used a Potion on "+self.pokemon.name+"!"
                 self.item_menu = False
@@ -398,6 +404,10 @@ class Fight:
                     self.end = True
             elif pokemon.HP > 0:
                 pokemon.exp += monster.give_exp
+                if not self.npc:
+                    #wild Pokemon only - beating a trainer's Pokemon doesn't pay out, matching
+                    #the plan's explicit ask ("money from beating wild pokemon")
+                    self.money_earned += balance.WILD_DEFEAT_BASE_MONEY + balance.WILD_DEFEAT_MONEY_PER_LEVEL * monster.lvl
                 if pokemon.exp >= pokemon.max_exp:
                     if pokemon.lvl <= balance.MAX_LEVEL:
                         pokemon.lvl += 1
@@ -405,11 +415,11 @@ class Fight:
                         (pokemon.ATK, pokemon.DEF, pokemon.fullhp,
                          pokemon.max_exp, pokemon.give_exp) = battle_rules.level_up_stats(
                             base_stats["ATK"], base_stats["DEF"], base_stats["fullhp"], pokemon.lvl)
-                        #a small, renewable trickle of the cheapest ball tier - otherwise
-                        #catching would only ever deplete PlayerItems.json with no way back
-                        #short of a Pokecenter shop (see plans/feature-ideas.md item 11)
+                        #a small, renewable trickle of the cheapest ball tier on top of the
+                        #Pokecenter shop (ui.py's Shop) - keeps a floor of catch resources even
+                        #before the player has any money
                         self.items["Poke Ball"] = self.items.get("Poke Ball", 0) + 1
-                        _save_items(self.items)
+                        save_items(self.items)
                     pokemon.exp -= pokemon.max_exp
                     pokemon.HP = pokemon.fullhp
 

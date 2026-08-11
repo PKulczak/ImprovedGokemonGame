@@ -75,6 +75,7 @@ class Player:
         self.encounters = self.num_lines = len(load_seen_pokemon())
 
         self.lives = balance.STARTING_LIVES
+        self.money = balance.STARTING_MONEY
         self.player_heal = False
         self.heart_img = load_image('{}/Overworld/Other/heart.png'.format(BASE_DIR))
 
@@ -101,6 +102,7 @@ class Player:
 
         self.encounters = self.num_lines = len(load_seen_pokemon())
         canvas.draw_text("Gokedex entries: "+str(self.encounters), [300,20], 24, "Black")
+        canvas.draw_text("$"+str(self.money), [630,20], 24, "Black")
 
         self.clock.tick(dt)
         move_on = self.clock.transition(balance.WALK_ANIMATION_CADENCE_FRAMES)

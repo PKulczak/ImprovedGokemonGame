@@ -7,6 +7,7 @@
     "x": 552,
     "y": 224,
     "lives": 6,
+    "money": 100,
     "name": null
   },
   "map": "map2y"

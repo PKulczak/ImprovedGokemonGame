@@ -3,7 +3,7 @@ import json
 from game.engine.image_cache import load_image
 from game.engine import balance
 from game.engine.party_grid import PartyGrid
-from game.battle.fight import POKEDEX, load_seen_pokemon, seen_pokemon_version
+from game.battle.fight import POKEDEX, load_seen_pokemon, seen_pokemon_version, ITEM_ORDER, load_items, save_items
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -66,6 +66,65 @@ class Pokedex:
                 canvas.draw_text(self.poke_list[i], (290, 150+(i*120)), 25, 'Black')
             else:
                 canvas.draw_text(self.poke_list[i], (540, 150+(i-3)*120), 25, 'Black')
+
+#buyable at a Pokecenter counter (see Game._draw_shop) - a fixed price list for the same items
+#the battle Bag menu already tracks in PlayerItems.json (game/battle/fight.py's ITEM_ORDER)
+SHOP_PRICES = {"Poke Ball": 50, "Great Ball": 150, "Ultra Ball": 300, "Potion": 30}
+
+#a small Pokecenter shop, offered after healing - same 6-slot grid/backdrop as the Gokedex and
+#the battle item menu (only 4 of the 6 slots are used, one per ITEM_ORDER entry)
+class Shop:
+    def __init__(self, kbd):
+        self.kbd = kbd
+        self.first = True
+        self.grid = PartyGrid()
+        self.bag = load_image('{}/Fight/Other/bag.png'.format(BASE_DIR))
+        self.light = load_image('{}/Fight/Other/highlight.png'.format(BASE_DIR))
+        self.txtbox = load_image('{}/Text/box.png'.format(BASE_DIR))
+        self.message = ""
+        #a purchase result (bought/not enough money) blocks the grid until dismissed with
+        #Space, same box.png dialogue pattern used for heal/intro/battle-win text elsewhere
+        self.popup_active = False
+
+    def draw(self, canvas, player):
+        items = load_items()
+        #frozen while the popup is up - only Space (handled below) does anything until dismissed
+        if not self.popup_active:
+            self.first = self.grid.update(self.kbd, self.first)
+        self.grid.draw_highlight(canvas, self.bag, self.light)
+        for i, name in enumerate(ITEM_ORDER):
+            label = name+" x"+str(items.get(name, 0))+" - $"+str(SHOP_PRICES[name])
+            if i < 3:
+                canvas.draw_text(label, (270, 145+(i*120)), 20, 'Black')
+            else:
+                canvas.draw_text(label, (520, 145+(i-3)*120), 20, 'Black')
+        canvas.draw_text("Money: $"+str(player.money), (30, 30), 24, 'Black')
+
+        if self.popup_active:
+            canvas.draw_image(self.txtbox, (400,75), (800,150), (400,405), (800,150))
+            canvas.draw_text(self.message, (50, 385), 22, 'White')
+            canvas.draw_text("Press Space to continue", (50, 435), 18, 'White')
+            if self.kbd.select:
+                self.kbd.select = False
+                self.popup_active = False
+            return
+
+        #buying is a one-shot per select press, same debounce-by-consumption pattern used
+        #everywhere else kbd.select drives a menu confirm
+        if self.kbd.select:
+            self.kbd.select = False
+            index = self.grid.selected_index()
+            if index < len(ITEM_ORDER):
+                name = ITEM_ORDER[index]
+                price = SHOP_PRICES[name]
+                if player.money >= price:
+                    player.money -= price
+                    items[name] = items.get(name, 0) + 1
+                    save_items(items)
+                    self.message = "Bought a "+name+"!"
+                else:
+                    self.message = "Not enough money!"
+                self.popup_active = True
 
 #loads all dialogue text once from Text/dialogue.json
 def _load_dialogue():

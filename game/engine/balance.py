@@ -29,6 +29,12 @@ GIVE_EXP_PER_LEVEL = 3
 #player
 STARTING_LIVES = 6
 
+#money - defeating (not catching) a wild Pokemon pays out BASE + PER_LEVEL*monster_lvl; trainer
+#battles don't pay out at all (see Fight.money_earned, only incremented for non-npc fights)
+STARTING_MONEY = 100
+WILD_DEFEAT_BASE_MONEY = 10
+WILD_DEFEAT_MONEY_PER_LEVEL = 2
+
 #message/animation timing - all in "frame-equivalents" at the nominal 60fps design rate (see
 #frame.py's dt calculation), NOT raw call counts - the main loop scales real elapsed time onto
 #this unit so these durations stay real-time-correct regardless of the actual frame rate
