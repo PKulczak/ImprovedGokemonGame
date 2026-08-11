@@ -4,6 +4,7 @@ import os
 import json
 from game.engine.image_cache import load_image
 from game.engine import balance
+from game.engine import sound
 from game.engine.party_grid import PartyGrid
 from game.battle import battle_rules
 
@@ -335,6 +336,7 @@ class Fight:
         monster = self.monster
         hp_fraction = monster.HP / monster.fullhp
         if not self.npc and battle_rules.catch_succeeds(ball_multiplier, hp_fraction):
+            sound.play_sfx("catch")
             if len(self.poke_list) < balance.MAX_PARTY_SIZE:
                 self.info = "Caught with a "+ball_name+"!"
                 monster.pos = self.pokemon.pos
@@ -356,6 +358,7 @@ class Fight:
         else:
             self.info = "Catch failed!" if self.npc else ball_name+" failed to catch it!"
             self.attack = False
+            sound.play_sfx("catch_fail")
 
     #browsing the item menu - Potion/ball counts plus a Switch Pokemon entry, same 6-slot grid
     #backdrop as the old party-switch-only Bag menu
@@ -419,9 +422,18 @@ class Fight:
         if pokemon.HP > 0 and monster.HP > 0:
             if not self.attack:
                 monster_move = self._choose_monster_move(monster, pokemon)
+                hp_before = pokemon.HP
                 pokemon.HP = max(0, pokemon.HP - battle_rules.type_effective_damage(
                     monster.ATK, pokemon.DEF, monster_move["type"], pokemon.effect_img,
                     power=monster_move["power"]))
+                sound.play_sfx("hit")
+                #only warns about the player's own Pokemon, and only on the hit that actually
+                #crosses the threshold - staying below it for several turns in a row isn't a
+                #fresh warning each time
+                low_hp_now = pokemon.HP / pokemon.fullhp <= balance.LOW_HP_WARNING_FRACTION
+                low_hp_before = hp_before / pokemon.fullhp <= balance.LOW_HP_WARNING_FRACTION
+                if low_hp_now and not low_hp_before and pokemon.HP > 0:
+                    sound.play_sfx("low_hp")
                 self.info = monster.name+" used "+monster_move["name"]+"!"
                 self.attack = True
             else:
@@ -429,6 +441,7 @@ class Fight:
                     monster.HP = max(0, monster.HP - battle_rules.type_effective_damage(
                         pokemon.ATK, monster.DEF, move["type"], monster.effect_img,
                         power=move["power"]))
+                    sound.play_sfx("hit")
                     self.info = pokemon.name+" used "+move["name"]+"!"
                     self.attack = False
                 elif inte == 2:
@@ -483,6 +496,7 @@ class Fight:
                          pokemon.max_exp, pokemon.give_exp) = battle_rules.level_up_stats(
                             base_stats["ATK"], base_stats["DEF"], base_stats["fullhp"],
                             base_stats.get("SPD", balance.DEFAULT_SPD), pokemon.lvl)
+                        sound.play_sfx("level_up")
                         #a small, renewable trickle of the cheapest ball tier on top of the
                         #Pokecenter shop (ui.py's Shop) - keeps a floor of catch resources even
                         #before the player has any money
@@ -653,6 +667,7 @@ class Kbd:
             self.quit = True
         if key == pygame.K_SPACE:
             self.select = True
+            sound.play_sfx("select")
 
     def keyUp(self, key):
         if key == pygame.K_RIGHT:

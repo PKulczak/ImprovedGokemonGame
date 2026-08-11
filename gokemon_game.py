@@ -2,12 +2,14 @@ import pygame
 from game.gameplay.Welcome import Welcome
 from game.engine.canvas import Canvas
 from game.engine.frame import Frame
+from game.engine import sound
 from game.gameplay.clock import Clock
 from game.gameplay.entities import Player
 from game.gameplay.world import Background
 from game.gameplay.game import Game, Keyboard, WIDTH, HEIGHT, ensure_save_files_exist
 
 pygame.init()
+sound.init()
 
 #creates the live save files from the bundled defaults if they don't exist yet -
 #e.g. right after cloning the repo, since the live files themselves aren't committed

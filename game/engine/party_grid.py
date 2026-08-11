@@ -1,3 +1,5 @@
+from game.engine import sound
+
 #the 2-column/3-row party cursor grid shared by Fight's bag-browse menu and Pokedex - both used
 #to hand-roll the same centre/first debounce bookkeeping and the same six screen positions
 class PartyGrid:
@@ -33,6 +35,8 @@ class PartyGrid:
             elif kbd.up and self.centre[1] > 0:
                 self.centre[1] -= 1
                 first = True
+            if first:
+                sound.play_sfx("menu_move")
         else:
             if not (kbd.left or kbd.right or kbd.up or kbd.down):
                 first = False

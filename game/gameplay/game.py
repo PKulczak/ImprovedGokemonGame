@@ -13,6 +13,7 @@ from game.gameplay.world import Background
 from game.gameplay.ui import Text, Pokedex, Shop
 from game.gameplay.clock import Clock
 from game.engine import balance
+from game.engine import sound
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -34,6 +35,17 @@ PAUSE_CONTROLS = [
 
 #TEMP: set True to re-enable random wild encounters (disabled for map/collision QA)
 WILD_ENCOUNTERS_ENABLED = True
+
+#which looping background track (game/Sound/music/<zone>.ogg, see sound.py) plays for each of
+#the 14 maps - grouped into a handful of zones rather than one track per map, since most maps
+#within a group share the same overworld "feel". Falls back to "town" for any map not listed.
+MAP_MUSIC_ZONES = {
+    "map": "town", "map2": "town", "map2y": "town", "map3": "town",
+    "route1": "route", "route2": "route", "route3": "route", "route4": "route",
+    "pokecenter": "pokecenter", "pokecenter2": "pokecenter",
+    "gym2": "gym",
+    "bossfight1": "boss", "bossfight2": "boss", "bossfight3": "boss",
+}
 
 #both Pokecenter interior maps (game/Overworld/maps/pokecenter.json, pokecenter2.json) share this
 #exact door-entry position - it's already the target_pos used by the town-side door tiles that
@@ -102,6 +114,7 @@ class Keyboard:
             #screens) - this is a per-press "advance the current dialogue line" signal, cleared
             #by whichever Text.draw() call consumes it, same pattern as Kbd.select in battle
             self.select = True
+            sound.play_sfx("select")
         if key == pygame.K_p:
             self.pokedex = True
         if key == pygame.K_s:
@@ -178,6 +191,9 @@ class Interaction:
                     #autosave on every map transition - a natural, frequent checkpoint, silent
                     #(no "Saved!" flash) since it's automatic rather than a deliberate keypress
                     self.game.save_game()
+                    #picks up on a zone change even though the game *state* stays "overworld"
+                    #the whole time (_enter_state alone only fires when the state itself changes)
+                    self.game._play_zone_music()
 
                 if self.player.in_fight == True:
                     rand_int = random.random()
@@ -336,6 +352,20 @@ class Game:
         if state in ("fight", "pokedex", "shop"):
             self.frame.set_keydown_handler(self.Kbd.keyDown)
             self.frame.set_keyup_handler(self.Kbd.keyUp)
+        if state == "fight":
+            sound.play_music("battle")
+        elif state == "overworld":
+            #covers both "just returned from a fight/menu" and "just walked into a different
+            #zone" (the latter re-fires this same call from Interaction.draw on every map
+            #transition, since state stays "overworld" the whole time and _enter_state alone
+            #wouldn't otherwise notice the map changed)
+            self._play_zone_music()
+
+    #resumes whichever zone track the player's current map belongs to; a no-op if that track is
+    #already playing (see sound.play_music)
+    def _play_zone_music(self):
+        zone = MAP_MUSIC_ZONES.get(self.background.map_name, "town")
+        sound.play_music(zone)
 
     #saves the current progress of player
     def save_game(self):
@@ -542,11 +572,27 @@ class Game:
     #it (so overworld movement/timers are simply not ticked while paused, no extra flag needed).
     #dt unused, same reason as _draw_start_menu/_draw_welcome below
     def _draw_pause(self, canvas, dt):
+        #left/right are free to repurpose here - overworld movement isn't ticked while paused
+        #(_draw_overworld simply isn't called), so there's no conflict with their normal job.
+        #Manually zeroed after each press (rather than waiting for the natural keyUp) so holding
+        #the key down only steps the volume once per press, not once per frame held. Handled
+        #before drawing (not after) so the percentage below reflects this frame's own keypress
+        #instead of lagging a frame behind it
+        if self.keyboard.left:
+            self.keyboard.left = False
+            sound.set_volume(sound.get_volume() - 0.1)
+        elif self.keyboard.right:
+            self.keyboard.right = False
+            sound.set_volume(sound.get_volume() + 0.1)
+
         self.pauseScreen.draw(canvas)
         canvas.draw_text("Paused", (340, 60), 44, 'White')
         for i, line in enumerate(PAUSE_CONTROLS):
             canvas.draw_text(line, (220, 130 + i * 32), 22, 'White')
-        canvas.draw_text("Esc or Q to resume", (250, 130 + len(PAUSE_CONTROLS) * 32 + 20), 24, 'Yellow')
+        volume_line_y = 130 + len(PAUSE_CONTROLS) * 32 + 20
+        volume_pct = int(round(sound.get_volume()*100))
+        canvas.draw_text("Volume: "+str(volume_pct)+"% (Left/Right to adjust)", (220, volume_line_y), 20, 'White')
+        canvas.draw_text("Esc or Q to resume", (250, volume_line_y + 30), 24, 'Yellow')
 
         #Q reuses the same "back out of a screen" key/flag as every other overlay
         #(pokedex/tutorial); Esc itself already toggles keyboard.paused back off in keyDown
@@ -589,6 +635,7 @@ class Game:
             self.save_game()
             self.keyboard.save = False
             self.save_flash_count = balance.SAVE_FLASH_FRAMES
+            sound.play_sfx("save")
 
         if self.save_flash_count > 0:
             canvas.draw_text("Saved!", (340, 55), 26, 'Black')

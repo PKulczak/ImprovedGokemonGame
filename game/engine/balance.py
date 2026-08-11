@@ -43,6 +43,14 @@ SPD_GROWTH_RATE = 0.1
 #player
 STARTING_LIVES = 6
 
+#audio - 0.0-1.0, applied to both music and SFX (see game/engine/sound.py); adjustable in the
+#pause menu (Left/Right) but not persisted across sessions yet
+DEFAULT_VOLUME = 0.7
+
+#how low a fraction of fullhp has to drop to (from above it) in a single hit before the
+#low-HP warning SFX plays - only checked for the player's own active Pokemon
+LOW_HP_WARNING_FRACTION = 0.2
+
 #money - defeating (not catching) a wild Pokemon pays out BASE + PER_LEVEL*monster_lvl; trainer
 #battles don't pay out at all (see Fight.money_earned, only incremented for non-npc fights)
 STARTING_MONEY = 100
