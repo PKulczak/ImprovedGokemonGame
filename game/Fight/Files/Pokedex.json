@@ -16,7 +16,8 @@
         "type": "normal",
         "power": 40
       }
-    ]
+    ],
+    "SPD": 16
   },
   "Jolteon": {
     "ATK": 12,
@@ -35,7 +36,8 @@
         "type": "normal",
         "power": 40
       }
-    ]
+    ],
+    "SPD": 17
   },
   "Turtwig": {
     "ATK": 7,
@@ -54,7 +56,8 @@
         "type": "normal",
         "power": 40
       }
-    ]
+    ],
+    "SPD": 7
   },
   "Shinx": {
     "ATK": 16,
@@ -73,7 +76,8 @@
         "type": "normal",
         "power": 40
       }
-    ]
+    ],
+    "SPD": 19
   },
   "Squirtle": {
     "ATK": 8,
@@ -92,7 +96,8 @@
         "type": "normal",
         "power": 40
       }
-    ]
+    ],
+    "SPD": 8
   },
   "Zorua": {
     "ATK": 12,
@@ -111,7 +116,8 @@
         "type": "normal",
         "power": 40
       }
-    ]
+    ],
+    "SPD": 15
   },
   "Cyndaquil": {
     "ATK": 11,
@@ -130,7 +136,8 @@
         "type": "normal",
         "power": 40
       }
-    ]
+    ],
+    "SPD": 13
   },
   "Jigglypuff": {
     "ATK": 7,
@@ -149,7 +156,8 @@
         "type": "normal",
         "power": 40
       }
-    ]
+    ],
+    "SPD": 10
   },
   "Litten": {
     "ATK": 11,
@@ -168,7 +176,8 @@
         "type": "normal",
         "power": 40
       }
-    ]
+    ],
+    "SPD": 14
   },
   "Mareep": {
     "ATK": 7,
@@ -187,7 +196,8 @@
         "type": "normal",
         "power": 40
       }
-    ]
+    ],
+    "SPD": 14
   },
   "Quagsire": {
     "ATK": 6,
@@ -206,7 +216,8 @@
         "type": "normal",
         "power": 40
       }
-    ]
+    ],
+    "SPD": 7
   },
   "Nidorina": {
     "ATK": 9,
@@ -225,7 +236,8 @@
         "type": "normal",
         "power": 40
       }
-    ]
+    ],
+    "SPD": 6
   },
   "Oshawott": {
     "ATK": 11,
@@ -244,7 +256,8 @@
         "type": "normal",
         "power": 40
       }
-    ]
+    ],
+    "SPD": 10
   },
   "Popplio": {
     "ATK": 12,
@@ -263,7 +276,8 @@
         "type": "normal",
         "power": 40
       }
-    ]
+    ],
+    "SPD": 11
   },
   "Piplup": {
     "ATK": 11,
@@ -282,7 +296,8 @@
         "type": "normal",
         "power": 40
       }
-    ]
+    ],
+    "SPD": 10
   },
   "Cubone": {
     "ATK": 14,
@@ -301,7 +316,8 @@
         "type": "normal",
         "power": 40
       }
-    ]
+    ],
+    "SPD": 8
   },
   "Fletchling": {
     "ATK": 12,
@@ -320,7 +336,8 @@
         "type": "normal",
         "power": 40
       }
-    ]
+    ],
+    "SPD": 14
   },
   "Jirachi": {
     "ATK": 12,
@@ -339,7 +356,8 @@
         "type": "normal",
         "power": 40
       }
-    ]
+    ],
+    "SPD": 12
   },
   "Icepix": {
     "ATK": 11,
@@ -358,7 +376,8 @@
         "type": "normal",
         "power": 40
       }
-    ]
+    ],
+    "SPD": 9
   },
   "Treecko": {
     "ATK": 11,
@@ -377,7 +396,8 @@
         "type": "normal",
         "power": 40
       }
-    ]
+    ],
+    "SPD": 10
   },
   "Misdreavus": {
     "ATK": 12,
@@ -396,7 +416,8 @@
         "type": "normal",
         "power": 40
       }
-    ]
+    ],
+    "SPD": 16
   },
   "Charmander": {
     "ATK": 12,
@@ -415,7 +436,8 @@
         "type": "normal",
         "power": 40
       }
-    ]
+    ],
+    "SPD": 14
   },
   "Totodile": {
     "ATK": 10,
@@ -434,7 +456,8 @@
         "type": "normal",
         "power": 40
       }
-    ]
+    ],
+    "SPD": 10
   },
   "Breloom": {
     "ATK": 8,
@@ -453,7 +476,8 @@
         "type": "normal",
         "power": 40
       }
-    ]
+    ],
+    "SPD": 8
   },
   "Croconaw": {
     "ATK": 10,
@@ -472,7 +496,8 @@
         "type": "normal",
         "power": 40
       }
-    ]
+    ],
+    "SPD": 10
   },
   "Rowlet": {
     "ATK": 7,
@@ -491,7 +516,8 @@
         "type": "normal",
         "power": 40
       }
-    ]
+    ],
+    "SPD": 15
   },
   "Pyukumuku": {
     "ATK": 6,
@@ -510,7 +536,8 @@
         "type": "normal",
         "power": 40
       }
-    ]
+    ],
+    "SPD": 6
   },
   "Noibat": {
     "ATK": 11,
@@ -529,7 +556,8 @@
         "type": "normal",
         "power": 40
       }
-    ]
+    ],
+    "SPD": 18
   },
   "Ralts": {
     "ATK": 13,
@@ -548,7 +576,8 @@
         "type": "normal",
         "power": 40
       }
-    ]
+    ],
+    "SPD": 14
   },
   "Typhlosion": {
     "ATK": 13,
@@ -567,7 +596,8 @@
         "type": "normal",
         "power": 40
       }
-    ]
+    ],
+    "SPD": 14
   },
   "Absol": {
     "ATK": 12,
@@ -586,7 +616,8 @@
         "type": "normal",
         "power": 40
       }
-    ]
+    ],
+    "SPD": 15
   },
   "Chikorita": {
     "ATK": 8,
@@ -605,7 +636,8 @@
         "type": "normal",
         "power": 40
       }
-    ]
+    ],
+    "SPD": 9
   },
   "Skitty": {
     "ATK": 10,
@@ -624,7 +656,8 @@
         "type": "normal",
         "power": 40
       }
-    ]
+    ],
+    "SPD": 11
   },
   "Quilava": {
     "ATK": 11,
@@ -643,7 +676,8 @@
         "type": "normal",
         "power": 40
       }
-    ]
+    ],
+    "SPD": 14
   },
   "Sylveon": {
     "ATK": 11,
@@ -662,7 +696,8 @@
         "type": "normal",
         "power": 40
       }
-    ]
+    ],
+    "SPD": 11
   },
   "Weavile": {
     "ATK": 12,
@@ -681,7 +716,8 @@
         "type": "normal",
         "power": 40
       }
-    ]
+    ],
+    "SPD": 15
   },
   "Spheal": {
     "ATK": 8,
@@ -700,7 +736,8 @@
         "type": "normal",
         "power": 40
       }
-    ]
+    ],
+    "SPD": 9
   },
   "Caterpie": {
     "ATK": 8,
@@ -719,7 +756,8 @@
         "type": "normal",
         "power": 40
       }
-    ]
+    ],
+    "SPD": 8
   },
   "Phantump": {
     "ATK": 9,
@@ -738,7 +776,8 @@
         "type": "normal",
         "power": 40
       }
-    ]
+    ],
+    "SPD": 13
   },
   "Pumpkaboo": {
     "ATK": 8,
@@ -757,7 +796,8 @@
         "type": "normal",
         "power": 40
       }
-    ]
+    ],
+    "SPD": 13
   },
   "Litwick": {
     "ATK": 11,
@@ -776,7 +816,8 @@
         "type": "normal",
         "power": 40
       }
-    ]
+    ],
+    "SPD": 14
   },
   "Drifloon": {
     "ATK": 9,
@@ -795,7 +836,8 @@
         "type": "normal",
         "power": 40
       }
-    ]
+    ],
+    "SPD": 14
   },
   "Shuppet": {
     "ATK": 11,
@@ -814,7 +856,8 @@
         "type": "normal",
         "power": 40
       }
-    ]
+    ],
+    "SPD": 14
   },
   "Houndour": {
     "ATK": 11,
@@ -833,7 +876,8 @@
         "type": "normal",
         "power": 40
       }
-    ]
+    ],
+    "SPD": 13
   },
   "Gengar": {
     "ATK": 12,
@@ -852,7 +896,8 @@
         "type": "normal",
         "power": 40
       }
-    ]
+    ],
+    "SPD": 15
   },
   "Poochyena": {
     "ATK": 10,
@@ -871,7 +916,8 @@
         "type": "normal",
         "power": 40
       }
-    ]
+    ],
+    "SPD": 14
   },
   "Torchic": {
     "ATK": 11,
@@ -890,7 +936,8 @@
         "type": "normal",
         "power": 40
       }
-    ]
+    ],
+    "SPD": 13
   },
   "Rattata": {
     "ATK": 10,
@@ -909,7 +956,8 @@
         "type": "normal",
         "power": 40
       }
-    ]
+    ],
+    "SPD": 8
   },
   "Mudkip": {
     "ATK": 9,
@@ -928,7 +976,8 @@
         "type": "normal",
         "power": 40
       }
-    ]
+    ],
+    "SPD": 9
   },
   "Bulbasaur": {
     "ATK": 9,
@@ -947,7 +996,8 @@
         "type": "normal",
         "power": 40
       }
-    ]
+    ],
+    "SPD": 9
   },
   "Duskull": {
     "ATK": 11,
@@ -966,7 +1016,8 @@
         "type": "normal",
         "power": 40
       }
-    ]
+    ],
+    "SPD": 14
   },
   "Growlithe": {
     "ATK": 11,
@@ -985,7 +1036,8 @@
         "type": "normal",
         "power": 40
       }
-    ]
+    ],
+    "SPD": 13
   },
   "Suicune": {
     "ATK": 12,
@@ -1004,7 +1056,8 @@
         "type": "normal",
         "power": 40
       }
-    ]
+    ],
+    "SPD": 11
   },
   "Fennekin": {
     "ATK": 12,
@@ -1023,7 +1076,8 @@
         "type": "normal",
         "power": 40
       }
-    ]
+    ],
+    "SPD": 14
   },
   "Moltres": {
     "ATK": 11,
@@ -1042,7 +1096,8 @@
         "type": "normal",
         "power": 40
       }
-    ]
+    ],
+    "SPD": 13
   },
   "Zapdos": {
     "ATK": 11,
@@ -1061,7 +1116,8 @@
         "type": "normal",
         "power": 40
       }
-    ]
+    ],
+    "SPD": 16
   },
   "Articuno": {
     "ATK": 11,
@@ -1080,7 +1136,8 @@
         "type": "normal",
         "power": 40
       }
-    ]
+    ],
+    "SPD": 8
   },
   "Pichu": {
     "ATK": 11,
@@ -1099,7 +1156,8 @@
         "type": "normal",
         "power": 40
       }
-    ]
+    ],
+    "SPD": 17
   },
   "Raichu": {
     "ATK": 11,
@@ -1118,7 +1176,8 @@
         "type": "normal",
         "power": 40
       }
-    ]
+    ],
+    "SPD": 16
   },
   "Ninetales": {
     "ATK": 11,
@@ -1137,7 +1196,8 @@
         "type": "normal",
         "power": 40
       }
-    ]
+    ],
+    "SPD": 14
   },
   "Mew": {
     "ATK": 12,
@@ -1156,7 +1216,8 @@
         "type": "normal",
         "power": 40
       }
-    ]
+    ],
+    "SPD": 13
   },
   "Leafeon": {
     "ATK": 10,
@@ -1175,7 +1236,8 @@
         "type": "normal",
         "power": 40
       }
-    ]
+    ],
+    "SPD": 10
   },
   "Glaceon": {
     "ATK": 12,
@@ -1194,7 +1256,8 @@
         "type": "normal",
         "power": 40
       }
-    ]
+    ],
+    "SPD": 9
   },
   "Umbreon": {
     "ATK": 10,
@@ -1213,7 +1276,8 @@
         "type": "normal",
         "power": 40
       }
-    ]
+    ],
+    "SPD": 13
   },
   "Espeon": {
     "ATK": 12,
@@ -1232,7 +1296,8 @@
         "type": "normal",
         "power": 40
       }
-    ]
+    ],
+    "SPD": 13
   },
   "Vaporeon": {
     "ATK": 11,
@@ -1251,7 +1316,8 @@
         "type": "normal",
         "power": 40
       }
-    ]
+    ],
+    "SPD": 10
   },
   "Pikachu": {
     "ATK": 17,
@@ -1270,7 +1336,8 @@
         "type": "normal",
         "power": 40
       }
-    ]
+    ],
+    "SPD": 18
   },
   "Eevee": {
     "ATK": 11,
@@ -1289,7 +1356,8 @@
         "type": "normal",
         "power": 40
       }
-    ]
+    ],
+    "SPD": 7
   },
   "Flareon": {
     "ATK": 12,
@@ -1308,7 +1376,8 @@
         "type": "normal",
         "power": 40
       }
-    ]
+    ],
+    "SPD": 14
   },
   "Dialga": {
     "ATK": 10,
@@ -1327,7 +1396,8 @@
         "type": "normal",
         "power": 40
       }
-    ]
+    ],
+    "SPD": 7
   },
   "Palkia": {
     "ATK": 13,
@@ -1346,7 +1416,8 @@
         "type": "normal",
         "power": 40
       }
-    ]
+    ],
+    "SPD": 13
   },
   "Reshiram": {
     "ATK": 11,
@@ -1365,7 +1436,8 @@
         "type": "normal",
         "power": 40
       }
-    ]
+    ],
+    "SPD": 11
   },
   "Zekrom": {
     "ATK": 13,
@@ -1384,7 +1456,8 @@
         "type": "normal",
         "power": 40
       }
-    ]
+    ],
+    "SPD": 13
   },
   "Rayquaza": {
     "ATK": 13,
@@ -1403,7 +1476,8 @@
         "type": "normal",
         "power": 40
       }
-    ]
+    ],
+    "SPD": 14
   },
   "Groudon": {
     "ATK": 9,
@@ -1422,7 +1496,8 @@
         "type": "normal",
         "power": 40
       }
-    ]
+    ],
+    "SPD": 11
   },
   "Regigigas": {
     "ATK": 7,
@@ -1441,7 +1516,8 @@
         "type": "normal",
         "power": 40
       }
-    ]
+    ],
+    "SPD": 5
   },
   "Giratina": {
     "ATK": 15,
@@ -1460,7 +1536,8 @@
         "type": "normal",
         "power": 40
       }
-    ]
+    ],
+    "SPD": 13
   },
   "Ho-oh": {
     "ATK": 13,
@@ -1479,7 +1556,8 @@
         "type": "normal",
         "power": 40
       }
-    ]
+    ],
+    "SPD": 18
   },
   "Lugia": {
     "ATK": 10,
@@ -1498,6 +1576,7 @@
         "type": "normal",
         "power": 40
       }
-    ]
+    ],
+    "SPD": 16
   }
 }

@@ -119,6 +119,7 @@ class Pokedex:
         canvas.draw_text("ATK: "+str(stats["ATK"]), (470,200), 22, 'White')
         canvas.draw_text("DEF: "+str(stats["DEF"]), (470,235), 22, 'White')
         canvas.draw_text("HP: "+str(stats["fullhp"]), (470,270), 22, 'White')
+        canvas.draw_text("SPD: "+str(stats.get("SPD", balance.DEFAULT_SPD)), (470,305), 22, 'White')
         canvas.draw_text("Press Q to go back", (300,440), 22, 'Yellow')
         if self.kbd.quit:
             self.kbd.quit = False

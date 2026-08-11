@@ -58,12 +58,13 @@ def catch_succeeds(ball_multiplier=1.0, hp_fraction=1.0):
     return random.random() < min(chance, balance.MAX_CATCH_CHANCE)
 
 #computes a pokemon's stats after leveling up to new_lvl, from its BASE (unscaled) stats -
-#returns (atk, def, fullhp, max_exp, give_exp), same formula previously duplicated in
+#returns (atk, def, fullhp, spd, max_exp, give_exp), same formula previously duplicated in
 #Pokemon.__init__ and Fight.fight()'s level-up branch
-def level_up_stats(base_atk, base_def, base_fullhp, new_lvl):
+def level_up_stats(base_atk, base_def, base_fullhp, base_spd, new_lvl):
     atk = int(base_atk + (((base_atk * balance.ATK_GROWTH_RATE) * new_lvl) // 1))
     def_ = int(base_def + (((base_def * balance.DEF_GROWTH_RATE) * new_lvl) // 1))
     fullhp = int(base_fullhp + (((base_fullhp * balance.HP_GROWTH_RATE) * new_lvl) // 1))
+    spd = int(base_spd + (((base_spd * balance.SPD_GROWTH_RATE) * new_lvl) // 1))
     max_exp = int(balance.BASE_MAX_EXP + ((balance.MAX_EXP_PER_LEVEL * new_lvl) // 1))
     give_exp = int(balance.BASE_GIVE_EXP + ((balance.GIVE_EXP_PER_LEVEL * new_lvl) // 1))
-    return atk, def_, fullhp, max_exp, give_exp
+    return atk, def_, fullhp, spd, max_exp, give_exp

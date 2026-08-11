@@ -32,6 +32,14 @@ MAX_EXP_PER_LEVEL = 10
 BASE_GIVE_EXP = 30
 GIVE_EXP_PER_LEVEL = 3
 
+#speed & turn order - every Pokedex.json entry has its own "SPD" (derived per-species from its
+#effect_img type and ATK/DEF profile, see the migration note in feature-ideas.md item 9/11).
+#DEFAULT_SPD is only a runtime fallback for an entry missing the field entirely, not the value
+#any real species actually uses. SPD_GROWTH_RATE scales it by level, same shape as the other
+#GROWTH_RATE stats, so a level difference can also tip an otherwise-even matchup
+DEFAULT_SPD = 10
+SPD_GROWTH_RATE = 0.1
+
 #player
 STARTING_LIVES = 6
 

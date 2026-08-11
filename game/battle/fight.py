@@ -79,7 +79,9 @@ class Fight:
         self.poke_list = pokemon_list
         self.pokemon = pokemon_list[0]
         self.count = balance.SHORT_MESSAGE_FRAMES
-        self.attack = True
+        #whoever's faster leads off - ties (the common case today, see balance.DEFAULT_SPD)
+        #favour the player, matching the old always-player-first behaviour
+        self.attack = self.pokemon.SPD >= self.monster.SPD
         self.kbd = keyboard
         self.npc = npc
         self.info = self.monster.name+" VS "+ self.pokemon.name
@@ -292,6 +294,9 @@ class Fight:
                 self.end = True
             else:
                 self.monster = self.mons_list[0]
+                #a freshly-sent-out Pokemon is a new matchup - let Speed decide who leads
+                #against it, same as the opening turn of the fight
+                self.attack = self.pokemon.SPD >= self.monster.SPD
             self.catch = False
         else:
             if len(self.poke_list)-1>=choice:
@@ -342,6 +347,9 @@ class Fight:
                     self.end = True
                 else:
                     self.monster = self.mons_list[0]
+                    #a freshly-sent-out Pokemon is a new matchup - let Speed decide who leads
+                    #against it, same as the opening turn of the fight
+                    self.attack = self.pokemon.SPD >= self.monster.SPD
             else:
                 self.change = True
                 self.catch = True
@@ -471,9 +479,10 @@ class Fight:
                     if pokemon.lvl <= balance.MAX_LEVEL:
                         pokemon.lvl += 1
                         base_stats = POKEDEX[pokemon.name]
-                        (pokemon.ATK, pokemon.DEF, pokemon.fullhp,
+                        (pokemon.ATK, pokemon.DEF, pokemon.fullhp, pokemon.SPD,
                          pokemon.max_exp, pokemon.give_exp) = battle_rules.level_up_stats(
-                            base_stats["ATK"], base_stats["DEF"], base_stats["fullhp"], pokemon.lvl)
+                            base_stats["ATK"], base_stats["DEF"], base_stats["fullhp"],
+                            base_stats.get("SPD", balance.DEFAULT_SPD), pokemon.lvl)
                         #a small, renewable trickle of the cheapest ball tier on top of the
                         #Pokecenter shop (ui.py's Shop) - keeps a floor of catch resources even
                         #before the player has any money
@@ -487,6 +496,9 @@ class Fight:
                 self.mons_list.remove(monster)
                 if not(len(self.mons_list) == 0):
                     self.monster = self.mons_list[0]
+                    #a freshly-sent-out Pokemon is a new matchup - let Speed decide who leads
+                    #against it, same as the opening turn of the fight
+                    self.attack = pokemon.SPD >= self.monster.SPD
                 
     def interact(self, inte, canvas):
         canvas.draw_text("What will "+self.pokemon.name+" do?", (120, 415), 25, 'White')
@@ -520,6 +532,7 @@ class Pokemon:
         self.ATK = base_stats["ATK"]
         self.DEF = base_stats["DEF"]
         self.fullhp = base_stats["fullhp"]
+        self.SPD = base_stats.get("SPD", balance.DEFAULT_SPD)
         effect_img = base_stats["effect_img"]
         self.effect_img = effect_img
         self.moves = base_stats["moves"]
@@ -530,8 +543,8 @@ class Pokemon:
         #pokemon scaling
         self.lvl = lvl
         self.exp = exp
-        (self.ATK, self.DEF, self.fullhp,
-         self.max_exp, self.give_exp) = battle_rules.level_up_stats(self.ATK, self.DEF, self.fullhp, self.lvl)
+        (self.ATK, self.DEF, self.fullhp, self.SPD,
+         self.max_exp, self.give_exp) = battle_rules.level_up_stats(self.ATK, self.DEF, self.fullhp, self.SPD, self.lvl)
         if HP == -1:
             self.HP = self.fullhp
         else:
