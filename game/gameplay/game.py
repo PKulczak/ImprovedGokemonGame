@@ -3,6 +3,7 @@ import random
 import os
 import json
 from game.engine.vector import Vector
+from game.engine.image_cache import load_image
 from game.gameplay.Welcome import Welcome
 from game.battle.fight import Pokemon
 from game.battle.fight import Fight
@@ -272,6 +273,12 @@ class Game:
         self.pokedex = Pokedex(self.Kbd)
         self.shop = Shop(self.Kbd)
         self.shop_open = False
+        #the heal tile opens a Heal-or-Shop choice (pokecenter_menu) instead of always healing;
+        #pokecenter_healing is the confirmed-Heal follow-up (shows the "heal" dialogue and
+        #actually restores HP) - picking Shop instead just sets shop_open, no healing happens
+        self.pokecenter_box = load_image('{}/Text/box.png'.format(BASE_DIR))
+        self.pokecenter_choice = 0
+        self.pokecenter_healing = False
         pokemon2 = Pokemon('Palkia', 19, 5, 50, [210, 250], [570, 140])
         self.fight = Fight([pokemon2], [pokemon2], self.Kbd, False)
         self.fightB = False
@@ -287,6 +294,8 @@ class Game:
             "pause": self._draw_pause,
             "game_over": self._draw_game_over,
             "shop": self._draw_shop,
+            "pokecenter_menu": self._draw_pokecenter_menu,
+            "pokecenter_heal": self._draw_pokecenter_heal,
             "overworld": self._draw_overworld,
         }
         self.state = self._resolve_state()
@@ -309,6 +318,10 @@ class Game:
             return "game_over"
         if self.shop_open:
             return "shop"
+        if self.player.player_heal:
+            return "pokecenter_menu"
+        if self.pokecenter_healing:
+            return "pokecenter_heal"
         return "overworld"
 
     #fires once on the frame a new state is entered - swaps the active keydown/keyup handler
@@ -455,8 +468,9 @@ class Game:
             self.keyboard.pokedex = False
             self.Kbd.quit = False
 
-    #handles the Pokecenter shop, offered after every heal (see the player_heal block in
-    #_draw_overworld). Same swap-the-keydown-handler-back-on-quit pattern as _draw_pokedex above
+    #handles the Pokecenter shop, reached either from _draw_pokecenter_menu's "Visit the shop"
+    #choice or (unrelated to the Pokecenter) never otherwise. Same swap-the-keydown-handler-
+    #back-on-quit pattern as _draw_pokedex above
     def _draw_shop(self, canvas, dt):
         self.shop.draw(canvas, self.player)
         if self.Kbd.quit:
@@ -468,6 +482,60 @@ class Game:
             self.shop.popup_active = False
             self.shop_open = False
             self.Kbd.quit = False
+
+    #the Pokecenter counter's Heal-or-Shop choice, shown the moment the player steps on a heal
+    #tile (player.player_heal) instead of always auto-healing. Up/Down to pick, Space to
+    #confirm, Q ("back") to leave without doing either - uses self.keyboard directly rather
+    #than swapping to the fight/pokedex-local Kbd, same as the pause/game_over screens, since
+    #the overworld draw (and so player movement) simply isn't invoked while this state is active
+    def _draw_pokecenter_menu(self, canvas, dt):
+        self.player.lock = True
+        self.player.vel = Vector(0,0)
+        self.background.draw(canvas)
+        self.player.draw(canvas, dt)
+        canvas.draw_image(self.pokecenter_box, (400,75), (800,150), (400,405), (800,150))
+        canvas.draw_text("Heal your team, or visit the shop?", (50, 385), 20, 'White')
+        heal_col = "Yellow" if self.pokecenter_choice == 0 else "White"
+        shop_col = "Yellow" if self.pokecenter_choice == 1 else "White"
+        canvas.draw_text("Heal my team", (50, 420), 20, heal_col)
+        canvas.draw_text("Visit the shop", (50, 450), 20, shop_col)
+
+        if self.keyboard.up:
+            self.pokecenter_choice = 0
+        elif self.keyboard.down:
+            self.pokecenter_choice = 1
+
+        if self.keyboard.select:
+            self.keyboard.select = False
+            self.player.player_heal = False
+            if self.pokecenter_choice == 0:
+                self.pokecenter_healing = True
+                self.text = Text("heal", self.player, (50,405), True, self.txtcount, self.txtclock)
+            else:
+                self.shop_open = True
+                self.player.pos.y += 50
+                self.player.lock = False
+        elif self.keyboard.back:
+            self.keyboard.back = False
+            self.player.player_heal = False
+            self.player.pos.y += 50
+            self.player.lock = False
+
+    #the confirmed-Heal follow-up - shows the "heal" dialogue line while actually restoring HP,
+    #same beat the old always-heal flow had, just no longer forced or followed by the shop
+    def _draw_pokecenter_heal(self, canvas, dt):
+        self.background.draw(canvas)
+        self.player.draw(canvas, dt)
+        for y in self.player.pokemon_list:
+            y.HP = y.fullhp
+        self.text.draw(canvas, dt, select=self.keyboard.select)
+        self.keyboard.select = False
+        self.txtcount = self.text.count
+        if self.text.display == False:
+            self.player.pos.y += 50
+            self.pokecenter_healing = False
+            self.player.lock = False
+            self.txtcount = 0
 
     #handles the pause overlay - a full-screen image + controls list, same pattern as
     #credits/CaughtAll, replacing the overworld draw entirely rather than layering on top of
@@ -548,24 +616,6 @@ class Game:
                 move_on = self.txtclock.transition(balance.CREDITS_AND_COMPLETION_FRAMES)
                 if move_on:
                     self.pokecomplete = True
-
-        if self.player.player_heal:
-            self.player.lock = True
-            self.player.vel = Vector(0,0)
-            self.text = Text("heal", self.player, (50,405), True, self.txtcount, self.txtclock)
-            for y in self.player.pokemon_list:
-                y.HP = y.fullhp
-            self.text.draw(canvas, dt, select=self.keyboard.select)
-            self.keyboard.select = False
-            self.txtcount = self.text.count
-            if self.text.display == False:
-                self.player.pos.y += 50
-                self.player.player_heal = False
-                self.player.lock = False
-                self.txtcount = 0
-                #the Pokecenter counter doubles as a shop once healing's done - Q backs out of
-                #it immediately with no purchase required, same as declining any other menu
-                self.shop_open = True
 
         if not self.intro:
             self.player.lock = True
