@@ -53,6 +53,12 @@ WALK_ANIMATION_CADENCE_FRAMES = 6
 YACHT_ACCELERATION_INTERVAL_FRAMES = 20
 DIALOGUE_LINE_FRAMES = 140
 CREDITS_AND_COMPLETION_FRAMES = 200
+SAVE_FLASH_FRAMES = 90             # how long the "Saved!" confirmation stays up after pressing S
+
+#autosave fires on every map transition (Interaction.draw) regardless of this timer, plus once
+#every this-many frame-equivalents while in the overworld, so progress isn't lost even if the
+#player lingers on one map for a long session without triggering a transition
+AUTOSAVE_INTERVAL_FRAMES = 7200    # ~2 minutes at the nominal 60fps design rate
 
 #caps how many frame-equivalents a single real gap can count for, so a one-off stall (a long
 #GC/OS pause, alt-tabbing away and back) can't move the player through walls in one jump, dump a

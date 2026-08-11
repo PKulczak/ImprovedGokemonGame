@@ -174,6 +174,9 @@ class Interaction:
                 x.interact(self.player)
                 if self.player.interacting == True:
                     self.game.background.new_level(x.target_map, x.target_pos, self.player)
+                    #autosave on every map transition - a natural, frequent checkpoint, silent
+                    #(no "Saved!" flash) since it's automatic rather than a deliberate keypress
+                    self.game.save_game()
 
                 if self.player.in_fight == True:
                     rand_int = random.random()
@@ -255,6 +258,12 @@ class Game:
         #not persisted to Save.json - a fresh load just falls back to the default Pokecenter,
         #same as a session that hasn't visited one yet
         self.last_pokecenter_map = DEFAULT_POKECENTER_MAP
+        #counts down real frame-equivalents left to show the "Saved!" flash after manual save
+        self.save_flash_count = 0
+        #counts up towards the next timer-based autosave (see AUTOSAVE_INTERVAL_FRAMES) - reset
+        #on every save regardless of what triggered it, so a manual/transition save also pushes
+        #the next timer-based one back rather than firing needlessly soon after
+        self.autosave_count = 0
         self.txtcount = 0
         self.txtclock = Clock()
         self.text = Text("empty",self.player, (0,0), False, self.txtcount, self.txtclock)
@@ -337,6 +346,9 @@ class Game:
                       for pokemon in self.player.pokemon_list]
         with open('{}/Fight/Files/PlayerPokemon.json'.format(BASE_DIR),"w") as file2:
             json.dump(party_data, file2, indent=2)
+        #however this save was triggered (manual, map-transition, or the autosave timer itself),
+        #push the next timer-based autosave back rather than letting it fire redundantly soon after
+        self.autosave_count = 0
 
     #loads the game from the save files; falls back to a fresh game if Save.json is missing/corrupted
     def load_game(self, allow_fallback=True):
@@ -508,6 +520,17 @@ class Game:
         if self.keyboard.save:
             self.save_game()
             self.keyboard.save = False
+            self.save_flash_count = balance.SAVE_FLASH_FRAMES
+
+        if self.save_flash_count > 0:
+            canvas.draw_text("Saved!", (340, 55), 26, 'Black')
+            self.save_flash_count -= dt
+
+        #a fixed-interval safety net alongside the map-transition autosave in Interaction.draw -
+        #silent, same as that one, so it doesn't compete with the manual-save flash above
+        self.autosave_count += dt
+        if self.autosave_count >= balance.AUTOSAVE_INTERVAL_FRAMES:
+            self.save_game()
 
         if (self.complete == False) and ("boss2" in self.npc_lost):
             self.credits.draw(canvas)
