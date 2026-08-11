@@ -393,13 +393,24 @@ class Fight:
     def _draw_item_cancel(self, canvas, dt):
         self.item_menu = False
 
+    #a trainer's Pokemon picks whichever of its moves would deal the most damage against the
+    #player's current Pokemon (power and type effectiveness both factored in via the same
+    #formula the player's own attacks use) instead of always leading with its first move - wild
+    #Pokemon stay simple (always moves[0]) so trainer fights start to feel distinct from wild
+    #encounters now that there's more than one move to choose between (item 5)
+    def _choose_monster_move(self, monster, pokemon):
+        if not self.npc:
+            return monster.moves[0]
+        return max(monster.moves, key=lambda m: battle_rules.type_effective_damage(
+            monster.ATK, pokemon.DEF, m["type"], pokemon.effect_img, power=m["power"]))
+
     #does all the calculations for the fight. move is the player's chosen move (inte == 1 only) -
-    #the monster always uses its own first (highest-priority/STAB) move, since real move choice
-    #for the AI side is item 8's job, not this one
+    #the monster's own move choice is _choose_monster_move's job (trainers pick the strongest
+    #option, wild Pokemon always lead with their first move)
     def fight(self, pokemon, monster, inte, canvas, move=None):
         if pokemon.HP > 0 and monster.HP > 0:
             if not self.attack:
-                monster_move = monster.moves[0]
+                monster_move = self._choose_monster_move(monster, pokemon)
                 pokemon.HP = max(0, pokemon.HP - battle_rules.type_effective_damage(
                     monster.ATK, pokemon.DEF, monster_move["type"], pokemon.effect_img,
                     power=monster_move["power"]))
