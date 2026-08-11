@@ -8,6 +8,7 @@ from game.gameplay.Welcome import Welcome
 from game.battle.fight import Pokemon
 from game.battle.fight import Fight
 from game.battle.fight import Kbd
+from game.battle.fight import POKEDEX, load_seen_pokemon
 from game.gameplay.entities import _load_pokemon_party
 from game.gameplay.world import Background
 from game.gameplay.ui import Text, Pokedex, Shop
@@ -25,6 +26,7 @@ PAUSE_CONTROLS = [
     "Arrow keys - Move",
     "Space - Start / advance dialogue",
     "P - Open the Gokedex",
+    "L - Open the progress log",
     "S - Save game",
     "Q - Back / quit a screen",
     "T - Open the tutorial",
@@ -46,6 +48,11 @@ MAP_MUSIC_ZONES = {
     "gym2": "gym",
     "bossfight1": "boss", "bossfight2": "boss", "bossfight3": "boss",
 }
+
+#the 4 trainer NPCs that can appear in self.npc_lost (see the "npc_species" field of
+#gym2/bossfight1-3.json) - every other map's npc_species is one of these 4, so this doubles as
+#"every boss there is" for the progress screen's "bosses defeated" count
+BOSS_NPCS = ("boss1", "boss2", "boss3", "boss4")
 
 #both Pokecenter interior maps (game/Overworld/maps/pokecenter.json, pokecenter2.json) share this
 #exact door-entry position - it's already the target_pos used by the town-side door tiles that
@@ -88,6 +95,7 @@ class Keyboard:
         self.up = False
         self.down = False
         self.pokedex = False
+        self.progress = False
         self.start = False
         self.startscreen = False
         self.tutorial = False
@@ -108,15 +116,25 @@ class Keyboard:
         if key == pygame.K_SPACE:
             if self.start == False:
                 self.start = True
-            else:
+            elif self.startscreen == False:
                 self.startscreen = True
-            #distinct from start/startscreen above (one-shot latches for the welcome/start
-            #screens) - this is a per-press "advance the current dialogue line" signal, cleared
-            #by whichever Text.draw() call consumes it, same pattern as Kbd.select in battle
-            self.select = True
+            else:
+                #distinct from start/startscreen above (one-shot latches for the welcome/start
+                #screens) - this is a per-press "advance the current dialogue line" signal,
+                #cleared by whichever Text.draw() call consumes it, same pattern as Kbd.select
+                #in battle. Deliberately NOT set by the two presses above that flip start/
+                #startscreen themselves - a returning save (intro already True) skips the one
+                #block that normally drains this flag every frame (_draw_overworld's "if not
+                #self.intro" block), so a leftover True from the "start the game" press would
+                #otherwise survive into the player's first frame of control and silently
+                #auto-confirm the first menu that happens to read it (e.g. instantly picking
+                #"Heal" if they're standing on a Pokecenter tile already)
+                self.select = True
             sound.play_sfx("select")
         if key == pygame.K_p:
             self.pokedex = True
+        if key == pygame.K_l:
+            self.progress = True
         if key == pygame.K_s:
             self.save = True
         if key == pygame.K_q:
@@ -265,6 +283,7 @@ class Game:
         self.caughtAll = Welcome("CaughtAll.png")
         self.pauseScreen = Welcome("pause.png")
         self.gameOverScreen = Welcome("gameover.png")
+        self.progressScreen = Welcome("progress.png")
         self.tutorial = tutorial
         self.background = background
         self.npc_lost = []
@@ -307,6 +326,7 @@ class Game:
             "start_menu": self._draw_start_menu,
             "fight": self._draw_fight,
             "pokedex": self._draw_pokedex,
+            "progress": self._draw_progress,
             "pause": self._draw_pause,
             "game_over": self._draw_game_over,
             "shop": self._draw_shop,
@@ -328,6 +348,8 @@ class Game:
             return "fight"
         if self.keyboard.pokedex:
             return "pokedex"
+        if self.keyboard.progress:
+            return "progress"
         if self.keyboard.paused:
             return "pause"
         if self.game_over:
@@ -498,6 +520,38 @@ class Game:
             self.keyboard.pokedex = False
             self.Kbd.quit = False
 
+    #a read-only progress/achievement summary (item 12) - bosses defeated, Gokedex completion,
+    #money, and the current party. Reuses self.keyboard directly rather than swapping to Kbd,
+    #same as pause/game_over, since there's nothing to navigate here, just a Q to close
+    def _draw_progress(self, canvas, dt):
+        self.progressScreen.draw(canvas)
+        canvas.draw_text("Progress", (300, 55), 40, 'White')
+
+        defeated = len(self.npc_lost)
+        canvas.draw_text("Bosses defeated: "+str(defeated)+"/"+str(len(BOSS_NPCS)), (60, 110), 22, 'White')
+        for i, boss in enumerate(BOSS_NPCS):
+            beaten = boss in self.npc_lost
+            status = "Defeated" if beaten else "Not yet"
+            colour = 'Yellow' if beaten else 'Grey'
+            canvas.draw_text("Boss "+str(i+1)+": "+status, (80, 145 + i * 28), 20, colour)
+
+        seen_count = len(load_seen_pokemon())
+        canvas.draw_text("Gokedex: "+str(seen_count)+"/"+str(len(POKEDEX))+" seen", (60, 275), 22, 'White')
+        canvas.draw_text("Money: $"+str(self.player.money), (60, 305), 22, 'White')
+
+        canvas.draw_text("Your team:", (460, 110), 22, 'White')
+        for i, mon in enumerate(self.player.pokemon_list):
+            label = mon.name+" Lv."+str(mon.lvl)+"  HP:"+str(mon.HP)+"/"+str(mon.fullhp)
+            canvas.draw_text(label, (460, 145 + i * 28), 18, 'White')
+
+        canvas.draw_text("Q to close", (330, 445), 22, 'Yellow')
+
+        #back (Q) reuses the same "close an overlay" flag as pause/tutorial - no Kbd swap
+        #happened on entry, so nothing needs undoing beyond clearing the two flags
+        if self.keyboard.back:
+            self.keyboard.progress = False
+            self.keyboard.back = False
+
     #handles the Pokecenter shop, reached either from _draw_pokecenter_menu's "Visit the shop"
     #choice or (unrelated to the Pokecenter) never otherwise. Same swap-the-keydown-handler-
     #back-on-quit pattern as _draw_pokedex above
@@ -586,13 +640,17 @@ class Game:
             sound.set_volume(sound.get_volume() + 0.1)
 
         self.pauseScreen.draw(canvas)
-        canvas.draw_text("Paused", (340, 60), 44, 'White')
+        canvas.draw_text("Paused", (340, 40), 40, 'White')
+        #a tighter per-line height than most other screens use, purely so this list has
+        #headroom to grow (it's grown twice already) without pushing the volume/resume lines
+        #below the bottom of the 480px-tall screen
+        line_height = 26
         for i, line in enumerate(PAUSE_CONTROLS):
-            canvas.draw_text(line, (220, 130 + i * 32), 22, 'White')
-        volume_line_y = 130 + len(PAUSE_CONTROLS) * 32 + 20
+            canvas.draw_text(line, (200, 100 + i * line_height), 20, 'White')
+        volume_line_y = 100 + len(PAUSE_CONTROLS) * line_height + 20
         volume_pct = int(round(sound.get_volume()*100))
-        canvas.draw_text("Volume: "+str(volume_pct)+"% (Left/Right to adjust)", (220, volume_line_y), 20, 'White')
-        canvas.draw_text("Esc or Q to resume", (250, volume_line_y + 30), 24, 'Yellow')
+        canvas.draw_text("Volume: "+str(volume_pct)+"% (Left/Right to adjust)", (200, volume_line_y), 20, 'White')
+        canvas.draw_text("Esc or Q to resume", (230, volume_line_y + 30), 24, 'Yellow')
 
         #Q reuses the same "back out of a screen" key/flag as every other overlay
         #(pokedex/tutorial); Esc itself already toggles keyboard.paused back off in keyDown
