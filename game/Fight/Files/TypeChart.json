@@ -1,0 +1,14 @@
+{
+  "water": {"strong_against": ["fire"], "weak_against": ["electric", "grass"]},
+  "fire": {"strong_against": ["grass", "ice"], "weak_against": ["water", "rock"]},
+  "electric": {"strong_against": ["water", "flying"], "weak_against": ["rock"]},
+  "grass": {"strong_against": ["water", "rock"], "weak_against": ["fire", "flying", "ice", "poison"]},
+  "dark": {"strong_against": ["psychic"], "weak_against": ["fairy"]},
+  "dragon": {"strong_against": ["dragon"], "weak_against": ["fairy", "ice"]},
+  "fairy": {"strong_against": ["dragon", "dark"], "weak_against": ["poison"]},
+  "flying": {"strong_against": ["grass"], "weak_against": ["electric", "ice", "rock"]},
+  "ice": {"strong_against": ["grass", "dragon", "flying"], "weak_against": ["fire", "rock"]},
+  "poison": {"strong_against": ["grass", "fairy"], "weak_against": ["psychic"]},
+  "psychic": {"strong_against": ["poison"], "weak_against": ["dark"]},
+  "rock": {"strong_against": ["fire", "ice", "flying"], "weak_against": ["water", "grass"]}
+}

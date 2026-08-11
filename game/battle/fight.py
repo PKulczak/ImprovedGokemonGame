@@ -231,12 +231,14 @@ class Fight:
     def fight(self, pokemon, monster, inte, canvas):
         if pokemon.HP > 0 and monster.HP > 0:
             if not self.attack:
-                pokemon.HP = max(0, pokemon.HP - battle_rules.damage_amount(monster.ATK, pokemon.DEF))
+                pokemon.HP = max(0, pokemon.HP - battle_rules.type_effective_damage(
+                    monster.ATK, pokemon.DEF, monster.effect_img, pokemon.effect_img))
                 self.info = monster.name+" attack "+pokemon.name
                 self.attack = True
             else:
                 if inte == 1:
-                    monster.HP = max(0, monster.HP - battle_rules.damage_amount(pokemon.ATK, monster.DEF))
+                    monster.HP = max(0, monster.HP - battle_rules.type_effective_damage(
+                        pokemon.ATK, monster.DEF, pokemon.effect_img, monster.effect_img))
                     self.info = pokemon.name+" attack "+monster.name
                     self.attack = False
                 elif inte == 2:
@@ -337,6 +339,7 @@ class Pokemon:
         self.DEF = base_stats["DEF"]
         self.fullhp = base_stats["fullhp"]
         effect_img = base_stats["effect_img"]
+        self.effect_img = effect_img
         row = base_stats["row"]
         self.count = 0
         self._prev_count = 0
