@@ -38,6 +38,13 @@ class PartyGrid:
                 first = False
         return first
 
+    #flattens centre (col, row) into a single 0-5 index - left column first (0-2), then right
+    #column (3-5) - matching the reading order every grid-based list in this project draws in
+    def selected_index(self):
+        if self.centre[0] == 0:
+            return self.centre[1]
+        return self.centre[1] + 3
+
     def draw_highlight(self, canvas, bag_image, light_image):
         canvas.draw_image(bag_image, (375,250), (750,500), (400,240), (735,490))
         canvas.draw_image(light_image, (116,45), (233,91), self.POSITIONS[self.centre[0]][self.centre[1]], (233,91))

@@ -49,6 +49,7 @@ SAVE_FILE_TEMPLATES = [
     ("NewSave.json", "Save.json"),
     ("NewPlayerPokedex.json", "PlayerPokedex.json"),
     ("NewPlayerPokemon.json", "PlayerPokemon.json"),
+    ("NewPlayerItems.json", "PlayerItems.json"),
 ]
 
 #overwrites a live save file with its bundled default

@@ -42,11 +42,16 @@ def type_effective_damage(attacker_atk, defender_def, attacker_type, defender_ty
 def escape_succeeds():
     return random.randint(1, balance.ESCAPE_SUCCESS_ROLL_MAX) == 1
 
-#rolls whether a catch attempt succeeds - trainer battles (is_npc_battle) can never be caught
-def catch_succeeds(is_npc_battle):
-    if is_npc_battle:
-        return False
-    return random.randint(1, balance.CATCH_SUCCESS_ROLL_MAX) == 1
+#rolls whether a catch attempt succeeds - base 1-in-CATCH_SUCCESS_ROLL_MAX chance, scaled up by
+#the ball's tier multiplier (1.0/1.5/2.0 for Poke/Great/Ultra Ball) and by how weakened the
+#target already is (hp_fraction 1.0 = full HP, no bonus; 0.0 = fainting, doubles the chance) -
+#capped at MAX_CATCH_CHANCE so no combination guarantees a catch. Trainer battles never call
+#this at all (fight.py never lets a trainer's Pokemon be thrown at) rather than special-casing
+#it here, since a blocked catch there doesn't roll or cost a ball either.
+def catch_succeeds(ball_multiplier=1.0, hp_fraction=1.0):
+    base_chance = 1.0 / balance.CATCH_SUCCESS_ROLL_MAX
+    chance = base_chance * ball_multiplier * (2 - hp_fraction)
+    return random.random() < min(chance, balance.MAX_CATCH_CHANCE)
 
 #computes a pokemon's stats after leveling up to new_lvl, from its BASE (unscaled) stats -
 #returns (atk, def, fullhp, max_exp, give_exp), same formula previously duplicated in

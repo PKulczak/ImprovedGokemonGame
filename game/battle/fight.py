@@ -52,6 +52,24 @@ def _mark_pokemon_seen(name):
         _seen_pokemon_mtime = os.path.getmtime(_SEEN_POKEMON_PATH)
         _seen_pokemon_version += 1
 
+_ITEMS_PATH = '{}/Fight/Files/PlayerItems.json'.format(BASE_DIR)
+
+#loaded fresh once per Fight (unlike load_seen_pokemon, no mtime caching needed - nothing else
+#reads this file while a battle is in progress)
+def _load_items():
+    with open(_ITEMS_PATH, "r") as file:
+        return json.load(file)
+
+def _save_items(items):
+    with open(_ITEMS_PATH, "w") as file:
+        json.dump(items, file, indent=2)
+
+#display/iteration order for the item menu - cheapest ball first, Potion last. Also the order
+#Fight._default_ball() picks from for the dedicated Catch button, so a routine catch spends the
+#cheapest ball on hand instead of silently burning a rarer one the player might be saving
+ITEM_ORDER = ["Poke Ball", "Great Ball", "Ultra Ball", "Potion"]
+BALL_MULTIPLIERS = {"Poke Ball": 1.0, "Great Ball": 1.5, "Ultra Ball": 2.0}
+
 class Fight:
     def __init__(self, monster_list, pokemon_list, keyboard, npc):
         self.mons_list = monster_list
@@ -78,6 +96,9 @@ class Fight:
         self.lost = False
         self.grid = PartyGrid()
         self.end = False
+        self.items = _load_items()
+        self.item_menu = False
+        self.item_grid = PartyGrid()
 
         #which of the fight screen's states is active, dispatched via state_handlers instead of
         #the nested if/elif chain draw() used to be - derived fresh every frame from the exact
@@ -93,6 +114,9 @@ class Fight:
             "bag_browse": self._draw_bag_browse,
             "bag_confirm": self._draw_bag_confirm,
             "bag_cancel": self._draw_bag_cancel,
+            "item_browse": self._draw_item_browse,
+            "item_confirm": self._draw_item_confirm,
+            "item_cancel": self._draw_item_cancel,
             "message": self._draw_message,
             "choose_action": self._draw_choose_action,
             "resolve_action": self._draw_resolve_action,
@@ -104,6 +128,12 @@ class Fight:
     #(not != 0) since count is now a real-time countdown (see _draw_message) that can overshoot
     #past exactly zero in one dt step, rather than an integer that only ever decremented to it
     def _resolve_state(self):
+        if self.item_menu:
+            if self.kbd.quit:
+                return "item_cancel"
+            if self.kbd.select:
+                return "item_confirm"
+            return "item_browse"
         if self.change:
             if self.kbd.quit:
                 return "bag_cancel"
@@ -116,10 +146,13 @@ class Fight:
             return "resolve_action" if self.kbd.select else "choose_action"
         return "resolve_monster_turn"
 
+    #states that replace the whole battle scene with a menu, rather than drawing over it
+    _MENU_STATES = ("bag_browse", "bag_confirm", "bag_cancel", "item_browse", "item_confirm", "item_cancel")
+
     #responsible for drawing the fight
     def draw(self, canvas, dt):
         self.state = self._resolve_state()
-        if self.state != "bag_browse" and self.state != "bag_confirm" and self.state != "bag_cancel":
+        if self.state not in self._MENU_STATES:
             self._draw_scene(canvas, dt)
         self.state_handlers[self.state](canvas, dt)
 
@@ -177,7 +210,7 @@ class Fight:
             self.kbd.select = False
             self.count = balance.PLAYER_TURN_MESSAGE_FRAMES
         elif self.inte == 4:
-            self.change = True
+            self.item_menu = True
             self.kbd.select = False
 
     #the monster's turn - always resolves immediately, no menu of its own
@@ -200,10 +233,7 @@ class Fight:
 
     #confirms the currently-highlighted party slot
     def _draw_bag_confirm(self, canvas, dt):
-        if self.grid.centre[0] == 0 :
-            choice = self.grid.centre[0]+self.grid.centre[1]
-        else:
-            choice = self.grid.centre[0]+self.grid.centre[1]+2
+        choice = self.grid.selected_index()
         if self.catch:
             self.monster.pos = self.pokemon.pos
             self.monster.pos1 = self.pokemon.pos1
@@ -226,6 +256,93 @@ class Fight:
         if self.catch:
             self.info = "You release it again."
             self.catch = False
+
+    #the cheapest ball currently in stock (Poke > Great > Ultra) - what the dedicated Catch
+    #button throws, so a routine catch doesn't silently spend a rarer ball the player is saving
+    def _default_ball(self):
+        for name in ("Poke Ball", "Great Ball", "Ultra Ball"):
+            if self.items.get(name, 0) > 0:
+                return name, BALL_MULTIPLIERS[name]
+        return None, None
+
+    #one line per item slot: "<name> x<count>" for each entry in ITEM_ORDER, plus a trailing
+    #"Switch Pokemon" slot that hands off to the existing party-switch grid unchanged
+    def _item_labels(self):
+        labels = [name+" x"+str(self.items.get(name, 0)) for name in ITEM_ORDER]
+        labels.append("Switch Pokemon")
+        return labels
+
+    #resolves a catch attempt with the given ball - shared by the dedicated Catch button
+    #(cheapest ball owned, auto-picked) and manually throwing a specific tier from the item menu.
+    #Consumes the ball regardless of outcome, same as mainline - a failed throw still costs you.
+    def _attempt_catch(self, ball_name, ball_multiplier):
+        self.items[ball_name] -= 1
+        _save_items(self.items)
+        monster = self.monster
+        hp_fraction = monster.HP / monster.fullhp
+        if not self.npc and battle_rules.catch_succeeds(ball_multiplier, hp_fraction):
+            if len(self.poke_list) < balance.MAX_PARTY_SIZE:
+                self.info = "Caught with a "+ball_name+"!"
+                monster.pos = self.pokemon.pos
+                monster.pos1 = self.pokemon.pos1
+                self.poke_list.append(monster)
+                self.mons_list.remove(monster)
+                _mark_pokemon_seen(monster.name)
+                if len(self.mons_list) == 0:
+                    self.count = 0
+                    self.end = True
+                else:
+                    self.monster = self.mons_list[0]
+            else:
+                self.change = True
+                self.catch = True
+        else:
+            self.info = "Catch failed!" if self.npc else ball_name+" failed to catch it!"
+            self.attack = False
+
+    #browsing the item menu - Potion/ball counts plus a Switch Pokemon entry, same 6-slot grid
+    #backdrop as the old party-switch-only Bag menu
+    def _draw_item_browse(self, canvas, dt):
+        self.first = self.item_grid.update(self.kbd, self.first)
+        self.item_grid.draw_highlight(canvas, self.bag, self.light)
+        for i, label in enumerate(self._item_labels()):
+            if i < 3:
+                canvas.draw_text(label, (270, 145+(i*120)), 22, 'Black')
+            else:
+                canvas.draw_text(label, (520, 145+(i-3)*120), 22, 'Black')
+
+    #confirms the currently-highlighted item slot
+    def _draw_item_confirm(self, canvas, dt):
+        labels = self._item_labels()
+        index = self.item_grid.selected_index()
+        self.kbd.select = False
+        if index >= len(labels):
+            return
+        if index == len(ITEM_ORDER):
+            #"Switch Pokemon" - hand off to the existing party-switch flow unchanged
+            self.item_menu = False
+            self.change = True
+            return
+        name = ITEM_ORDER[index]
+        if name == "Potion":
+            if self.items.get(name, 0) > 0 and self.pokemon.HP < self.pokemon.fullhp:
+                self.items[name] -= 1
+                _save_items(self.items)
+                self.pokemon.HP = min(self.pokemon.fullhp, self.pokemon.HP + balance.POTION_HEAL_AMOUNT)
+                self.info = "Used a Potion on "+self.pokemon.name+"!"
+                self.item_menu = False
+                self.attack = False
+                self.count = balance.PLAYER_TURN_MESSAGE_FRAMES
+            #else: no potions left, or already at full HP - stay on the menu, nothing happens
+        elif self.items.get(name, 0) > 0:
+            self.item_menu = False
+            self._attempt_catch(name, BALL_MULTIPLIERS[name])
+            self.count = balance.PLAYER_TURN_MESSAGE_FRAMES
+        #else: that ball's stock is empty - stay on the menu, nothing happens
+
+    #cancels the item menu, no turn spent
+    def _draw_item_cancel(self, canvas, dt):
+        self.item_menu = False
 
     #does all the calculations for the fight
     def fight(self, pokemon, monster, inte, canvas):
@@ -251,25 +368,16 @@ class Fight:
                         self.info = "Escape failed!"
                         self.attack = False
                 elif inte == 3:
-                    if battle_rules.catch_succeeds(self.npc):
-                        if len(self.poke_list) < balance.MAX_PARTY_SIZE:
-                            self.info = "Catch succeed!"
-                            self.monster.pos = self.pokemon.pos
-                            self.monster.pos1 = self.pokemon.pos1
-                            self.poke_list.append(monster)
-                            self.mons_list.remove(self.monster)
-                            _mark_pokemon_seen(monster.name)
-                            if len(self.mons_list) == 0:
-                                self.count = 0
-                                self.end = True
-                            else:
-                                self.monster = self.mons_list[0]
-                        else:
-                            self.change = True
-                            self.catch = True
-                    else:
+                    if self.npc:
                         self.info = "Catch failed!"
                         self.attack = False
+                    else:
+                        ball_name, ball_multiplier = self._default_ball()
+                        if ball_name is None:
+                            self.info = "No Poke Balls left!"
+                            self.attack = False
+                        else:
+                            self._attempt_catch(ball_name, ball_multiplier)
                                              
         else:
             if pokemon.HP > 0 and len(self.mons_list) == 0:
@@ -297,6 +405,11 @@ class Fight:
                         (pokemon.ATK, pokemon.DEF, pokemon.fullhp,
                          pokemon.max_exp, pokemon.give_exp) = battle_rules.level_up_stats(
                             base_stats["ATK"], base_stats["DEF"], base_stats["fullhp"], pokemon.lvl)
+                        #a small, renewable trickle of the cheapest ball tier - otherwise
+                        #catching would only ever deplete PlayerItems.json with no way back
+                        #short of a Pokecenter shop (see plans/feature-ideas.md item 11)
+                        self.items["Poke Ball"] = self.items.get("Poke Ball", 0) + 1
+                        _save_items(self.items)
                     pokemon.exp -= pokemon.max_exp
                     pokemon.HP = pokemon.fullhp
 

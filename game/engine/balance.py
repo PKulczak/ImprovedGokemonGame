@@ -6,9 +6,14 @@
 #wild encounters & catching
 WILD_ENCOUNTER_CHANCE = 0.007  # chance per frame-equivalent of a wild encounter while walking
                                 # through grass (scaled by dt, same unit as the timers below)
-CATCH_SUCCESS_ROLL_MAX = 5     # random.randint(1, this); a roll of 1 succeeds. Also doubles as a
-                                # forced-fail sentinel for NPC trainer battles (their pokemon can't be caught)
+CATCH_SUCCESS_ROLL_MAX = 5     # base catch chance is 1-in-this before the ball-tier/target-HP
+                                # scaling battle_rules.catch_succeeds applies on top
+MAX_CATCH_CHANCE = 0.9         # hard cap on catch_succeeds' final probability, however favourable
+                                # the ball tier/target HP - a catch should never be a lock
 ESCAPE_SUCCESS_ROLL_MAX = 4    # random.randint(1, this); a roll of 1 succeeds
+
+#items
+POTION_HEAL_AMOUNT = 20        # HP restored by using a Potion mid-battle, capped at the target's fullhp
 
 #party & leveling
 MAX_PARTY_SIZE = 6

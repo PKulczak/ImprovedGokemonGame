@@ -17,6 +17,7 @@ plans/
 game/Fight/Files/Save.json
 game/Fight/Files/PlayerPokedex.json
 game/Fight/Files/PlayerPokemon.json
+game/Fight/Files/PlayerItems.json
 
 # map builder: in-progress projects and staged export output are local working files
 MapBuilder/projects/*
