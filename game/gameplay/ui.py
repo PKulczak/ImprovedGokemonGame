@@ -104,10 +104,12 @@ class Pokedex:
                 self.detail_active = True
 
     #a caught species' sprite (idle frame) plus its base ATK/DEF/HP/type, on its own full-screen
-    #backdrop (same Welcome-style full-image pattern as pause/game-over) rather than layered over
-    #the 6-box bag.png grid. Q returns to the grid, consumed here (rather than left for
-    #Game._draw_pokedex's own Kbd.quit check) so backing out of the detail view doesn't also
-    #close the whole Gokedex in the same press
+    #backdrop (item 14 - an illustrated orange-panel-on-cream frame matching bag.png/box.png's
+    #own palette, with a grey "window" behind the sprite and another behind the stats block,
+    #rather than the flat placeholder fill this used to be) layered over the 6-box bag.png grid.
+    #Q returns to the grid, consumed here (rather than left for Game._draw_pokedex's own
+    #Kbd.quit check) so backing out of the detail view doesn't also close the whole Gokedex in
+    #the same press
     def _draw_detail(self, canvas):
         name = self.detail_name
         stats = POKEDEX[name]
@@ -115,13 +117,13 @@ class Pokedex:
         canvas.draw_image(self.detail_bg, (400,240), (800,480), (400,240), (800,480))
         canvas.draw_image(image, (frame_dim[0]/2, frame_dim[1]/2), frame_dim,
                            (220,260), (frame_dim[0]*5, frame_dim[1]*5))
-        canvas.draw_text(name, (470,110), 32, 'White')
-        canvas.draw_text("Type: "+stats["effect_img"].capitalize(), (470,160), 22, 'White')
-        canvas.draw_text("ATK: "+str(stats["ATK"]), (470,200), 22, 'White')
-        canvas.draw_text("DEF: "+str(stats["DEF"]), (470,235), 22, 'White')
-        canvas.draw_text("HP: "+str(stats["fullhp"]), (470,270), 22, 'White')
-        canvas.draw_text("SPD: "+str(stats.get("SPD", balance.DEFAULT_SPD)), (470,305), 22, 'White')
-        canvas.draw_text("Press Q to go back", (300,440), 22, 'Yellow')
+        canvas.draw_text(name, (470,110), 32, 'Black')
+        canvas.draw_text("Type: "+stats["effect_img"].capitalize(), (470,160), 22, 'Black')
+        canvas.draw_text("ATK: "+str(stats["ATK"]), (470,200), 22, 'Black')
+        canvas.draw_text("DEF: "+str(stats["DEF"]), (470,235), 22, 'Black')
+        canvas.draw_text("HP: "+str(stats["fullhp"]), (470,270), 22, 'Black')
+        canvas.draw_text("SPD: "+str(stats.get("SPD", balance.DEFAULT_SPD)), (470,305), 22, 'Black')
+        canvas.draw_text("Press Q to go back", (300,440), 22, 'White')
         if self.kbd.quit:
             self.kbd.quit = False
             self.detail_active = False
