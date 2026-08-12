@@ -19,7 +19,6 @@ kbd = Keyboard()
 clock = Clock()
 player = Player(clock)
 welcome = Welcome("welcome.png")
-tutorial = Welcome("tutorial.png")
 background = Background("map2y", WIDTH, HEIGHT)
 
 #sets up frame and all the event handlers
@@ -29,7 +28,7 @@ canvas = Canvas(screen)
 frame = Frame(screen, canvas)
 frame.set_canvas_background('Black')
 
-game = Game(welcome, tutorial, player, kbd, background, frame)
+game = Game(welcome, player, kbd, background, frame)
 game.load_game()
 
 frame.add_input("Player Name:", player.add_name, pygame.K_r)

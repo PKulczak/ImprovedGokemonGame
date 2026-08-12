@@ -42,7 +42,6 @@ Asset and save-data paths are resolved relative to the script's own location, so
 | M | Fast travel - move between the 7 world-map hubs with arrows, Space to travel |
 | S | Save game |
 | Q | Back / quit a screen |
-| T | Open the tutorial |
 | Esc | Pause - shows this controls list in-game |
 
 **Battle & menu screens**
@@ -68,7 +67,7 @@ Running out of lives does **not** wipe your save - a "Game Over" screen shows fi
   - `gameplay/` — the overworld: `game.py` (`Game`/`Interaction`/`Keyboard`, the top-level state
     machine), `entities.py` (`Player`/`NPC`/`Wall`/`Interact`), `world.py` (`Background`/map
     loading), `ui.py` (`Pokedex`/`Text`/dialogue), `clock.py` (frame-count timer), `Welcome.py`
-    (start/tutorial/credits screen rendering)
+    (start/credits screen rendering)
   - `battle/` — the fight screen: `fight.py` (`Fight`/`Pokemon`, its own state machine),
     `battle_rules.py` (pure damage/catch/escape/level-up formulas, independent of rendering)
   - `engine/` — generic pygame plumbing shared by both: `canvas.py` (image/text drawing surface),

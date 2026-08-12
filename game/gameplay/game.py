@@ -30,7 +30,6 @@ PAUSE_CONTROLS = [
     "S - Save game",
     "M - Fast travel (arrows to move, Space to travel)",
     "Q - Back / quit a screen",
-    "T - Open the tutorial",
     "R - Rename your player",
     "N - Reset to a new game",
     "Shift (hold) - Fast-forward",
@@ -115,7 +114,6 @@ class Keyboard:
         self.fast_travel = False
         self.start = False
         self.startscreen = False
-        self.tutorial = False
         self.back = False
         self.save = False
         self.select = False
@@ -158,8 +156,6 @@ class Keyboard:
             self.save = True
         if key == pygame.K_q:
             self.back = True
-        if key == pygame.K_t:
-            self.tutorial = True
         if key == pygame.K_ESCAPE:
             #a plain toggle rather than a one-shot latch (like the pokedex/fight flags below
             #it) - Esc both opens and closes the pause overlay with the same key, standard
@@ -292,7 +288,7 @@ class Interaction:
 
 #sets up main class
 class Game:
-    def __init__(self, welcome, tutorial, player, keyboard, background, frame):
+    def __init__(self, welcome, player, keyboard, background, frame):
         self.player = player
         self.keyboard = keyboard
         self.welcome = welcome
@@ -303,7 +299,6 @@ class Game:
         self.pauseScreen = Welcome("pause.png")
         self.gameOverScreen = Welcome("gameover.png")
         self.progressScreen = Welcome("progress.png")
-        self.tutorial = tutorial
         self.background = background
         self.npc_lost = []
         #maps the player has actually set foot in this save (see _draw_overworld) - the pool
@@ -342,8 +337,7 @@ class Game:
         self.fightB = False
 
         #which top-level screen is active, dispatched via STATE_HANDLERS instead of nested
-        #if/elif checks. "tutorial" isn't its own state - it's an overlay toggle within
-        #welcome/start_menu (see _draw_welcome/_draw_start_menu), same as the original code.
+        #if/elif checks
         self.state_handlers = {
             "welcome": self._draw_welcome,
             "start_menu": self._draw_start_menu,
@@ -582,8 +576,8 @@ class Game:
 
         canvas.draw_text("Q to close", (330, 445), 22, 'Yellow')
 
-        #back (Q) reuses the same "close an overlay" flag as pause/tutorial - no Kbd swap
-        #happened on entry, so nothing needs undoing beyond clearing the two flags
+        #back (Q) reuses the same "close an overlay" flag as pause - no Kbd swap happened on
+        #entry, so nothing needs undoing beyond clearing the two flags
         if self.keyboard.back:
             self.keyboard.progress = False
             self.keyboard.back = False
@@ -717,8 +711,8 @@ class Game:
         canvas.draw_text("Volume: "+str(volume_pct)+"% (Left/Right to adjust)", (200, volume_line_y), 20, 'White')
         canvas.draw_text("Esc or Q to resume", (230, volume_line_y + 30), 24, 'Yellow')
 
-        #Q reuses the same "back out of a screen" key/flag as every other overlay
-        #(pokedex/tutorial); Esc itself already toggles keyboard.paused back off in keyDown
+        #Q reuses the same "back out of a screen" key/flag as every other overlay (pokedex);
+        #Esc itself already toggles keyboard.paused back off in keyDown
         if self.keyboard.back:
             self.keyboard.paused = False
             self.keyboard.back = False
@@ -812,24 +806,12 @@ class Game:
             self.player.lock = True
             self.player.vel = Vector(0, 0)
 
-    #handles the start-screen / tutorial toggle shown before pressing space to enter the
-    #overworld. dt unused - no timing here - but part of the uniform state_handlers call shape
+    #handles the start-screen shown before pressing space to enter the overworld. dt unused -
+    #no timing here - but part of the uniform state_handlers call shape
     def _draw_start_menu(self, canvas, dt):
-        if not self.keyboard.tutorial:
-            self.startscreen.draw(canvas)
-        else:
-            self.tutorial.draw(canvas)
-            if self.keyboard.back:
-                self.keyboard.tutorial = False
-                self.keyboard.back = False
+        self.startscreen.draw(canvas)
 
-    #handles the welcome screen / tutorial shown before pressing space the first time. dt unused,
-    #same reason as _draw_start_menu above
+    #handles the welcome screen shown before pressing space the first time. dt unused, same
+    #reason as _draw_start_menu above
     def _draw_welcome(self, canvas, dt):
-        if not self.keyboard.tutorial:
-            self.welcome.draw(canvas)
-        else:
-            self.tutorial.draw(canvas)
-            if self.keyboard.back:
-                self.keyboard.tutorial = False
-                self.keyboard.back = False
+        self.welcome.draw(canvas)
