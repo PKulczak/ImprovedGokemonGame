@@ -11,7 +11,7 @@ from game.battle.fight import Kbd
 from game.battle.fight import POKEDEX, load_seen_pokemon
 from game.gameplay.entities import _load_pokemon_party
 from game.gameplay.world import Background
-from game.gameplay.ui import Text, Pokedex, Shop, FastTravel, MAP_DIAGRAM_NODE, MAP_DISPLAY_NAMES
+from game.gameplay.ui import Text, Pokedex, Shop, FastTravel, TeamOrder, MAP_DIAGRAM_NODE, MAP_DISPLAY_NAMES
 from game.gameplay.clock import Clock
 from game.engine import balance
 from game.engine import sound
@@ -29,6 +29,7 @@ PAUSE_CONTROLS = [
     "L - Open the progress log",
     "S - Save game",
     "M - Fast travel (arrows to move, Space to travel)",
+    "T - Reorder your party",
     "Q - Back / quit a screen",
     "R - Rename your player",
     "N - Reset to a new game",
@@ -112,6 +113,7 @@ class Keyboard:
         self.pokedex = False
         self.progress = False
         self.fast_travel = False
+        self.team = False
         self.start = False
         self.startscreen = False
         self.back = False
@@ -152,6 +154,8 @@ class Keyboard:
             self.progress = True
         if key == pygame.K_m:
             self.fast_travel = True
+        if key == pygame.K_t:
+            self.team = True
         if key == pygame.K_s:
             self.save = True
         if key == pygame.K_q:
@@ -325,6 +329,7 @@ class Game:
         self.pokedex = Pokedex(self.Kbd)
         self.shop = Shop(self.Kbd)
         self.fast_travel_ui = FastTravel(self.Kbd)
+        self.team_ui = TeamOrder(self.Kbd)
         self.shop_open = False
         #the heal tile opens a Heal-or-Shop choice (pokecenter_menu) instead of always healing;
         #pokecenter_healing is the confirmed-Heal follow-up (shows the "heal" dialogue and
@@ -345,6 +350,7 @@ class Game:
             "pokedex": self._draw_pokedex,
             "progress": self._draw_progress,
             "fast_travel": self._draw_fast_travel,
+            "team": self._draw_team,
             "pause": self._draw_pause,
             "game_over": self._draw_game_over,
             "shop": self._draw_shop,
@@ -370,6 +376,8 @@ class Game:
             return "progress"
         if self.keyboard.fast_travel:
             return "fast_travel"
+        if self.keyboard.team:
+            return "team"
         if self.keyboard.paused:
             return "pause"
         if self.game_over:
@@ -383,15 +391,15 @@ class Game:
         return "overworld"
 
     #fires once on the frame a new state is entered - swaps the active keydown/keyup handler
-    #to the fight/pokedex/shop/fast_travel-local Kbd. Only fires on entry (not every frame like
-    #the original inline calls did) since re-setting the same handler reference every frame was
-    #redundant. The handler is swapped *back* to self.keyboard from inside _draw_fight/
-    #_draw_pokedex/_draw_shop/_draw_fast_travel themselves, not here - that swap-back
-    #intentionally happens as soon as the battle/pokedex/shop/fast-travel interaction itself
-    #concludes, which can be several frames before the state actually changes (e.g. the
-    #post-fight win/lose text overlay keeps "fight" active while it plays out).
+    #to the fight/pokedex/shop/fast_travel/team-local Kbd. Only fires on entry (not every frame
+    #like the original inline calls did) since re-setting the same handler reference every
+    #frame was redundant. The handler is swapped *back* to self.keyboard from inside
+    #_draw_fight/_draw_pokedex/_draw_shop/_draw_fast_travel/_draw_team themselves, not here -
+    #that swap-back intentionally happens as soon as the battle/pokedex/shop/fast-travel/team
+    #interaction itself concludes, which can be several frames before the state actually
+    #changes (e.g. the post-fight win/lose text overlay keeps "fight" active while it plays out).
     def _enter_state(self, state):
-        if state in ("fight", "pokedex", "shop", "fast_travel"):
+        if state in ("fight", "pokedex", "shop", "fast_travel", "team"):
             self.frame.set_keydown_handler(self.Kbd.keyDown)
             self.frame.set_keyup_handler(self.Kbd.keyUp)
         if state == "fight":
@@ -624,6 +632,26 @@ class Game:
             self.frame.set_keyup_handler(self.keyboard.keyUp)
             self.keyboard.KeyReset()
             self.keyboard.fast_travel = False
+            self.Kbd.quit = False
+
+    #the party-reorder screen (item 15) - Space picks up a slot then Space on a second slot
+    #swaps them, same PartyGrid cursor as the Bag/Gokedex screens. TeamOrder mutates
+    #self.player.pokemon_list in place (the same list Fight/PlayerPokemon.json both already
+    #reference), so a swap is immediately reflected everywhere else without extra plumbing;
+    #only the save-on-swap below is new
+    def _draw_team(self, canvas, dt):
+        self.team_ui.draw(canvas, self.player.pokemon_list)
+        if self.team_ui.changed:
+            #same reasoning as fast travel's post-teleport save - a deliberate reorder
+            #shouldn't be able to roll back on a crash before the next save
+            self.save_game()
+
+        if self.Kbd.quit:
+            self.Kbd.KeyReset()
+            self.frame.set_keydown_handler(self.keyboard.keyDown)
+            self.frame.set_keyup_handler(self.keyboard.keyUp)
+            self.keyboard.KeyReset()
+            self.keyboard.team = False
             self.Kbd.quit = False
 
     #the Pokecenter counter's Heal-or-Shop choice, shown the moment the player steps on a heal

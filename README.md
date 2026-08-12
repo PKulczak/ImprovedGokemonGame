@@ -40,6 +40,7 @@ Asset and save-data paths are resolved relative to the script's own location, so
 | P | Open the Gokedex |
 | L | Open the progress log - bosses defeated, Gokedex completion, money, current party |
 | M | Fast travel - move between the 7 world-map hubs with arrows, Space to travel |
+| T | Reorder your party - Space to pick up a slot, Space again to swap |
 | S | Save game |
 | Q | Back / quit a screen |
 | Esc | Pause - shows this controls list in-game |

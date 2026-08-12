@@ -3,7 +3,7 @@ import json
 from game.engine.image_cache import load_image
 from game.engine import balance
 from game.engine import sound
-from game.engine.party_grid import PartyGrid
+from game.engine.party_grid import PartyGrid, draw_party_slot
 from game.battle.fight import POKEDEX, load_seen_pokemon, seen_pokemon_version, ITEM_ORDER, load_items, save_items
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -198,6 +198,88 @@ class Shop:
                 else:
                     self.message = "Not enough money!"
                 self.popup_active = True
+
+#shifts the whole bag_plain.png backdrop (and everything drawn relative to it) up from
+#PartyGrid's normal position - frees enough plain background below the panel for a real
+#two-line hint (the panel's default bottom edge leaves only ~26px of clear background there,
+#not enough for two font-20 lines); doesn't touch PartyGrid.draw_highlight itself, so Pokedex/
+#Shop's own layout is unaffected
+TEAM_Y_OFFSET = -38
+
+#lets the player reorder their own party (item 15) from the overworld, not just mid-battle -
+#reuses the same PartyGrid/bag.png presentation as the Bag/Gokedex screens, but on bag_plain.png
+#(a copy of bag.png with its baked-in "Back to Q fight" caption blanked out - wrong on every
+#non-battle screen that reuses bag.png, but only fixed here since this is the one that got
+#flagged) rather than bag.png itself. Space picks up a slot, Space on a second slot swaps them;
+#persisted the same way PlayerPokemon.json already round-trips player.pokemon_list today
+#(Game.save_game), no new save format needed. Slot order matters beyond display - it's also who
+#leads a fresh fight (Fight.__init__ auto-skips a fainted lead but otherwise always opens on
+#slot 0), so this doubles as "choose your lead"
+class TeamOrder:
+    def __init__(self, kbd):
+        self.kbd = kbd
+        self.first = True
+        self.grid = PartyGrid()
+        self.bag = load_image('{}/Fight/Other/bag_plain.png'.format(BASE_DIR))
+        self.light = load_image('{}/Fight/Other/highlight.png'.format(BASE_DIR))
+        #index of the slot picked up, waiting for a second slot to swap with; None if nothing
+        #is currently picked up
+        self.picked = None
+        #True for exactly the frame a swap actually happens, so Game knows to save - TeamOrder
+        #itself has no reason to know about Game.save_game
+        self.changed = False
+
+    #PartyGrid.draw_highlight draws both the backdrop and the selection box at fixed
+    #coordinates; reimplemented here with TEAM_Y_OFFSET applied to both so they stay aligned
+    #with each other (and with this screen's own shifted text/sprites below). Shifting the
+    #backdrop image up also drags its bottom edge up with it (it only overhung the 480-tall
+    #canvas by 5px to begin with) - the plain-background rect below patches the resulting gap
+    #at the very bottom of the screen so the hint text still has its cream background there
+    #instead of whatever's behind the canvas (black, same as this screen's own bag_plain.png
+    #outer colour so the seam is invisible)
+    def _draw_shifted_backdrop(self, canvas):
+        canvas.draw_image(self.bag, (375,250), (750,500), (400,240+TEAM_Y_OFFSET), (735,490))
+        canvas.draw_rect((400, 465), (800, 40), (228, 228, 222))
+        pos = self.grid.POSITIONS[self.grid.centre[0]][self.grid.centre[1]]
+        canvas.draw_image(self.light, (116,45), (233,91),
+                           (pos[0], pos[1]+TEAM_Y_OFFSET), (233,91))
+
+    def draw(self, canvas, pokemon_list):
+        self.changed = False
+        self.first = self.grid.update(self.kbd, self.first)
+        self._draw_shifted_backdrop(canvas)
+        canvas.draw_text("Reorder Team", (270, 60+TEAM_Y_OFFSET), 28, 'Black')
+        for i, mon in enumerate(pokemon_list):
+            colour = 'Yellow' if i == self.picked else 'Black'
+            name_x = 270 if i < 3 else 520
+            row_y = 130+TEAM_Y_OFFSET+((i if i < 3 else i-3)*120)
+            draw_party_slot(canvas, mon, name_x, row_y, colour)
+
+        #two lines, sized up from the single-line version this replaced, landing fully in the
+        #plain background TEAM_Y_OFFSET freed up below the panel (see its own comment) rather
+        #than straddling the panel's bottom edge the way one line at the old position did
+        if self.picked is None:
+            lines = ("Space to pick up a slot", "Q to close")
+        else:
+            lines = ("Space on another slot to swap", "same slot again to cancel")
+        canvas.draw_text_centered(lines[0], (473, 436), 20, 'Black')
+        canvas.draw_text_centered(lines[1], (473, 463), 20, 'Black')
+
+        if self.kbd.select:
+            self.kbd.select = False
+            idx = self.grid.selected_index()
+            if idx < len(pokemon_list):
+                if self.picked is None:
+                    self.picked = idx
+                elif self.picked == idx:
+                    self.picked = None
+                else:
+                    pokemon_list[self.picked], pokemon_list[idx] = pokemon_list[idx], pokemon_list[self.picked]
+                    self.picked = None
+                    self.changed = True
+
+        if self.kbd.quit:
+            self.picked = None
 
 #fast travel's world map (item 13) - the 7 hubs it can jump between; every other real map
 #groups onto one of these for the "you are here" highlight (see MAP_DIAGRAM_NODE below), since

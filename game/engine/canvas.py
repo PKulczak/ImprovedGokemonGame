@@ -23,7 +23,10 @@ class Canvas:
         self.surface = surface
         self._crop_cache = {}
 
-    def draw_image(self, image, center_source, dim_source, center_dest, dim_dest):
+    #grayscale=True desaturates the cropped/scaled result (cached separately from the colour
+    #version under the same key+flag) - used to grey out a fainted Pokemon's party-slot icon
+    #(see party_grid.draw_party_slot) without a second grayscale copy of every sprite on disk
+    def draw_image(self, image, center_source, dim_source, center_dest, dim_dest, grayscale=False):
         src_w, src_h = int(round(dim_source[0])), int(round(dim_source[1]))
         if src_w > image.get_width() or src_h > image.get_height():
             return
@@ -31,13 +34,15 @@ class Canvas:
         y0 = int(round(center_source[1] - dim_source[1] / 2))
         dest_w, dest_h = int(round(dim_dest[0])), int(round(dim_dest[1]))
 
-        key = (id(image), x0, y0, src_w, src_h, dest_w, dest_h)
+        key = (id(image), x0, y0, src_w, src_h, dest_w, dest_h, grayscale)
         prepared = self._crop_cache.get(key)
         if prepared is None:
             crop = pygame.Surface((src_w, src_h), pygame.SRCALPHA)
             crop.blit(image, (0, 0), area=pygame.Rect(x0, y0, src_w, src_h))
             if (dest_w, dest_h) != (src_w, src_h):
                 crop = pygame.transform.scale(crop, (dest_w, dest_h))
+            if grayscale:
+                crop = pygame.transform.grayscale(crop)
             prepared = crop
             self._crop_cache[key] = prepared
 

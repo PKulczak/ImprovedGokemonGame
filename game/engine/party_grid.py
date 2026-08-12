@@ -52,3 +52,28 @@ class PartyGrid:
     def draw_highlight(self, canvas, bag_image, light_image):
         canvas.draw_image(bag_image, (375,250), (750,500), (400,240), (735,490))
         canvas.draw_image(light_image, (116,45), (233,91), self.POSITIONS[self.centre[0]][self.centre[1]], (233,91))
+
+#a species' idle frame is always exactly 50x50 regardless of species (see Pokemon.__init__,
+#fight.py) - scaled down to this so it lines up vertically with a name rendered at SLOT_NAME_FONT
+SLOT_SPRITE_SIZE = 30
+SLOT_NAME_FONT = 26
+
+#one party slot's info - species icon, name (top-left, big), level (top-right, same row), HP
+#(below the name, smaller) - shared by the battle Bag menu (fight.py's _draw_bag_browse) and
+#the overworld party-reorder screen (ui.py's TeamOrder) so the two don't drift out of sync.
+#colour is the caller's own choice (Fight uses DarkRed for fainted, TeamOrder uses Yellow for
+#a picked-up slot); the icon greys itself out on a fainted (HP<=0) Pokemon regardless of colour
+def draw_party_slot(canvas, mon, name_x, row_y, colour):
+    fainted = mon.HP <= 0
+    #-size/4 centers it on draw_text's own vertical anchor (point_y - height*3/4, see
+    #Canvas.draw_text) for a name rendered at exactly SLOT_SPRITE_SIZE tall; -21 sits it in the
+    #box's own left margin (the gap bag.png already leaves before name_x) rather than pushing
+    #name/level rightward and crowding the level position
+    sprite_centre = (name_x-21, row_y-SLOT_SPRITE_SIZE/4)
+    canvas.draw_image(mon.image, mon.frame_center, mon.frame_dim,
+                       sprite_centre, (SLOT_SPRITE_SIZE, SLOT_SPRITE_SIZE), grayscale=fainted)
+    canvas.draw_text(mon.name, (name_x, row_y), SLOT_NAME_FONT, colour)
+    #+140 is wide enough that even this roster's widest rendered name at this font size
+    #("Charmander", 130px) doesn't run into the level
+    canvas.draw_text("Lv."+str(mon.lvl), (name_x+140, row_y), 20, colour)
+    canvas.draw_text("HP:"+str(mon.HP)+"/"+str(mon.fullhp), (name_x, row_y+34), 20, colour)

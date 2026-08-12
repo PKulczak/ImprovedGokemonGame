@@ -5,7 +5,7 @@ import json
 from game.engine.image_cache import load_image
 from game.engine import balance
 from game.engine import sound
-from game.engine.party_grid import PartyGrid
+from game.engine.party_grid import PartyGrid, draw_party_slot
 from game.battle import battle_rules
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -324,22 +324,21 @@ class Fight:
     def _draw_move_cancel(self, canvas, dt):
         self.move_menu = False
 
-    #browsing the party grid (the bag hotkey, or a forced switch/catch-overflow prompt) - a
-    #fainted (HP 0) Pokemon can't be sent out to battle, so its name/HP are greyed out here to
-    #match _draw_bag_confirm below refusing to select it
+    #browsing the party grid (the bag hotkey, or a forced switch/catch-overflow prompt) - same
+    #per-slot layout (icon, name, level, HP) as the overworld party-reorder screen (ui.py's
+    #TeamOrder), via the shared draw_party_slot. A fainted (HP 0) Pokemon can't be sent out to
+    #battle, so its name/HP are DarkRed (rather than the move-menu's Grey - the party grid's
+    #own tile backdrop is already light grey, so plain Grey text nearly disappears against it)
+    #and its icon is greyed out (draw_party_slot's own doing) to match _draw_bag_confirm below
+    #refusing to select it
     def _draw_bag_browse(self, canvas, dt):
         self.first = self.grid.update(self.kbd, self.first)
         self.grid.draw_highlight(canvas, self.bag, self.light)
-        for i in range(0,len(self.poke_list)):
-            #DarkRed rather than the move-menu's Grey - the party grid's own tile backdrop is
-            #already light grey, so plain Grey text nearly disappears against it
-            colour = 'DarkRed' if self.poke_list[i].HP <= 0 else 'Black'
-            if i<3:
-                canvas.draw_text(self.poke_list[i].name, (270, 130+(i*120)), 25, colour)
-                canvas.draw_text("HP:"+str(self.poke_list[i].HP), (350, 160+(i*120)), 25, colour)
-            else:
-                canvas.draw_text(self.poke_list[i].name, (520, 130+(i-3)*120), 25, colour)
-                canvas.draw_text("HP:"+str(self.poke_list[i].HP), (600, 160+(i-3)*120), 25, colour)
+        for i, mon in enumerate(self.poke_list):
+            colour = 'DarkRed' if mon.HP <= 0 else 'Black'
+            name_x = 270 if i < 3 else 520
+            row_y = 130+((i if i < 3 else i-3)*120)
+            draw_party_slot(canvas, mon, name_x, row_y, colour)
 
     #confirms the currently-highlighted party slot
     def _draw_bag_confirm(self, canvas, dt):
