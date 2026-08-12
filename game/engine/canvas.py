@@ -14,9 +14,10 @@ def _get_font(size):
     return font
 
 
-#drop-in replacement for SimpleGUICS2Pygame's Canvas - only draw_image/draw_text are used
-#anywhere in this codebase, so that's all that's implemented here, matching the shim's
-#exact crop/scale/center semantics so existing call sites don't need to change
+#drop-in replacement for SimpleGUICS2Pygame's Canvas - draw_image/draw_text covered every
+#need until the fast-travel map screen (FastTravel, ui.py) needed to highlight a node at
+#runtime without a separate pre-rendered image per highlight colour/position combination,
+#hence draw_rect below
 class Canvas:
     def __init__(self, surface):
         self.surface = surface
@@ -48,3 +49,23 @@ class Canvas:
         font = _get_font(font_size)
         rendered = font.render(text, True, pygame.Color(font_color))
         self.surface.blit(rendered, (point[0], point[1] - rendered.get_height() * 3 / 4))
+
+    #true-centered text (both axes) at center, unlike draw_text's point-is-roughly-baseline
+    #convention - needed for FastTravel's box labels, which get redrawn over a highlight rect
+    #at varying lengths ("map" vs "route1") and need to land centered regardless
+    def draw_text_centered(self, text, center, font_size, font_color):
+        font = _get_font(font_size)
+        rendered = font.render(text, True, pygame.Color(font_color))
+        x = center[0] - rendered.get_width() / 2
+        y = center[1] - rendered.get_height() / 2
+        self.surface.blit(rendered, (x, y))
+
+    #a filled, optionally rounded rectangle centered at center_dest - same center+dim
+    #convention as draw_image, rather than pygame.Rect's own top-left+size, so call sites
+    #don't have to convert between the two
+    def draw_rect(self, center, dim, color, border_radius=0):
+        w, h = int(round(dim[0])), int(round(dim[1]))
+        x = int(round(center[0] - w / 2))
+        y = int(round(center[1] - h / 2))
+        pygame.draw.rect(self.surface, pygame.Color(color), pygame.Rect(x, y, w, h),
+                          border_radius=border_radius)

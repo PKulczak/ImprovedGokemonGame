@@ -39,6 +39,7 @@ Asset and save-data paths are resolved relative to the script's own location, so
 | Space | Start / advance dialogue |
 | P | Open the Gokedex |
 | L | Open the progress log - bosses defeated, Gokedex completion, money, current party |
+| M | Fast travel - move between the 7 world-map hubs with arrows, Space to travel |
 | S | Save game |
 | Q | Back / quit a screen |
 | T | Open the tutorial |

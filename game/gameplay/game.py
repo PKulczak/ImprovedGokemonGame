@@ -11,7 +11,7 @@ from game.battle.fight import Kbd
 from game.battle.fight import POKEDEX, load_seen_pokemon
 from game.gameplay.entities import _load_pokemon_party
 from game.gameplay.world import Background
-from game.gameplay.ui import Text, Pokedex, Shop
+from game.gameplay.ui import Text, Pokedex, Shop, FastTravel, MAP_DIAGRAM_NODE, MAP_DISPLAY_NAMES
 from game.gameplay.clock import Clock
 from game.engine import balance
 from game.engine import sound
@@ -28,6 +28,7 @@ PAUSE_CONTROLS = [
     "P - Open the Gokedex",
     "L - Open the progress log",
     "S - Save game",
+    "M - Fast travel (arrows to move, Space to travel)",
     "Q - Back / quit a screen",
     "T - Open the tutorial",
     "R - Rename your player",
@@ -47,6 +48,21 @@ MAP_MUSIC_ZONES = {
     "pokecenter": "pokecenter", "pokecenter2": "pokecenter",
     "gym2": "gym",
     "bossfight1": "boss", "bossfight2": "boss", "bossfight3": "boss",
+}
+
+#where fast travel (item 13) drops the player in each of its 7 world-map hubs (ui.py's
+#MAP_DIAGRAM_NODE_POS) - the only maps it can ever land on, since FastTravel's own screen only
+#ever offers those 7. Reuses the exact target_pos an existing door into that map already lands
+#on (see world.py's per-map door graph in Overworld/maps/*.json) rather than inventing new
+#coordinates
+MAP_ENTRY_POINTS = {
+    "map2": (756, 169),
+    "route1": (770, 338),
+    "map": (58, 169),
+    "route2": (58, 236),
+    "route3": (746, 67),
+    "map3": (650, 143),
+    "route4": (626, 200),
 }
 
 #the 4 trainer NPCs that can appear in self.npc_lost (see the "npc_species" field of
@@ -96,6 +112,7 @@ class Keyboard:
         self.down = False
         self.pokedex = False
         self.progress = False
+        self.fast_travel = False
         self.start = False
         self.startscreen = False
         self.tutorial = False
@@ -135,6 +152,8 @@ class Keyboard:
             self.pokedex = True
         if key == pygame.K_l:
             self.progress = True
+        if key == pygame.K_m:
+            self.fast_travel = True
         if key == pygame.K_s:
             self.save = True
         if key == pygame.K_q:
@@ -287,6 +306,9 @@ class Game:
         self.tutorial = tutorial
         self.background = background
         self.npc_lost = []
+        #maps the player has actually set foot in this save (see _draw_overworld) - the pool
+        #the fast-travel screen (item 13) offers, in MAP_ORDER regardless of visit order
+        self.visited_maps = []
         self.intro = False
         self.complete = False
         self.pokecomplete = False
@@ -307,6 +329,7 @@ class Game:
         self.Kbd = Kbd()
         self.pokedex = Pokedex(self.Kbd)
         self.shop = Shop(self.Kbd)
+        self.fast_travel_ui = FastTravel(self.Kbd)
         self.shop_open = False
         #the heal tile opens a Heal-or-Shop choice (pokecenter_menu) instead of always healing;
         #pokecenter_healing is the confirmed-Heal follow-up (shows the "heal" dialogue and
@@ -327,6 +350,7 @@ class Game:
             "fight": self._draw_fight,
             "pokedex": self._draw_pokedex,
             "progress": self._draw_progress,
+            "fast_travel": self._draw_fast_travel,
             "pause": self._draw_pause,
             "game_over": self._draw_game_over,
             "shop": self._draw_shop,
@@ -350,6 +374,8 @@ class Game:
             return "pokedex"
         if self.keyboard.progress:
             return "progress"
+        if self.keyboard.fast_travel:
+            return "fast_travel"
         if self.keyboard.paused:
             return "pause"
         if self.game_over:
@@ -363,19 +389,23 @@ class Game:
         return "overworld"
 
     #fires once on the frame a new state is entered - swaps the active keydown/keyup handler
-    #to the fight/pokedex/shop-local Kbd. Only fires on entry (not every frame like the original
-    #inline calls did) since re-setting the same handler reference every frame was redundant.
-    #The handler is swapped *back* to self.keyboard from inside _draw_fight/_draw_pokedex/
-    #_draw_shop themselves, not here - that swap-back intentionally happens as soon as the
-    #battle/pokedex/shop interaction itself concludes, which can be several frames before the
-    #state actually changes (e.g. the post-fight win/lose text overlay keeps "fight" active
-    #while it plays out).
+    #to the fight/pokedex/shop/fast_travel-local Kbd. Only fires on entry (not every frame like
+    #the original inline calls did) since re-setting the same handler reference every frame was
+    #redundant. The handler is swapped *back* to self.keyboard from inside _draw_fight/
+    #_draw_pokedex/_draw_shop/_draw_fast_travel themselves, not here - that swap-back
+    #intentionally happens as soon as the battle/pokedex/shop/fast-travel interaction itself
+    #concludes, which can be several frames before the state actually changes (e.g. the
+    #post-fight win/lose text overlay keeps "fight" active while it plays out).
     def _enter_state(self, state):
-        if state in ("fight", "pokedex", "shop"):
+        if state in ("fight", "pokedex", "shop", "fast_travel"):
             self.frame.set_keydown_handler(self.Kbd.keyDown)
             self.frame.set_keyup_handler(self.Kbd.keyUp)
         if state == "fight":
             sound.play_music("battle")
+        elif state == "fast_travel":
+            #the cursor always starts on wherever the player actually is, not wherever it
+            #was last left open
+            self.fast_travel_ui.reset(MAP_DIAGRAM_NODE.get(self.background.map_name, self.background.map_name))
         elif state == "overworld":
             #covers both "just returned from a fight/menu" and "just walked into a different
             #zone" (the latter re-fires this same call from Interaction.draw on every map
@@ -396,6 +426,7 @@ class Game:
             "complete": self.complete,
             "pokecomplete": self.pokecomplete,
             "npc_lost": list(self.npc_lost),
+            "visited_maps": list(self.visited_maps),
             "player": {
                 "x": self.player.pos.x,
                 "y": self.player.pos.y,
@@ -425,6 +456,11 @@ class Game:
             self.complete = save_data["complete"]
             self.pokecomplete = save_data["pokecomplete"]
             self.npc_lost = list(save_data["npc_lost"])
+            #.get with a fallback, not save_data["visited_maps"] - lets a save file written
+            #before fast travel existed load cleanly (falling back to just its current map,
+            #same as a brand new visit to it) instead of hitting the except-and-wipe fallback
+            #below over a merely-missing (not corrupted) field
+            self.visited_maps = list(save_data.get("visited_maps", [save_data["map"]]))
             player_data = save_data["player"]
             self.player.pos.x = int(player_data["x"])
             self.player.pos.y = int(player_data["y"])
@@ -565,6 +601,35 @@ class Game:
             self.shop.message = ""
             self.shop.popup_active = False
             self.shop_open = False
+            self.Kbd.quit = False
+
+    #the fast-travel screen (item 13) - navigate the 7-hub world map itself (arrow keys move a
+    #cursor along FastTravel's own adjacency graph, Space travels to it) rather than picking off
+    #a text list. Picking a hub drops the player at that map's MAP_ENTRY_POINTS spot (the same
+    #landing spot an existing door into it already uses) and closes the screen in the same
+    #frame; Q closes it without travelling
+    def _draw_fast_travel(self, canvas, dt):
+        visited_hubs = set(self.visited_maps) & set(MAP_ENTRY_POINTS)
+        current_map = self.background.map_name
+        current_label = MAP_DISPLAY_NAMES.get(current_map, current_map)
+        target = self.fast_travel_ui.draw(canvas, visited_hubs, current_map, current_label)
+
+        if target is not None:
+            self.background = Background(target, WIDTH, HEIGHT, self.npc_lost)
+            self.background.load_wall()
+            self.player.pos.x, self.player.pos.y = MAP_ENTRY_POINTS[target]
+            #a deliberate checkpoint, same reasoning as the map-transition autosave in
+            #Interaction.draw - a free teleport is exactly the kind of position change that
+            #shouldn't be able to roll back on a crash before the next save
+            self.save_game()
+            self._play_zone_music()
+
+        if target is not None or self.Kbd.quit:
+            self.Kbd.KeyReset()
+            self.frame.set_keydown_handler(self.keyboard.keyDown)
+            self.frame.set_keyup_handler(self.keyboard.keyUp)
+            self.keyboard.KeyReset()
+            self.keyboard.fast_travel = False
             self.Kbd.quit = False
 
     #the Pokecenter counter's Heal-or-Shop choice, shown the moment the player steps on a heal
@@ -735,6 +800,12 @@ class Game:
 
         if self.background.map_name in POKECENTER_MAPS:
             self.last_pokecenter_map = self.background.map_name
+
+        #fast travel's (item 13) pool of offerable destinations - grows the first time the
+        #player actually sets foot on each map, same "seen it once, it's unlocked" shape as
+        #the Gokedex's own seen-list
+        if self.background.map_name not in self.visited_maps:
+            self.visited_maps.append(self.background.map_name)
 
         if self.player.lives == 0:
             self.game_over = True

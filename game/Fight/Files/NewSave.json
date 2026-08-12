@@ -3,6 +3,7 @@
   "complete": false,
   "pokecomplete": false,
   "npc_lost": [],
+  "visited_maps": [],
   "player": {
     "x": 552,
     "y": 224,

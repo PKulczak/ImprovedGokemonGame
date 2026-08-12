@@ -2,6 +2,7 @@ import os
 import json
 from game.engine.image_cache import load_image
 from game.engine import balance
+from game.engine import sound
 from game.engine.party_grid import PartyGrid
 from game.battle.fight import POKEDEX, load_seen_pokemon, seen_pokemon_version, ITEM_ORDER, load_items, save_items
 
@@ -195,6 +196,151 @@ class Shop:
                 else:
                     self.message = "Not enough money!"
                 self.popup_active = True
+
+#fast travel's world map (item 13) - the 7 hubs it can jump between; every other real map
+#groups onto one of these for the "you are here" highlight (see MAP_DIAGRAM_NODE below), since
+#the diagram only has room for the major hubs, not every Pokecenter/gym/boss room individually
+MAP_DIAGRAM_NATIVE_SIZE = (1020, 600)
+MAP_DIAGRAM_BOX_DIM = (150, 74)
+MAP_DIAGRAM_NODE_POS = {
+    "map2":   (150, 360),
+    "route1": (330, 360),
+    "map":    (510, 360),
+    "route2": (690, 360),
+    "route3": (870, 240),
+    "map3":   (870, 120),
+    "route4": (870, 480),
+}
+
+#arrow-key adjacency between the 7 hubs, matching the diagram's own layout - horizontal along
+#the map2-route1-map-route2 chain, vertical for route2's two branches (route3/map3 up, route4
+#down), rather than the diagonal directions the diagram draws them at (plain arrow keys only
+#have 4 directions to work with)
+MAP_DIAGRAM_EDGES = {
+    "map2":   {"right": "route1"},
+    "route1": {"left": "map2", "right": "map"},
+    "map":    {"left": "route1", "right": "route2"},
+    "route2": {"left": "map", "up": "route3", "down": "route4"},
+    "route3": {"down": "route2", "up": "map3"},
+    "map3":   {"down": "route3"},
+    "route4": {"up": "route2"},
+}
+
+#which hub lights up for a "you are here" highlight while standing on a given real map - the 7
+#hubs are their own key (identity, via .get fallback below); every side location groups onto
+#whichever hub it's a single door-hop off of in world.py's graph (pokecenter/map2y each have
+#exactly one such neighbour; pokecenter2/gym2 share map3's; bossfight1/2/3 are grouped under
+#route4 - the branch they all hang off, even though 2/3 are further nested behind 1 - rather
+#than nested one-under-the-next, since none of the three bossfight rooms gets its own hub)
+MAP_DIAGRAM_NODE = {
+    "map2y": "map2",
+    "pokecenter": "map",
+    "pokecenter2": "map3",
+    "gym2": "map3",
+    "bossfight1": "route4",
+    "bossfight2": "route4",
+    "bossfight3": "route4",
+}
+
+#display label for every real map that can appear as either a hub or a "you are here" caption
+MAP_DISPLAY_NAMES = {
+    "map2y": "Starting Dock",
+    "map": "Town",
+    "map2": "North Town",
+    "map3": "Gym Town",
+    "pokecenter": "Pokecenter",
+    "pokecenter2": "Pokecenter (North)",
+    "gym2": "Gym",
+    "route1": "Route 1",
+    "route2": "Route 2",
+    "route3": "Route 3",
+    "route4": "Route 4",
+    "bossfight1": "Boss Arena 1",
+    "bossfight2": "Boss Arena 2",
+    "bossfight3": "Boss Arena 3",
+}
+
+HERE_COLOR = (232, 115, 74)     #deep orange - the player's actual current hub
+CURSOR_COLOR = (255, 214, 51)   #yellow - the hub the cursor would travel to on Space
+
+#fast travel's map-select screen (item 13) - navigate the world map itself (arrow keys move
+#a cursor along MAP_DIAGRAM_EDGES, Space travels to it) rather than picking off a text list.
+#Only ever offers the 7 hubs above as destinations - individual Pokecenters/gyms/boss rooms
+#aren't separately selectable, only whichever hub they're grouped under
+class FastTravel:
+    def __init__(self, kbd):
+        self.kbd = kbd
+        self.first = True
+        self.cursor = "map2"
+        self.map_image = load_image('{}/Text/map_layout.png'.format(BASE_DIR))
+
+    #called by Game._enter_state on opening the screen, so the cursor always starts on
+    #wherever the player actually is rather than wherever it was last left
+    def reset(self, current_node):
+        self.cursor = current_node
+        self.first = True
+
+    #moves the cursor along MAP_DIAGRAM_EDGES, debounced the same "wait for keys to release"
+    #way PartyGrid.update is; a hub not yet in visited_hubs is treated as unreachable - the
+    #cursor simply can't step onto it, same as it never appearing in the old text list at all
+    def _update_cursor(self, visited_hubs):
+        if not self.first:
+            moved = False
+            for direction, kbd_flag in (("left", self.kbd.left), ("right", self.kbd.right),
+                                         ("up", self.kbd.up), ("down", self.kbd.down)):
+                if kbd_flag:
+                    target = MAP_DIAGRAM_EDGES.get(self.cursor, {}).get(direction)
+                    if target is not None and target in visited_hubs:
+                        self.cursor = target
+                        moved = True
+                    break
+            if moved:
+                self.first = True
+                sound.play_sfx("menu_move")
+        else:
+            if not (self.kbd.left or self.kbd.right or self.kbd.up or self.kbd.down):
+                self.first = False
+
+    #visited_hubs is which of MAP_DIAGRAM_NODE_POS's 7 keys the player has actually set foot
+    #on (a subset of Game.visited_maps); current_map/current_label are the player's real
+    #current map id and its own display name (may not be one of the 7 hubs). Returns the
+    #chosen hub's id the frame Space confirms a reachable selection, else None
+    def draw(self, canvas, visited_hubs, current_map, current_label):
+        current_node = MAP_DIAGRAM_NODE.get(current_map, current_map)
+        self._update_cursor(visited_hubs)
+
+        native_w, native_h = MAP_DIAGRAM_NATIVE_SIZE
+        dest_w, dest_h = 760, native_h * 760 / native_w
+        dest_center = (400, 260)
+        scale = dest_w / native_w
+        offset_x = dest_center[0] - native_w / 2 * scale
+        offset_y = dest_center[1] - native_h / 2 * scale
+
+        canvas.draw_image(self.map_image, (native_w/2, native_h/2), (native_w, native_h),
+                           dest_center, (dest_w, dest_h))
+
+        box_w, box_h = MAP_DIAGRAM_BOX_DIM[0]*scale, MAP_DIAGRAM_BOX_DIM[1]*scale
+        for node, color in ((current_node, HERE_COLOR), (self.cursor, CURSOR_COLOR)):
+            if node not in MAP_DIAGRAM_NODE_POS:
+                continue
+            nx, ny = MAP_DIAGRAM_NODE_POS[node]
+            center = (offset_x + nx*scale, offset_y + ny*scale)
+            canvas.draw_rect(center, (box_w, box_h), color, border_radius=8)
+            canvas.draw_text_centered(node, center, 22, 'Black')
+
+        #both lines land inside the cream diagram (which starts at offset_y, ~36px down) -
+        #any higher and 'Black' text sits on the screen's plain black margin, invisible
+        canvas.draw_text("Fast Travel", (20, offset_y+22), 24, 'Black')
+        canvas.draw_text("You are here: "+current_label, (20, offset_y+48), 18, 'Black')
+        cursor_label = MAP_DISPLAY_NAMES.get(self.cursor, self.cursor)
+        canvas.draw_text("Travel to: "+cursor_label, (20, 425), 20, 'Black')
+        canvas.draw_text("Arrows move - Space travels - Q closes", (20, 455), 18, 'Black')
+
+        if self.kbd.select:
+            self.kbd.select = False
+            if self.cursor in visited_hubs:
+                return self.cursor
+        return None
 
 #loads all dialogue text once from Text/dialogue.json
 def _load_dialogue():
