@@ -1,0 +1,376 @@
+{
+  "route_101_grass": {
+    "entries": [
+      {
+        "species": "Rattata",
+        "min_level": 2,
+        "max_level": 4,
+        "weight": 30
+      },
+      {
+        "species": "Zigzagoon",
+        "min_level": 2,
+        "max_level": 4,
+        "weight": 25
+      },
+      {
+        "species": "Hoppip",
+        "min_level": 2,
+        "max_level": 4,
+        "weight": 20
+      },
+      {
+        "species": "Taillow",
+        "min_level": 3,
+        "max_level": 5,
+        "weight": 15
+      },
+      {
+        "species": "Ledyba",
+        "min_level": 3,
+        "max_level": 5,
+        "weight": 10
+      }
+    ]
+  },
+  "route_102_grass": {
+    "entries": [
+      {
+        "species": "Spinarak",
+        "min_level": 5,
+        "max_level": 8,
+        "weight": 25
+      },
+      {
+        "species": "Ledyba",
+        "min_level": 5,
+        "max_level": 8,
+        "weight": 25
+      },
+      {
+        "species": "Hoppip",
+        "min_level": 5,
+        "max_level": 8,
+        "weight": 20
+      },
+      {
+        "species": "Zigzagoon",
+        "min_level": 5,
+        "max_level": 8,
+        "weight": 20
+      },
+      {
+        "species": "Shroomish",
+        "min_level": 6,
+        "max_level": 8,
+        "weight": 10
+      }
+    ]
+  },
+  "route_103_grass": {
+    "entries": [
+      {
+        "species": "Wingull",
+        "min_level": 8,
+        "max_level": 10,
+        "weight": 30
+      },
+      {
+        "species": "Magikarp",
+        "min_level": 8,
+        "max_level": 10,
+        "weight": 25
+      },
+      {
+        "species": "Zigzagoon",
+        "min_level": 8,
+        "max_level": 10,
+        "weight": 20
+      },
+      {
+        "species": "Taillow",
+        "min_level": 9,
+        "max_level": 11,
+        "weight": 15
+      },
+      {
+        "species": "Buizel",
+        "min_level": 9,
+        "max_level": 11,
+        "weight": 10
+      }
+    ]
+  },
+  "route_103_water": {
+    "entries": [
+      {
+        "species": "Magikarp",
+        "min_level": 8,
+        "max_level": 11,
+        "weight": 40
+      },
+      {
+        "species": "Wingull",
+        "min_level": 8,
+        "max_level": 11,
+        "weight": 25
+      },
+      {
+        "species": "Buizel",
+        "min_level": 9,
+        "max_level": 12,
+        "weight": 20
+      },
+      {
+        "species": "Horsea",
+        "min_level": 9,
+        "max_level": 12,
+        "weight": 10
+      },
+      {
+        "species": "Barboach",
+        "min_level": 9,
+        "max_level": 12,
+        "weight": 5
+      }
+    ]
+  },
+  "route_104_grass": {
+    "entries": [
+      {
+        "species": "Croagunk",
+        "min_level": 12,
+        "max_level": 16,
+        "weight": 25
+      },
+      {
+        "species": "Koffing",
+        "min_level": 12,
+        "max_level": 16,
+        "weight": 20
+      },
+      {
+        "species": "Seviper",
+        "min_level": 12,
+        "max_level": 16,
+        "weight": 20
+      },
+      {
+        "species": "Linoone",
+        "min_level": 12,
+        "max_level": 16,
+        "weight": 20
+      },
+      {
+        "species": "Girafarig",
+        "min_level": 13,
+        "max_level": 16,
+        "weight": 15
+      }
+    ]
+  },
+  "route_105_grass": {
+    "entries": [
+      {
+        "species": "Poochyena",
+        "min_level": 16,
+        "max_level": 20,
+        "weight": 25
+      },
+      {
+        "species": "Murkrow",
+        "min_level": 16,
+        "max_level": 20,
+        "weight": 20
+      },
+      {
+        "species": "Duskull",
+        "min_level": 16,
+        "max_level": 20,
+        "weight": 20
+      },
+      {
+        "species": "Misdreavus",
+        "min_level": 16,
+        "max_level": 20,
+        "weight": 20
+      },
+      {
+        "species": "Houndour",
+        "min_level": 17,
+        "max_level": 20,
+        "weight": 15
+      }
+    ]
+  },
+  "route_106_grass": {
+    "entries": [
+      {
+        "species": "Snorunt",
+        "min_level": 20,
+        "max_level": 24,
+        "weight": 30
+      },
+      {
+        "species": "Vanillite",
+        "min_level": 20,
+        "max_level": 24,
+        "weight": 25
+      },
+      {
+        "species": "Sneasel",
+        "min_level": 20,
+        "max_level": 24,
+        "weight": 20
+      },
+      {
+        "species": "Snover",
+        "min_level": 21,
+        "max_level": 24,
+        "weight": 15
+      },
+      {
+        "species": "Woobat",
+        "min_level": 20,
+        "max_level": 23,
+        "weight": 10
+      }
+    ]
+  },
+  "route_107_grass": {
+    "entries": [
+      {
+        "species": "Zubat",
+        "min_level": 24,
+        "max_level": 28,
+        "weight": 30
+      },
+      {
+        "species": "Geodude",
+        "min_level": 24,
+        "max_level": 28,
+        "weight": 25
+      },
+      {
+        "species": "Roggenrola",
+        "min_level": 24,
+        "max_level": 28,
+        "weight": 20
+      },
+      {
+        "species": "Drilbur",
+        "min_level": 25,
+        "max_level": 28,
+        "weight": 15
+      },
+      {
+        "species": "Larvitar",
+        "min_level": 25,
+        "max_level": 28,
+        "weight": 10
+      }
+    ]
+  },
+  "route_107_water": {
+    "entries": [
+      {
+        "species": "Barboach",
+        "min_level": 24,
+        "max_level": 28,
+        "weight": 30
+      },
+      {
+        "species": "Magikarp",
+        "min_level": 24,
+        "max_level": 28,
+        "weight": 25
+      },
+      {
+        "species": "Horsea",
+        "min_level": 24,
+        "max_level": 28,
+        "weight": 20
+      },
+      {
+        "species": "Whiscash",
+        "min_level": 25,
+        "max_level": 28,
+        "weight": 15
+      },
+      {
+        "species": "Feebas",
+        "min_level": 25,
+        "max_level": 28,
+        "weight": 10
+      }
+    ]
+  },
+  "route_108_grass": {
+    "entries": [
+      {
+        "species": "Swablu",
+        "min_level": 30,
+        "max_level": 36,
+        "weight": 30
+      },
+      {
+        "species": "Bagon",
+        "min_level": 30,
+        "max_level": 36,
+        "weight": 25
+      },
+      {
+        "species": "Deino",
+        "min_level": 30,
+        "max_level": 36,
+        "weight": 20
+      },
+      {
+        "species": "Vanillish",
+        "min_level": 32,
+        "max_level": 38,
+        "weight": 15
+      },
+      {
+        "species": "Sneasel",
+        "min_level": 30,
+        "max_level": 36,
+        "weight": 10
+      }
+    ]
+  },
+  "victory_road_grass": {
+    "entries": [
+      {
+        "species": "Golbat",
+        "min_level": 35,
+        "max_level": 42,
+        "weight": 30
+      },
+      {
+        "species": "Graveler",
+        "min_level": 35,
+        "max_level": 42,
+        "weight": 25
+      },
+      {
+        "species": "Gabite",
+        "min_level": 36,
+        "max_level": 43,
+        "weight": 20
+      },
+      {
+        "species": "Sneasel",
+        "min_level": 35,
+        "max_level": 42,
+        "weight": 15
+      },
+      {
+        "species": "Larvitar",
+        "min_level": 36,
+        "max_level": 43,
+        "weight": 10
+      }
+    ]
+  }
+}

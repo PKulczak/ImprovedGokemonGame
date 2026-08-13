@@ -1,0 +1,392 @@
+{
+  "id": "test_room",
+  "width": 10,
+  "height": 8,
+  "layers": {
+    "ground": [
+      [
+        [
+          "base",
+          10
+        ],
+        [
+          "base",
+          10
+        ],
+        [
+          "base",
+          10
+        ],
+        [
+          "base",
+          10
+        ],
+        [
+          "base",
+          10
+        ],
+        [
+          "base",
+          10
+        ],
+        [
+          "base",
+          10
+        ],
+        [
+          "base",
+          10
+        ],
+        [
+          "base",
+          10
+        ],
+        [
+          "base",
+          10
+        ]
+      ],
+      [
+        [
+          "base",
+          10
+        ],
+        [
+          "base",
+          0
+        ],
+        [
+          "base",
+          0
+        ],
+        [
+          "base",
+          0
+        ],
+        [
+          "base",
+          0
+        ],
+        [
+          "base",
+          0
+        ],
+        [
+          "base",
+          0
+        ],
+        [
+          "base",
+          0
+        ],
+        [
+          "base",
+          0
+        ],
+        [
+          "base",
+          10
+        ]
+      ],
+      [
+        [
+          "base",
+          10
+        ],
+        [
+          "base",
+          0
+        ],
+        [
+          "base",
+          0
+        ],
+        [
+          "base",
+          0
+        ],
+        [
+          "base",
+          0
+        ],
+        [
+          "base",
+          0
+        ],
+        [
+          "base",
+          0
+        ],
+        [
+          "base",
+          0
+        ],
+        [
+          "base",
+          0
+        ],
+        [
+          "base",
+          10
+        ]
+      ],
+      [
+        [
+          "base",
+          10
+        ],
+        [
+          "base",
+          0
+        ],
+        [
+          "base",
+          0
+        ],
+        [
+          "base",
+          0
+        ],
+        [
+          "base",
+          0
+        ],
+        [
+          "base",
+          0
+        ],
+        [
+          "base",
+          0
+        ],
+        [
+          "base",
+          0
+        ],
+        [
+          "base",
+          0
+        ],
+        [
+          "base",
+          10
+        ]
+      ],
+      [
+        [
+          "base",
+          10
+        ],
+        [
+          "base",
+          0
+        ],
+        [
+          "base",
+          0
+        ],
+        [
+          "base",
+          0
+        ],
+        [
+          "base",
+          1
+        ],
+        [
+          "base",
+          1
+        ],
+        [
+          "base",
+          0
+        ],
+        [
+          "base",
+          0
+        ],
+        [
+          "base",
+          0
+        ],
+        [
+          "base",
+          10
+        ]
+      ],
+      [
+        [
+          "base",
+          10
+        ],
+        [
+          "base",
+          0
+        ],
+        [
+          "base",
+          0
+        ],
+        [
+          "base",
+          0
+        ],
+        [
+          "base",
+          1
+        ],
+        [
+          "base",
+          1
+        ],
+        [
+          "base",
+          0
+        ],
+        [
+          "base",
+          0
+        ],
+        [
+          "base",
+          0
+        ],
+        [
+          "base",
+          10
+        ]
+      ],
+      [
+        [
+          "base",
+          10
+        ],
+        [
+          "base",
+          2
+        ],
+        [
+          "base",
+          2
+        ],
+        [
+          "base",
+          2
+        ],
+        [
+          "base",
+          2
+        ],
+        [
+          "base",
+          2
+        ],
+        [
+          "base",
+          2
+        ],
+        [
+          "base",
+          2
+        ],
+        [
+          "base",
+          2
+        ],
+        [
+          "base",
+          10
+        ]
+      ],
+      [
+        [
+          "base",
+          10
+        ],
+        [
+          "base",
+          10
+        ],
+        [
+          "base",
+          10
+        ],
+        [
+          "base",
+          10
+        ],
+        [
+          "base",
+          10
+        ],
+        [
+          "base",
+          10
+        ],
+        [
+          "base",
+          10
+        ],
+        [
+          "base",
+          10
+        ],
+        [
+          "base",
+          10
+        ],
+        [
+          "base",
+          10
+        ]
+      ]
+    ],
+    "decoration_below": null,
+    "decoration_above": null
+  },
+  "encounter_tables": {
+    "grass": "test_room_grass"
+  },
+  "warps": [
+    {
+      "x": 1,
+      "y": 1,
+      "trigger": "step",
+      "to_map": "test_room",
+      "to_x": 8,
+      "to_y": 5,
+      "to_facing": "DOWN"
+    }
+  ],
+  "edge_warps": {},
+  "npcs": [
+    {
+      "id": "villager_1",
+      "type": "static",
+      "x": 3,
+      "y": 2,
+      "facing": "DOWN",
+      "sprite": "boss1",
+      "dialogue_id": "test_villager"
+    },
+    {
+      "id": "trainer_1",
+      "type": "trainer",
+      "x": 6,
+      "y": 2,
+      "facing": "DOWN",
+      "sprite": "boss2",
+      "trainer_ref": "youngster_dale",
+      "vision_range": 3
+    },
+    {
+      "id": "test_nurse",
+      "type": "healer",
+      "x": 3,
+      "y": 6,
+      "facing": "DOWN",
+      "sprite": "boss1",
+      "dialogue_id": "test_nurse_heal"
+    }
+  ]
+}

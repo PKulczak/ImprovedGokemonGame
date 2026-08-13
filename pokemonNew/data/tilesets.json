@@ -1,0 +1,72 @@
+{
+  "base": {
+    "image": "tilesets/base_tiles.png",
+    "mode": "grid",
+    "tile_w": 16,
+    "tile_h": 16,
+    "margin": 0,
+    "spacing": 0,
+    "tiles": {
+      "0": {"name": "grass", "walkable": true},
+      "1": {"name": "tall_grass", "walkable": true, "encounter_zone": "grass"},
+      "2": {"name": "path", "walkable": true},
+      "3": {"name": "water", "walkable": false, "encounter_zone": "water"},
+      "4": {"name": "sand", "walkable": true},
+      "5": {"name": "cave_floor", "walkable": true},
+      "6": {"name": "cave_wall", "walkable": false},
+      "7": {"name": "wood_floor", "walkable": true},
+      "8": {"name": "stone_floor", "walkable": true},
+      "9": {"name": "wall", "walkable": false},
+      "10": {"name": "rock", "walkable": false},
+      "11": {"name": "flower_grass", "walkable": true},
+      "12": {"name": "ice_floor", "walkable": true},
+      "13": {"name": "mud", "walkable": true},
+      "14": {"name": "snow", "walkable": true},
+      "15": {"name": "dark_wall", "walkable": false}
+    }
+  },
+  "nikouu": {
+    "image": "tilesets/nikouu_original.png",
+    "mode": "grid",
+    "tile_w": 16,
+    "tile_h": 16,
+    "margin": 0,
+    "spacing": 0,
+    "cols": 24,
+    "rows": 15
+  },
+  "padded_tileset": {
+    "image": "tilesets/padded_tileset.png",
+    "mode": "atlas",
+    "manifest": "tilesets/padded_tileset.atlas.json"
+  },
+  "padded_caveTiles": {
+    "image": "tilesets/padded_caveTiles.png",
+    "mode": "atlas",
+    "manifest": "tilesets/padded_caveTiles.atlas.json"
+  },
+  "padded_mountain": {
+    "image": "tilesets/padded_mountain.png",
+    "mode": "atlas",
+    "manifest": "tilesets/padded_mountain.atlas.json"
+  },
+  "padded_outside_with_giant_tree": {
+    "image": "tilesets/padded_outside_with_giant_tree.png",
+    "mode": "atlas",
+    "manifest": "tilesets/padded_outside_with_giant_tree.atlas.json"
+  },
+  "padded_Folley": {
+    "image": "tilesets/padded_Folley.png",
+    "mode": "atlas",
+    "manifest": "tilesets/padded_Folley.atlas.json"
+  },
+  "padded_BogOfYore": {
+    "image": "tilesets/padded_BogOfYore.png",
+    "mode": "atlas",
+    "manifest": "tilesets/padded_BogOfYore.atlas.json"
+  },
+  "tree_prop": {
+    "image": "tilesets/tree_prop.png",
+    "mode": "single"
+  }
+}

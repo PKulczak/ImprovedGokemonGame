@@ -1,0 +1,180 @@
+{
+  "maps": [
+    {
+      "id": "sagewood_town",
+      "name": "Sagewood Town"
+    },
+    {
+      "id": "larkspur_lab",
+      "name": "Larkspur Lab (interior)"
+    },
+    {
+      "id": "sagewood_pokemon_center",
+      "name": "Sagewood Pokemon Center (interior)"
+    },
+    {
+      "id": "player_house_interior",
+      "name": "Player's House (interior)"
+    },
+    {
+      "id": "route_101",
+      "name": "Route 101"
+    },
+    {
+      "id": "route_102",
+      "name": "Route 102"
+    },
+    {
+      "id": "route_103",
+      "name": "Route 103"
+    },
+    {
+      "id": "route_104",
+      "name": "Route 104"
+    },
+    {
+      "id": "route_105",
+      "name": "Route 105"
+    },
+    {
+      "id": "route_106",
+      "name": "Route 106"
+    },
+    {
+      "id": "route_107",
+      "name": "Route 107"
+    },
+    {
+      "id": "route_108",
+      "name": "Route 108"
+    },
+    {
+      "id": "bramblegate_town",
+      "name": "Bramblegate Town"
+    },
+    {
+      "id": "bramblegate_town_pokemon_center",
+      "name": "Bramblegate Town Pokemon Center"
+    },
+    {
+      "id": "gym_wren",
+      "name": "Gym Wren"
+    },
+    {
+      "id": "corvid_hollow",
+      "name": "Corvid Hollow"
+    },
+    {
+      "id": "corvid_hollow_pokemon_center",
+      "name": "Corvid Hollow Pokemon Center"
+    },
+    {
+      "id": "gym_bartle",
+      "name": "Gym Bartle"
+    },
+    {
+      "id": "ferroport_city",
+      "name": "Ferroport City"
+    },
+    {
+      "id": "ferroport_city_pokemon_center",
+      "name": "Ferroport City Pokemon Center"
+    },
+    {
+      "id": "gym_talia",
+      "name": "Gym Talia"
+    },
+    {
+      "id": "mossvale",
+      "name": "Mossvale"
+    },
+    {
+      "id": "mossvale_pokemon_center",
+      "name": "Mossvale Pokemon Center"
+    },
+    {
+      "id": "gym_orin",
+      "name": "Gym Orin"
+    },
+    {
+      "id": "duskmere",
+      "name": "Duskmere"
+    },
+    {
+      "id": "duskmere_pokemon_center",
+      "name": "Duskmere Pokemon Center"
+    },
+    {
+      "id": "gym_priscilla",
+      "name": "Gym Priscilla"
+    },
+    {
+      "id": "frostholm",
+      "name": "Frostholm"
+    },
+    {
+      "id": "frostholm_pokemon_center",
+      "name": "Frostholm Pokemon Center"
+    },
+    {
+      "id": "gym_kade",
+      "name": "Gym Kade"
+    },
+    {
+      "id": "terracalda",
+      "name": "Terracalda"
+    },
+    {
+      "id": "terracalda_pokemon_center",
+      "name": "Terracalda Pokemon Center"
+    },
+    {
+      "id": "gym_garrick",
+      "name": "Gym Garrick"
+    },
+    {
+      "id": "skyreach_summit",
+      "name": "Skyreach Summit"
+    },
+    {
+      "id": "skyreach_summit_pokemon_center",
+      "name": "Skyreach Summit Pokemon Center"
+    },
+    {
+      "id": "gym_serath",
+      "name": "Gym Serath"
+    },
+    {
+      "id": "team_eclipse_hideout",
+      "name": "Team Eclipse Hideout"
+    },
+    {
+      "id": "victory_road",
+      "name": "Victory Road"
+    },
+    {
+      "id": "league_entrance",
+      "name": "League Entrance"
+    },
+    {
+      "id": "elite_four_room_ivor",
+      "name": "Elite Four Room Ivor"
+    },
+    {
+      "id": "elite_four_room_maren",
+      "name": "Elite Four Room Maren"
+    },
+    {
+      "id": "elite_four_room_zephyra",
+      "name": "Elite Four Room Zephyra"
+    },
+    {
+      "id": "elite_four_room_draven",
+      "name": "Elite Four Room Draven"
+    },
+    {
+      "id": "champion_room",
+      "name": "Champion Room"
+    }
+  ]
+}
